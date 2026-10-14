@@ -630,12 +630,12 @@
       <translation type="unfinished">Reset to default</translation>
     </message>
     <message>
-      <source>You might need to restart Strawberry for this setting to fully apply</source>
-      <translation type="unfinished">You might need to restart Strawberry for this setting to fully apply</translation>
+      <source>You might need to restart NASAQ for this setting to fully apply</source>
+      <translation type="unfinished">You might need to restart NASAQ for this setting to fully apply</translation>
     </message>
     <message>
-      <source>You need to restart Strawberry for this setting to take affect</source>
-      <translation type="unfinished">You need to restart Strawberry for this setting to take affect</translation>
+      <source>You need to restart NASAQ for this setting to take affect</source>
+      <translation type="unfinished">You need to restart NASAQ for this setting to take affect</translation>
     </message>
     <message>
       <source>System icons</source>
@@ -825,8 +825,8 @@
       <translation>Zeslabení při pozastavení/Zesílení při obnovení přehrávání</translation>
     </message>
     <message>
-      <source>You need to restart Strawberry for this setting to take affect</source>
-      <translation type="unfinished">You need to restart Strawberry for this setting to take affect</translation>
+      <source>You need to restart NASAQ for this setting to take affect</source>
+      <translation type="unfinished">You need to restart NASAQ for this setting to take affect</translation>
     </message>
     <message>
       <source>Map the volume slider to a decibel scale so that perceived loudness changes evenly. Each 1% step equals 0.5 dB, 100% is 0 dB and 0% is silence.</source>
@@ -908,8 +908,8 @@
       <translation>Použít výchozí nastavení systému</translation>
     </message>
     <message>
-      <source>You will need to restart Strawberry if you change the language.</source>
-      <translation>Pokud změníte jazyk, budete muset Strawberry spustit znovu.</translation>
+      <source>You will need to restart NASAQ if you change the language.</source>
+      <translation>Pokud změníte jazyk, budete muset NASAQ spustit znovu.</translation>
     </message>
     <message>
       <source>Using the menu to add a song will...</source>
@@ -1226,8 +1226,8 @@
       <translation>Automatická aktualizace</translation>
     </message>
     <message>
-      <source>Update the collection when Strawberry starts</source>
-      <translation>Při spuštění Strawberry obnovit hudební sbírku</translation>
+      <source>Update the collection when NASAQ starts</source>
+      <translation>Při spuštění NASAQ obnovit hudební sbírku</translation>
     </message>
     <message>
       <source>Monitor the collection for changes</source>
@@ -1258,9 +1258,9 @@
       <translation>Upřednostňované názvy souborů s obaly alb (oddělené čárkou)</translation>
     </message>
     <message>
-      <source>When looking for album art Strawberry will first look for picture files that contain one of these words.
+      <source>When looking for album art NASAQ will first look for picture files that contain one of these words.
 If there are no matches then it will use the largest image in the directory.</source>
-      <translation>Při hledání obalu alba se Strawberry nejprve podívá po obrázkových souborech, jež obsahují jedno z těchto slov.
+      <translation>Při hledání obalu alba se NASAQ nejprve podívá po obrázkových souborech, jež obsahují jedno z těchto slov.
 Pokud nenajde žádné, které by se shodovaly, potom použije největší obrázek v adresáři.</translation>
     </message>
     <message>
@@ -2051,24 +2051,24 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
       <translation>Připojit zařízení</translation>
     </message>
     <message>
-      <source>This is the first time you have connected this device.  Strawberry will now scan the device to find music files - this may take some time.</source>
-      <translation>Toto zařízení bylo připojeno poprvé. Strawberry na něm nyní hledá hudební soubory - může to chvíli trvat.</translation>
+      <source>This is the first time you have connected this device.  NASAQ will now scan the device to find music files - this may take some time.</source>
+      <translation>Toto zařízení bylo připojeno poprvé. NASAQ na něm nyní hledá hudební soubory - může to chvíli trvat.</translation>
     </message>
     <message>
       <source>This device will not work properly</source>
       <translation>Toto zařízení nebude pracovat správně</translation>
     </message>
     <message>
-      <source>This is an MTP device, but you compiled Strawberry without libmtp support.</source>
-      <translation>Toto je zařízení MTP, ale Strawberry byl sestaven bez podpory pro libmtp.</translation>
+      <source>This is an MTP device, but you compiled NASAQ without libmtp support.</source>
+      <translation>Toto je zařízení MTP, ale NASAQ byl sestaven bez podpory pro libmtp.</translation>
     </message>
     <message>
       <source>If you continue, this device will work slowly and songs copied to it may not work.</source>
       <translation>Budete-li pokračovat, toto zařízení bude pracovat pomalu a písně na něj kopírované nemusí fungovat.</translation>
     </message>
     <message>
-      <source>This is an iPod, but you compiled Strawberry without libgpod support.</source>
-      <translation>Toto je zařízení iPod, ale Strawberry byl sestaven bez podpory pro libgpod.</translation>
+      <source>This is an iPod, but you compiled NASAQ without libgpod support.</source>
+      <translation>Toto je zařízení iPod, ale NASAQ byl sestaven bez podpory pro libgpod.</translation>
     </message>
     <message>
       <source>This type of device is not supported: %1</source>
@@ -2114,8 +2114,8 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
       <translation>Toto zařízení podporuje následující formáty souborů:</translation>
     </message>
     <message>
-      <source>Strawberry can automatically convert the music you copy to this device into a format that it can play.</source>
-      <translation>Strawberry může automaticky převést hudbu kopírovanou do tohoto zařízení do formátu, který dokáže přehrát.</translation>
+      <source>NASAQ can automatically convert the music you copy to this device into a format that it can play.</source>
+      <translation>NASAQ může automaticky převést hudbu kopírovanou do tohoto zařízení do formátu, který dokáže přehrát.</translation>
     </message>
     <message>
       <source>Do not convert any music</source>
@@ -2134,7 +2134,7 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
       <translation>Upřednostňovaný formát</translation>
     </message>
     <message>
-      <source>This device must be connected and opened before Strawberry can see what file formats it supports.</source>
+      <source>This device must be connected and opened before NASAQ can see what file formats it supports.</source>
       <translation>Pro zjištění podporovaných formátů souborů je zařízení nejdřív nutno připojit a otevřít.</translation>
     </message>
     <message>
@@ -2189,8 +2189,8 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
       <translation>Smazat ze zařízení...</translation>
     </message>
     <message>
-      <source>Forgetting a device will remove it from this list and Strawberry will have to rescan all the songs again next time you connect it.</source>
-      <translation>Zařízení bude odstraněno z tohoto seznamu. Po opětovném připojení je Strawberry bude muset znovu celé prohledat.</translation>
+      <source>Forgetting a device will remove it from this list and NASAQ will have to rescan all the songs again next time you connect it.</source>
+      <translation>Zařízení bude odstraněno z tohoto seznamu. Po opětovném připojení je NASAQ bude muset znovu celé prohledat.</translation>
     </message>
     <message>
       <source>Delete files</source>
@@ -2714,7 +2714,7 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
   <context>
     <name>ErrorDialog</name>
     <message>
-      <source>Strawberry Error</source>
+      <source>NASAQ Error</source>
       <translation>Chyba Clemetine</translation>
     </message>
   </context>
@@ -3033,8 +3033,8 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
       <translation type="unfinished">Use X11 shortcuts when available</translation>
     </message>
     <message>
-      <source>You need to launch System Preferences and allow Strawberry to &quot;&lt;span style=&quot;font-style:italic&quot;&gt;control your computer&lt;/span&gt;&quot; to use global shortcuts in Strawberry.</source>
-      <translation>Aby bylo možné v Strawberry používat globální klávesové zkratky, je nutné spustit Nastavení Systému a povolit Strawberry &quot;&lt;span style=&quot;font-style:italic&quot;&gt;ovládat váš počítač&lt;/span&gt;&quot;.</translation>
+      <source>You need to launch System Preferences and allow NASAQ to &quot;&lt;span style=&quot;font-style:italic&quot;&gt;control your computer&lt;/span&gt;&quot; to use global shortcuts in NASAQ.</source>
+      <translation>Aby bylo možné v NASAQ používat globální klávesové zkratky, je nutné spustit Nastavení Systému a povolit NASAQ &quot;&lt;span style=&quot;font-style:italic&quot;&gt;ovládat váš počítač&lt;/span&gt;&quot;.</translation>
     </message>
     <message>
       <source>Action</source>
@@ -3364,8 +3364,8 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
   <context>
     <name>MainWindow</name>
     <message>
-      <source>Strawberry Music Player</source>
-      <translation>Přehrávač hudby Strawberry</translation>
+      <source>NASAQ Music Player</source>
+      <translation>Přehrávač hudby NASAQ</translation>
     </message>
     <message>
       <source>MenuPopupToolButton</source>
@@ -3480,8 +3480,8 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
       <translation type="unfinished">Ctrl+P</translation>
     </message>
     <message>
-      <source>&amp;About Strawberry</source>
-      <translation>&amp;O Strawberry</translation>
+      <source>&amp;About NASAQ</source>
+      <translation>&amp;O NASAQ</translation>
     </message>
     <message>
       <source>F1</source>
@@ -3768,12 +3768,12 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
       <translation>Zkontrolovat aktualizace</translation>
     </message>
     <message>
-      <source>Strawberry running under Rosetta</source>
-      <translation type="unfinished">Strawberry running under Rosetta</translation>
+      <source>NASAQ running under Rosetta</source>
+      <translation type="unfinished">NASAQ running under Rosetta</translation>
     </message>
     <message>
-      <source>You are running Strawberry under Rosetta. Running Strawberry under Rosetta is unsupported and known to have issues. You should download Strawberry for the correct CPU architecture from %1</source>
-      <translation type="unfinished">You are running Strawberry under Rosetta. Running Strawberry under Rosetta is unsupported and known to have issues. You should download Strawberry for the correct CPU architecture from %1</translation>
+      <source>You are running NASAQ under Rosetta. Running NASAQ under Rosetta is unsupported and known to have issues. You should download NASAQ for the correct CPU architecture from %1</source>
+      <translation type="unfinished">You are running NASAQ under Rosetta. Running NASAQ under Rosetta is unsupported and known to have issues. You should download NASAQ for the correct CPU architecture from %1</translation>
     </message>
     <message>
       <source>Sponsoring Strawberry</source>
@@ -3864,8 +3864,8 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
       <translation>Žádná z vybraných písní nebyla vhodná ke zkopírování do zařízení</translation>
     </message>
     <message>
-      <source>The version of Strawberry you&apos;ve just updated to requires a full collection rescan because of the new features listed below:</source>
-      <translation>Verze Strawberry, na kterou jste právě povýšili, vyžaduje z důvodu nových vlastností vypsaných níže úplné nové prohledání sbírky:</translation>
+      <source>The version of NASAQ you&apos;ve just updated to requires a full collection rescan because of the new features listed below:</source>
+      <translation>Verze NASAQ, na kterou jste právě povýšili, vyžaduje z důvodu nových vlastností vypsaných níže úplné nové prohledání sbírky:</translation>
     </message>
     <message>
       <source>Would you like to run a full rescan right now?</source>
@@ -4028,8 +4028,8 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
       <translation>Oznámení</translation>
     </message>
     <message>
-      <source>Strawberry can show a message when the track changes.</source>
-      <translation>Strawberry může při změně skladby ukázat zprávu.</translation>
+      <source>NASAQ can show a message when the track changes.</source>
+      <translation>NASAQ může při změně skladby ukázat zprávu.</translation>
     </message>
     <message>
       <source>Notification type</source>
@@ -4141,7 +4141,7 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
       <translation>Jednoduchá modrá</translation>
     </message>
     <message>
-      <source>Strawberry Red</source>
+      <source>Classic Red</source>
       <translation>Jahodově Červená</translation>
     </message>
     <message>
@@ -4261,8 +4261,8 @@ Pokud nenajde žádné, které by se shodovaly, potom použije největší obrá
       <translation type="unfinished">&quot;Listening to...&quot;</translation>
     </message>
     <message>
-      <source>Strawberry</source>
-      <translation type="unfinished">Strawberry</translation>
+      <source>NASAQ</source>
+      <translation type="unfinished">NASAQ</translation>
     </message>
     <message>
       <source>Artist name</source>
@@ -7576,12 +7576,12 @@ Opravdu chcete pokračovat?</translation>
       <translation>Zrušeno.</translation>
     </message>
     <message>
-      <source>Received a %1 encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
-      <translation type="unfinished">Received a %1 encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</translation>
+      <source>Received a %1 encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
+      <translation type="unfinished">Received a %1 encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</translation>
     </message>
     <message>
-      <source>Received an encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
-      <translation type="unfinished">Received an encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</translation>
+      <source>Received an encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
+      <translation type="unfinished">Received an encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</translation>
     </message>
   </context>
   <context>
@@ -7591,8 +7591,8 @@ Opravdu chcete pokračovat?</translation>
       <translation>Stahování značek</translation>
     </message>
     <message>
-      <source>Strawberry was unable to find results for this file</source>
-      <translation>Strawberry se pro tento soubor výsledky najít nepodařilo</translation>
+      <source>NASAQ was unable to find results for this file</source>
+      <translation>NASAQ se pro tento soubor výsledky najít nepodařilo</translation>
     </message>
     <message>
       <source>Select best possible match</source>

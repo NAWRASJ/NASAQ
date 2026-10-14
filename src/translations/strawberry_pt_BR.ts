@@ -630,12 +630,12 @@
       <translation type="unfinished">Reset to default</translation>
     </message>
     <message>
-      <source>You might need to restart Strawberry for this setting to fully apply</source>
-      <translation type="unfinished">You might need to restart Strawberry for this setting to fully apply</translation>
+      <source>You might need to restart NASAQ for this setting to fully apply</source>
+      <translation type="unfinished">You might need to restart NASAQ for this setting to fully apply</translation>
     </message>
     <message>
-      <source>You need to restart Strawberry for this setting to take affect</source>
-      <translation type="unfinished">You need to restart Strawberry for this setting to take affect</translation>
+      <source>You need to restart NASAQ for this setting to take affect</source>
+      <translation type="unfinished">You need to restart NASAQ for this setting to take affect</translation>
     </message>
     <message>
       <source>System icons</source>
@@ -825,8 +825,8 @@
       <translation>Desvanecer ao pausar / Voltar gradualmente ao retomar</translation>
     </message>
     <message>
-      <source>You need to restart Strawberry for this setting to take affect</source>
-      <translation type="unfinished">You need to restart Strawberry for this setting to take affect</translation>
+      <source>You need to restart NASAQ for this setting to take affect</source>
+      <translation type="unfinished">You need to restart NASAQ for this setting to take affect</translation>
     </message>
     <message>
       <source>Map the volume slider to a decibel scale so that perceived loudness changes evenly. Each 1% step equals 0.5 dB, 100% is 0 dB and 0% is silence.</source>
@@ -908,8 +908,8 @@
       <translation>Usar padrão do sistema</translation>
     </message>
     <message>
-      <source>You will need to restart Strawberry if you change the language.</source>
-      <translation>Você precisará reiniciar o Strawberry se mudar o idioma.</translation>
+      <source>You will need to restart NASAQ if you change the language.</source>
+      <translation>Você precisará reiniciar o NASAQ se mudar o idioma.</translation>
     </message>
     <message>
       <source>Using the menu to add a song will...</source>
@@ -1226,8 +1226,8 @@
       <translation>Atualização automática</translation>
     </message>
     <message>
-      <source>Update the collection when Strawberry starts</source>
-      <translation>Atualizar a biblioteca quando o Strawberry iniciar</translation>
+      <source>Update the collection when NASAQ starts</source>
+      <translation>Atualizar a biblioteca quando o NASAQ iniciar</translation>
     </message>
     <message>
       <source>Monitor the collection for changes</source>
@@ -1258,9 +1258,9 @@
       <translation>Nomenclatura para arquivos de capa (separado por vírgulas)</translation>
     </message>
     <message>
-      <source>When looking for album art Strawberry will first look for picture files that contain one of these words.
+      <source>When looking for album art NASAQ will first look for picture files that contain one of these words.
 If there are no matches then it will use the largest image in the directory.</source>
-      <translation>Ao procurar por capas de discos, o Strawberry primeiro procurará por arquivos que contenham uma destas palavras.
+      <translation>Ao procurar por capas de discos, o NASAQ primeiro procurará por arquivos que contenham uma destas palavras.
 Se não houver resultados, ele usará a maior imagem no diretório.</translation>
     </message>
     <message>
@@ -2051,24 +2051,24 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
       <translation>Conectar dispositivo</translation>
     </message>
     <message>
-      <source>This is the first time you have connected this device.  Strawberry will now scan the device to find music files - this may take some time.</source>
-      <translation>Esta é a primeira vez que você conecta este dispositivo. O Strawberry vai escaneá-lo agora para achar músicas - isso pode levar algum tempo.</translation>
+      <source>This is the first time you have connected this device.  NASAQ will now scan the device to find music files - this may take some time.</source>
+      <translation>Esta é a primeira vez que você conecta este dispositivo. O NASAQ vai escaneá-lo agora para achar músicas - isso pode levar algum tempo.</translation>
     </message>
     <message>
       <source>This device will not work properly</source>
       <translation>Este dispositivo não funcionará corretamente</translation>
     </message>
     <message>
-      <source>This is an MTP device, but you compiled Strawberry without libmtp support.</source>
-      <translation>Este é um dispositivo MTP, mas você compilou o Strawberry sem suporte a libmtp</translation>
+      <source>This is an MTP device, but you compiled NASAQ without libmtp support.</source>
+      <translation>Este é um dispositivo MTP, mas você compilou o NASAQ sem suporte a libmtp</translation>
     </message>
     <message>
       <source>If you continue, this device will work slowly and songs copied to it may not work.</source>
       <translation>Se você continar, este dispositivo funcionará lentamente e as músicas copiadas para ele podem não funcionar.</translation>
     </message>
     <message>
-      <source>This is an iPod, but you compiled Strawberry without libgpod support.</source>
-      <translation>Este é um iPod, mas você compilou o Strawberry sem suporte a libgpod</translation>
+      <source>This is an iPod, but you compiled NASAQ without libgpod support.</source>
+      <translation>Este é um iPod, mas você compilou o NASAQ sem suporte a libgpod</translation>
     </message>
     <message>
       <source>This type of device is not supported: %1</source>
@@ -2114,8 +2114,8 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
       <translation>Este dispositivo suporta os seguintes formatos de arquivo:</translation>
     </message>
     <message>
-      <source>Strawberry can automatically convert the music you copy to this device into a format that it can play.</source>
-      <translation>O Strawberry pode converter automaticamente a música que você copiar para o dispositivo no formato que pode ser executado.</translation>
+      <source>NASAQ can automatically convert the music you copy to this device into a format that it can play.</source>
+      <translation>O NASAQ pode converter automaticamente a música que você copiar para o dispositivo no formato que pode ser executado.</translation>
     </message>
     <message>
       <source>Do not convert any music</source>
@@ -2134,8 +2134,8 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
       <translation>Formato preferido</translation>
     </message>
     <message>
-      <source>This device must be connected and opened before Strawberry can see what file formats it supports.</source>
-      <translation>O dispositivo deve estar conectado e aberto antes que o Strawberry possa ver que formatos de arquivo ele suporta.</translation>
+      <source>This device must be connected and opened before NASAQ can see what file formats it supports.</source>
+      <translation>O dispositivo deve estar conectado e aberto antes que o NASAQ possa ver que formatos de arquivo ele suporta.</translation>
     </message>
     <message>
       <source>Open device</source>
@@ -2189,8 +2189,8 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
       <translation>Apagar do dispositivo...</translation>
     </message>
     <message>
-      <source>Forgetting a device will remove it from this list and Strawberry will have to rescan all the songs again next time you connect it.</source>
-      <translation>Esquecer um dispositivo irá removê-lo desta lista e o Strawberry terá que examinar todas as músicas de novo, da próxima vez que você conectá-lo.</translation>
+      <source>Forgetting a device will remove it from this list and NASAQ will have to rescan all the songs again next time you connect it.</source>
+      <translation>Esquecer um dispositivo irá removê-lo desta lista e o NASAQ terá que examinar todas as músicas de novo, da próxima vez que você conectá-lo.</translation>
     </message>
     <message>
       <source>Delete files</source>
@@ -2714,8 +2714,8 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
   <context>
     <name>ErrorDialog</name>
     <message>
-      <source>Strawberry Error</source>
-      <translation>Erro no Strawberry</translation>
+      <source>NASAQ Error</source>
+      <translation>Erro no NASAQ</translation>
     </message>
   </context>
   <context>
@@ -3033,8 +3033,8 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
       <translation>Usar atalhos X11 quando disponível</translation>
     </message>
     <message>
-      <source>You need to launch System Preferences and allow Strawberry to &quot;&lt;span style=&quot;font-style:italic&quot;&gt;control your computer&lt;/span&gt;&quot; to use global shortcuts in Strawberry.</source>
-      <translation>Você deve iniciar as Preferências do Sistema e permitir que o Strawberry &quot;&lt;span style=&quot;font-style:italic&quot;&gt;controle o seu computador&lt;/span&gt;&quot; para poder usar atalhos globais no Strawberry.</translation>
+      <source>You need to launch System Preferences and allow NASAQ to &quot;&lt;span style=&quot;font-style:italic&quot;&gt;control your computer&lt;/span&gt;&quot; to use global shortcuts in NASAQ.</source>
+      <translation>Você deve iniciar as Preferências do Sistema e permitir que o NASAQ &quot;&lt;span style=&quot;font-style:italic&quot;&gt;controle o seu computador&lt;/span&gt;&quot; para poder usar atalhos globais no NASAQ.</translation>
     </message>
     <message>
       <source>Action</source>
@@ -3364,8 +3364,8 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
   <context>
     <name>MainWindow</name>
     <message>
-      <source>Strawberry Music Player</source>
-      <translation>Reprodutor de Música Strawberry</translation>
+      <source>NASAQ Music Player</source>
+      <translation>Reprodutor de Música NASAQ</translation>
     </message>
     <message>
       <source>MenuPopupToolButton</source>
@@ -3480,8 +3480,8 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
       <translation>Ctrl+P</translation>
     </message>
     <message>
-      <source>&amp;About Strawberry</source>
-      <translation>&amp;Sobre o Strawberry</translation>
+      <source>&amp;About NASAQ</source>
+      <translation>&amp;Sobre o NASAQ</translation>
     </message>
     <message>
       <source>F1</source>
@@ -3768,12 +3768,12 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
       <translation>Procurar por atualizações...</translation>
     </message>
     <message>
-      <source>Strawberry running under Rosetta</source>
-      <translation type="unfinished">Strawberry running under Rosetta</translation>
+      <source>NASAQ running under Rosetta</source>
+      <translation type="unfinished">NASAQ running under Rosetta</translation>
     </message>
     <message>
-      <source>You are running Strawberry under Rosetta. Running Strawberry under Rosetta is unsupported and known to have issues. You should download Strawberry for the correct CPU architecture from %1</source>
-      <translation type="unfinished">You are running Strawberry under Rosetta. Running Strawberry under Rosetta is unsupported and known to have issues. You should download Strawberry for the correct CPU architecture from %1</translation>
+      <source>You are running NASAQ under Rosetta. Running NASAQ under Rosetta is unsupported and known to have issues. You should download NASAQ for the correct CPU architecture from %1</source>
+      <translation type="unfinished">You are running NASAQ under Rosetta. Running NASAQ under Rosetta is unsupported and known to have issues. You should download NASAQ for the correct CPU architecture from %1</translation>
     </message>
     <message>
       <source>Sponsoring Strawberry</source>
@@ -3864,8 +3864,8 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
       <translation>Nenhuma das músicas selecionadas estão adequadas para copiar para um dispositivo</translation>
     </message>
     <message>
-      <source>The version of Strawberry you&apos;ve just updated to requires a full collection rescan because of the new features listed below:</source>
-      <translation>A versão do Strawberry para a qual você atualizou requer um reescaneamento completo da biblioteca por causa dos novos recursos listados abaixo:</translation>
+      <source>The version of NASAQ you&apos;ve just updated to requires a full collection rescan because of the new features listed below:</source>
+      <translation>A versão do NASAQ para a qual você atualizou requer um reescaneamento completo da biblioteca por causa dos novos recursos listados abaixo:</translation>
     </message>
     <message>
       <source>Would you like to run a full rescan right now?</source>
@@ -4028,8 +4028,8 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
       <translation>Notificações</translation>
     </message>
     <message>
-      <source>Strawberry can show a message when the track changes.</source>
-      <translation>O Strawberry pode exibir uma mensagem quando a faixa mudar.</translation>
+      <source>NASAQ can show a message when the track changes.</source>
+      <translation>O NASAQ pode exibir uma mensagem quando a faixa mudar.</translation>
     </message>
     <message>
       <source>Notification type</source>
@@ -4141,8 +4141,8 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
       <translation>Azul básico</translation>
     </message>
     <message>
-      <source>Strawberry Red</source>
-      <translation>Strawberry Red</translation>
+      <source>Classic Red</source>
+      <translation>Classic Red</translation>
     </message>
     <message>
       <source>Custom...</source>
@@ -4261,8 +4261,8 @@ Se não houver resultados, ele usará a maior imagem no diretório.</translation
       <translation>&quot;Ouvindo...&quot;</translation>
     </message>
     <message>
-      <source>Strawberry</source>
-      <translation>Strawberry</translation>
+      <source>NASAQ</source>
+      <translation>NASAQ</translation>
     </message>
     <message>
       <source>Artist name</source>
@@ -7566,12 +7566,12 @@ Deseja continuar?</translation>
       <translation>Cancelado.</translation>
     </message>
     <message>
-      <source>Received a %1 encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
-      <translation type="unfinished">Received a %1 encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</translation>
+      <source>Received a %1 encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
+      <translation type="unfinished">Received a %1 encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</translation>
     </message>
     <message>
-      <source>Received an encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
-      <translation type="unfinished">Received an encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</translation>
+      <source>Received an encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
+      <translation type="unfinished">Received an encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</translation>
     </message>
   </context>
   <context>
@@ -7581,8 +7581,8 @@ Deseja continuar?</translation>
       <translation>Buscador de tag</translation>
     </message>
     <message>
-      <source>Strawberry was unable to find results for this file</source>
-      <translation>O Strawberry não conseguiu encontrar resultados para este arquivo</translation>
+      <source>NASAQ was unable to find results for this file</source>
+      <translation>O NASAQ não conseguiu encontrar resultados para este arquivo</translation>
     </message>
     <message>
       <source>Select best possible match</source>

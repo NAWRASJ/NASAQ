@@ -630,12 +630,12 @@
       <translation>Lähtesta vaikimisi väärtusteks</translation>
     </message>
     <message>
-      <source>You might need to restart Strawberry for this setting to fully apply</source>
-      <translation>Selle seadistuse täismahus jõustumiseks pead ilmselt Strawberry uuesti käivitama</translation>
+      <source>You might need to restart NASAQ for this setting to fully apply</source>
+      <translation>Selle seadistuse täismahus jõustumiseks pead ilmselt NASAQ uuesti käivitama</translation>
     </message>
     <message>
-      <source>You need to restart Strawberry for this setting to take affect</source>
-      <translation>Selle seadistuse jõustumiseks pead Strawberry uuesti käivitama</translation>
+      <source>You need to restart NASAQ for this setting to take affect</source>
+      <translation>Selle seadistuse jõustumiseks pead NASAQ uuesti käivitama</translation>
     </message>
     <message>
       <source>System icons</source>
@@ -825,8 +825,8 @@
       <translation>Kasuta peatamisel ja jätkamisel hajumist</translation>
     </message>
     <message>
-      <source>You need to restart Strawberry for this setting to take affect</source>
-      <translation>Selle sätte jõustumiseks peab Strawberry taaskäivitama</translation>
+      <source>You need to restart NASAQ for this setting to take affect</source>
+      <translation>Selle sätte jõustumiseks peab NASAQ taaskäivitama</translation>
     </message>
     <message>
       <source>Map the volume slider to a decibel scale so that perceived loudness changes evenly. Each 1% step equals 0.5 dB, 100% is 0 dB and 0% is silence.</source>
@@ -908,8 +908,8 @@
       <translation>Kasuta süsteemi vaikeväärtust</translation>
     </message>
     <message>
-      <source>You will need to restart Strawberry if you change the language.</source>
-      <translation>Keele muutmisel tuleb Strawberry taaskäivitada.</translation>
+      <source>You will need to restart NASAQ if you change the language.</source>
+      <translation>Keele muutmisel tuleb NASAQ taaskäivitada.</translation>
     </message>
     <message>
       <source>Using the menu to add a song will...</source>
@@ -1226,8 +1226,8 @@
       <translation>Automaatne uuendamine</translation>
     </message>
     <message>
-      <source>Update the collection when Strawberry starts</source>
-      <translation>Värskenda muusikakogu Strawberry käivitumisel</translation>
+      <source>Update the collection when NASAQ starts</source>
+      <translation>Värskenda muusikakogu NASAQ käivitumisel</translation>
     </message>
     <message>
       <source>Monitor the collection for changes</source>
@@ -1258,9 +1258,9 @@
       <translation>Eelistatud kaanepildi failinimed (komadega eraldatud)</translation>
     </message>
     <message>
-      <source>When looking for album art Strawberry will first look for picture files that contain one of these words.
+      <source>When looking for album art NASAQ will first look for picture files that contain one of these words.
 If there are no matches then it will use the largest image in the directory.</source>
-      <translation>Kaanepilte otsides vaatab Strawberry esmalt pildifaile, mis sisaldavad ühte neist sõnadest.
+      <translation>Kaanepilte otsides vaatab NASAQ esmalt pildifaile, mis sisaldavad ühte neist sõnadest.
 Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
     </message>
     <message>
@@ -2051,24 +2051,24 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
       <translation>Ühenda seade</translation>
     </message>
     <message>
-      <source>This is the first time you have connected this device.  Strawberry will now scan the device to find music files - this may take some time.</source>
-      <translation>Ühendasid selle seadme esimest korda.  Strawberry skaneerib nüüd seadet muusikafailide leidmiseks – selleks võib kuluda veidi aega.</translation>
+      <source>This is the first time you have connected this device.  NASAQ will now scan the device to find music files - this may take some time.</source>
+      <translation>Ühendasid selle seadme esimest korda.  NASAQ skaneerib nüüd seadet muusikafailide leidmiseks – selleks võib kuluda veidi aega.</translation>
     </message>
     <message>
       <source>This device will not work properly</source>
       <translation>See seade ei tööta korralikult</translation>
     </message>
     <message>
-      <source>This is an MTP device, but you compiled Strawberry without libmtp support.</source>
-      <translation>See on MTP seade, kuid kompileerisid Strawberry libmtp toeta.</translation>
+      <source>This is an MTP device, but you compiled NASAQ without libmtp support.</source>
+      <translation>See on MTP seade, kuid kompileerisid NASAQ libmtp toeta.</translation>
     </message>
     <message>
       <source>If you continue, this device will work slowly and songs copied to it may not work.</source>
       <translation>Kui jätkad, töötab see seade aeglaselt ja sinna kopeeritud lood ei pruugi töötada.</translation>
     </message>
     <message>
-      <source>This is an iPod, but you compiled Strawberry without libgpod support.</source>
-      <translation>See on iPod, kuid kompileerisid Strawberry libgpod toeta.</translation>
+      <source>This is an iPod, but you compiled NASAQ without libgpod support.</source>
+      <translation>See on iPod, kuid kompileerisid NASAQ libgpod toeta.</translation>
     </message>
     <message>
       <source>This type of device is not supported: %1</source>
@@ -2114,8 +2114,8 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
       <translation>See seade toetab järgmisi failivorminguid:</translation>
     </message>
     <message>
-      <source>Strawberry can automatically convert the music you copy to this device into a format that it can play.</source>
-      <translation>Strawberry saab sellesse seadmesse kopeeritud muusika automaatselt teisendada vormingusse, mida ta suudab esitada.</translation>
+      <source>NASAQ can automatically convert the music you copy to this device into a format that it can play.</source>
+      <translation>NASAQ saab sellesse seadmesse kopeeritud muusika automaatselt teisendada vormingusse, mida ta suudab esitada.</translation>
     </message>
     <message>
       <source>Do not convert any music</source>
@@ -2134,8 +2134,8 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
       <translation>Eelistatud vorming</translation>
     </message>
     <message>
-      <source>This device must be connected and opened before Strawberry can see what file formats it supports.</source>
-      <translation>See seade peab olema ühendatud ja avatud, enne kui Strawberry näeb, milliseid failivorminguid see toetab.</translation>
+      <source>This device must be connected and opened before NASAQ can see what file formats it supports.</source>
+      <translation>See seade peab olema ühendatud ja avatud, enne kui NASAQ näeb, milliseid failivorminguid see toetab.</translation>
     </message>
     <message>
       <source>Open device</source>
@@ -2189,8 +2189,8 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
       <translation>Kustuta seadmest...</translation>
     </message>
     <message>
-      <source>Forgetting a device will remove it from this list and Strawberry will have to rescan all the songs again next time you connect it.</source>
-      <translation>Seadme unustamine eemaldab selle siit loendist, mistõttu peab Strawberry järgmisel ühendamisel kõik lood uuesti skaneerima.</translation>
+      <source>Forgetting a device will remove it from this list and NASAQ will have to rescan all the songs again next time you connect it.</source>
+      <translation>Seadme unustamine eemaldab selle siit loendist, mistõttu peab NASAQ järgmisel ühendamisel kõik lood uuesti skaneerima.</translation>
     </message>
     <message>
       <source>Delete files</source>
@@ -2714,8 +2714,8 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
   <context>
     <name>ErrorDialog</name>
     <message>
-      <source>Strawberry Error</source>
-      <translation>Strawberry viga</translation>
+      <source>NASAQ Error</source>
+      <translation>NASAQ viga</translation>
     </message>
   </context>
   <context>
@@ -3033,8 +3033,8 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
       <translation>Kasuta võimalusel X11 kiirklahve</translation>
     </message>
     <message>
-      <source>You need to launch System Preferences and allow Strawberry to &quot;&lt;span style=&quot;font-style:italic&quot;&gt;control your computer&lt;/span&gt;&quot; to use global shortcuts in Strawberry.</source>
-      <translation>Et Strawberry saaks üldiseid kiirklahve kasutada, ava süsteemi seadistused ja märgi eelistus „&lt;span style=&quot;font-style:italic&quot;&gt;juhi oma arvutit&lt;/span&gt;“.</translation>
+      <source>You need to launch System Preferences and allow NASAQ to &quot;&lt;span style=&quot;font-style:italic&quot;&gt;control your computer&lt;/span&gt;&quot; to use global shortcuts in NASAQ.</source>
+      <translation>Et NASAQ saaks üldiseid kiirklahve kasutada, ava süsteemi seadistused ja märgi eelistus „&lt;span style=&quot;font-style:italic&quot;&gt;juhi oma arvutit&lt;/span&gt;“.</translation>
     </message>
     <message>
       <source>Action</source>
@@ -3364,8 +3364,8 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
   <context>
     <name>MainWindow</name>
     <message>
-      <source>Strawberry Music Player</source>
-      <translation>Strawberry muusikamängija</translation>
+      <source>NASAQ Music Player</source>
+      <translation>NASAQ muusikamängija</translation>
     </message>
     <message>
       <source>MenuPopupToolButton</source>
@@ -3480,8 +3480,8 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
       <translation>Ctrl+P</translation>
     </message>
     <message>
-      <source>&amp;About Strawberry</source>
-      <translation>Strawberry teave</translation>
+      <source>&amp;About NASAQ</source>
+      <translation>NASAQ teave</translation>
     </message>
     <message>
       <source>F1</source>
@@ -3768,12 +3768,12 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
       <translation>Kontrolli uuendusi...</translation>
     </message>
     <message>
-      <source>Strawberry running under Rosetta</source>
-      <translation>Strawberry töötab Rosetta all</translation>
+      <source>NASAQ running under Rosetta</source>
+      <translation>NASAQ töötab Rosetta all</translation>
     </message>
     <message>
-      <source>You are running Strawberry under Rosetta. Running Strawberry under Rosetta is unsupported and known to have issues. You should download Strawberry for the correct CPU architecture from %1</source>
-      <translation>Kasutad Strawberryt Rosetta all.  Strawberry käitamist Rosetta all ei toetata ja sellel on teadaolevalt probleeme.  Õige CPU arhitektuuri jaoks tuleks Strawberry alla laadida saidilt %1</translation>
+      <source>You are running NASAQ under Rosetta. Running NASAQ under Rosetta is unsupported and known to have issues. You should download NASAQ for the correct CPU architecture from %1</source>
+      <translation>Kasutad NASAQt Rosetta all.  NASAQ käitamist Rosetta all ei toetata ja sellel on teadaolevalt probleeme.  Õige CPU arhitektuuri jaoks tuleks NASAQ alla laadida saidilt %1</translation>
     </message>
     <message>
       <source>Sponsoring Strawberry</source>
@@ -3864,8 +3864,8 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
       <translation>Valitud lood ei olnud sobilikud seadmesse kopeerimiseks</translation>
     </message>
     <message>
-      <source>The version of Strawberry you&apos;ve just updated to requires a full collection rescan because of the new features listed below:</source>
-      <translation>Strawberry versioon, millele äsja uuendasid, nõuab muusikakogu täielikku uuesti skaneerimist allpool loetletud uute funktsioonide tõttu:</translation>
+      <source>The version of NASAQ you&apos;ve just updated to requires a full collection rescan because of the new features listed below:</source>
+      <translation>NASAQ versioon, millele äsja uuendasid, nõuab muusikakogu täielikku uuesti skaneerimist allpool loetletud uute funktsioonide tõttu:</translation>
     </message>
     <message>
       <source>Would you like to run a full rescan right now?</source>
@@ -4028,8 +4028,8 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
       <translation>Teavitused</translation>
     </message>
     <message>
-      <source>Strawberry can show a message when the track changes.</source>
-      <translation>Strawberry võib loo vahetumisel kuvada märguande.</translation>
+      <source>NASAQ can show a message when the track changes.</source>
+      <translation>NASAQ võib loo vahetumisel kuvada märguande.</translation>
     </message>
     <message>
       <source>Notification type</source>
@@ -4141,7 +4141,7 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
       <translation>Tavaline sinine</translation>
     </message>
     <message>
-      <source>Strawberry Red</source>
+      <source>Classic Red</source>
       <translation>Maasikapunane</translation>
     </message>
     <message>
@@ -4261,8 +4261,8 @@ Kui vasteid pole, kasutab ta kaustas asuvat suurimat pilti.</translation>
       <translation>&quot;Kuulamas...&quot;</translation>
     </message>
     <message>
-      <source>Strawberry</source>
-      <translation>Strawberry</translation>
+      <source>NASAQ</source>
+      <translation>NASAQ</translation>
     </message>
     <message>
       <source>Artist name</source>
@@ -7566,12 +7566,12 @@ Kas soovid jätkata?</translation>
       <translation>Tühistatud.</translation>
     </message>
     <message>
-      <source>Received a %1 encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
-      <translation>Tidal edastas krüptitud voogedastuse (%1), mida Strawberry ei toeta. Seda, kas Tidal voogedastuse krüptib või mitte sõltub klienditunnusest. Proovi seda Tidali seadistustest muuta</translation>
+      <source>Received a %1 encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
+      <translation>Tidal edastas krüptitud voogedastuse (%1), mida NASAQ ei toeta. Seda, kas Tidal voogedastuse krüptib või mitte sõltub klienditunnusest. Proovi seda Tidali seadistustest muuta</translation>
     </message>
     <message>
-      <source>Received an encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
-      <translation>Tidal edastas krüptitud voogedastuse, mida Strawberry ei toeta. Seda, kas Tidal voogedastuse krüptib või mitte sõltub klienditunnusest. Proovi seda Tidali seadistustest muuta</translation>
+      <source>Received an encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
+      <translation>Tidal edastas krüptitud voogedastuse, mida NASAQ ei toeta. Seda, kas Tidal voogedastuse krüptib või mitte sõltub klienditunnusest. Proovi seda Tidali seadistustest muuta</translation>
     </message>
   </context>
   <context>
@@ -7581,8 +7581,8 @@ Kas soovid jätkata?</translation>
       <translation>Siltide laadija</translation>
     </message>
     <message>
-      <source>Strawberry was unable to find results for this file</source>
-      <translation>Strawberry ei leidnud selle faili jaoks tulemusi</translation>
+      <source>NASAQ was unable to find results for this file</source>
+      <translation>NASAQ ei leidnud selle faili jaoks tulemusi</translation>
     </message>
     <message>
       <source>Select best possible match</source>

@@ -60,7 +60,7 @@ SystemTrayIcon::SystemTrayIcon(QObject *parent)
   if (isSystemTrayAvailable()) {
     available_ = true;
     setIcon(icon_normal_);
-    setToolTip(QCoreApplication::applicationName());
+    setToolTip(QStringLiteral("NASAQ"));
   }
 
   QObject::connect(this, &QSystemTrayIcon::activated, this, &SystemTrayIcon::Clicked);
@@ -233,7 +233,7 @@ void SystemTrayIcon::SetNowPlaying(const Song &song, const QUrl &url) {
 }
 
 void SystemTrayIcon::ClearNowPlaying() {
-  if (available_) setToolTip(QCoreApplication::applicationName());
+  if (available_) setToolTip(QStringLiteral("NASAQ"));
 }
 
 void SystemTrayIcon::LoveVisibilityChanged(const bool value) {

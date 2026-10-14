@@ -1,3 +1,4 @@
+// Modified for CAM 0.2 on 2026-10-14: in-process commercial audio integration.
 /*
  * Strawberry Music Player
  * This file was part of Clementine.
@@ -139,6 +140,7 @@ using std::make_unique;
 using std::make_shared;
 
 int main(int argc, char *argv[]) {
+  qputenv("QT_MEDIA_BACKEND", "windows");
 
 #ifdef Q_OS_MACOS
   // Do Mac specific startup to get media keys working.
@@ -146,13 +148,13 @@ int main(int argc, char *argv[]) {
   mac::MacMain();
 #endif
 
-  QCoreApplication::setApplicationName(u"Strawberry"_s);
-  QCoreApplication::setOrganizationName(u"Strawberry"_s);
-  QCoreApplication::setApplicationVersion(QStringLiteral(STRAWBERRY_VERSION_DISPLAY));
+  QCoreApplication::setApplicationName(qEnvironmentVariableIsEmpty("CAM_SMOKE_OUTPUT") ? u"CAM-Strawberry"_s : u"CAM-Strawberry-Test"_s);
+  QCoreApplication::setOrganizationName(u"CAMProject"_s);
+  QCoreApplication::setApplicationVersion(QStringLiteral("0.2.1"));
   QCoreApplication::setOrganizationDomain(u"strawberrymusicplayer.org"_s);
 
   // This makes us show up nicely in gnome-volume-control
-  g_set_application_name("Strawberry");
+  g_set_application_name("NASAQ");
   g_setenv("PULSE_PROP_application.icon_name", "strawberry", TRUE);
   g_setenv("PULSE_PROP_media.role", "music", TRUE);
 
@@ -199,7 +201,7 @@ int main(int argc, char *argv[]) {
   Utilities::IncreaseFDLimit();
 #endif
 
-  QGuiApplication::setApplicationDisplayName(u"Strawberry Music Player"_s);
+  QGuiApplication::setApplicationDisplayName(u"نسق NASAQ 0.2.1"_s);
   QGuiApplication::setDesktopFileName(u"org.strawberrymusicplayer.strawberry"_s);
   QGuiApplication::setQuitOnLastWindowClosed(false);
 

@@ -630,12 +630,12 @@
       <translation>Återställ till standard</translation>
     </message>
     <message>
-      <source>You might need to restart Strawberry for this setting to fully apply</source>
-      <translation>Du kan behöva starta om Strawberry för att inställningen ska tillämpas fullt ut</translation>
+      <source>You might need to restart NASAQ for this setting to fully apply</source>
+      <translation>Du kan behöva starta om NASAQ för att inställningen ska tillämpas fullt ut</translation>
     </message>
     <message>
-      <source>You need to restart Strawberry for this setting to take affect</source>
-      <translation>Du måste starta om Strawberry för att den här inställningen ska börja gälla</translation>
+      <source>You need to restart NASAQ for this setting to take affect</source>
+      <translation>Du måste starta om NASAQ för att den här inställningen ska börja gälla</translation>
     </message>
     <message>
       <source>System icons</source>
@@ -825,8 +825,8 @@
       <translation>Tona ut vid pausning / tona in vid återupptagning</translation>
     </message>
     <message>
-      <source>You need to restart Strawberry for this setting to take affect</source>
-      <translation>Du måste starta om Strawberry för att den här inställningen ska träda i kraft</translation>
+      <source>You need to restart NASAQ for this setting to take affect</source>
+      <translation>Du måste starta om NASAQ för att den här inställningen ska träda i kraft</translation>
     </message>
     <message>
       <source>Map the volume slider to a decibel scale so that perceived loudness changes evenly. Each 1% step equals 0.5 dB, 100% is 0 dB and 0% is silence.</source>
@@ -908,8 +908,8 @@
       <translation>Använd systemets standardspråk</translation>
     </message>
     <message>
-      <source>You will need to restart Strawberry if you change the language.</source>
-      <translation>Du måste starta om Strawberry om du ändrar språket.</translation>
+      <source>You will need to restart NASAQ if you change the language.</source>
+      <translation>Du måste starta om NASAQ om du ändrar språket.</translation>
     </message>
     <message>
       <source>Using the menu to add a song will...</source>
@@ -1226,8 +1226,8 @@
       <translation>Automatisk uppdatering</translation>
     </message>
     <message>
-      <source>Update the collection when Strawberry starts</source>
-      <translation>Uppdatera samlingen när Strawberry startar</translation>
+      <source>Update the collection when NASAQ starts</source>
+      <translation>Uppdatera samlingen när NASAQ startar</translation>
     </message>
     <message>
       <source>Monitor the collection for changes</source>
@@ -1258,9 +1258,9 @@
       <translation>Föredragna filnamn för albumomslag (kommaseparerade)</translation>
     </message>
     <message>
-      <source>When looking for album art Strawberry will first look for picture files that contain one of these words.
+      <source>When looking for album art NASAQ will first look for picture files that contain one of these words.
 If there are no matches then it will use the largest image in the directory.</source>
-      <translation>Vid sökning efter albumomslag letar Strawberry först efter bildfiler som innehåller ett av dessa ord.
+      <translation>Vid sökning efter albumomslag letar NASAQ först efter bildfiler som innehåller ett av dessa ord.
 Om det inte finns några träffar används den största bilden i mappen.</translation>
     </message>
     <message>
@@ -2051,24 +2051,24 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
       <translation>Anslut enhet</translation>
     </message>
     <message>
-      <source>This is the first time you have connected this device.  Strawberry will now scan the device to find music files - this may take some time.</source>
-      <translation>Det här är första gången du ansluter enheten. Strawberry söker nu efter musikfiler på den – det kan ta en stund.</translation>
+      <source>This is the first time you have connected this device.  NASAQ will now scan the device to find music files - this may take some time.</source>
+      <translation>Det här är första gången du ansluter enheten. NASAQ söker nu efter musikfiler på den – det kan ta en stund.</translation>
     </message>
     <message>
       <source>This device will not work properly</source>
       <translation>Den här enheten kommer inte att fungera ordentligt</translation>
     </message>
     <message>
-      <source>This is an MTP device, but you compiled Strawberry without libmtp support.</source>
-      <translation>Det här är en MTP-enhet, men Strawberry har kompilerats utan stöd för libmtp.</translation>
+      <source>This is an MTP device, but you compiled NASAQ without libmtp support.</source>
+      <translation>Det här är en MTP-enhet, men NASAQ har kompilerats utan stöd för libmtp.</translation>
     </message>
     <message>
       <source>If you continue, this device will work slowly and songs copied to it may not work.</source>
       <translation>Om du fortsätter fungerar enheten långsamt och låtar som kopieras till den kanske inte kan spelas.</translation>
     </message>
     <message>
-      <source>This is an iPod, but you compiled Strawberry without libgpod support.</source>
-      <translation>Det här är en iPod, men du har kompilerat Strawberry utan stöd för libgpod.</translation>
+      <source>This is an iPod, but you compiled NASAQ without libgpod support.</source>
+      <translation>Det här är en iPod, men du har kompilerat NASAQ utan stöd för libgpod.</translation>
     </message>
     <message>
       <source>This type of device is not supported: %1</source>
@@ -2114,8 +2114,8 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
       <translation>Den här enheten stöder följande filformat:</translation>
     </message>
     <message>
-      <source>Strawberry can automatically convert the music you copy to this device into a format that it can play.</source>
-      <translation>Strawberry kan automatiskt konvertera musiken du kopierar till den här enheten till ett format som den kan spela.</translation>
+      <source>NASAQ can automatically convert the music you copy to this device into a format that it can play.</source>
+      <translation>NASAQ kan automatiskt konvertera musiken du kopierar till den här enheten till ett format som den kan spela.</translation>
     </message>
     <message>
       <source>Do not convert any music</source>
@@ -2134,8 +2134,8 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
       <translation>Önskat format</translation>
     </message>
     <message>
-      <source>This device must be connected and opened before Strawberry can see what file formats it supports.</source>
-      <translation>Den här enheten måste vara ansluten och öppnad innan Strawberry kan se vilka filformat den stöder.</translation>
+      <source>This device must be connected and opened before NASAQ can see what file formats it supports.</source>
+      <translation>Den här enheten måste vara ansluten och öppnad innan NASAQ kan se vilka filformat den stöder.</translation>
     </message>
     <message>
       <source>Open device</source>
@@ -2189,8 +2189,8 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
       <translation>Ta bort från enhet…</translation>
     </message>
     <message>
-      <source>Forgetting a device will remove it from this list and Strawberry will have to rescan all the songs again next time you connect it.</source>
-      <translation>När du glömmer en enhet tas den bort från listan, och Strawberry måste skanna om alla låtar nästa gång du ansluter den.</translation>
+      <source>Forgetting a device will remove it from this list and NASAQ will have to rescan all the songs again next time you connect it.</source>
+      <translation>När du glömmer en enhet tas den bort från listan, och NASAQ måste skanna om alla låtar nästa gång du ansluter den.</translation>
     </message>
     <message>
       <source>Delete files</source>
@@ -2714,8 +2714,8 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
   <context>
     <name>ErrorDialog</name>
     <message>
-      <source>Strawberry Error</source>
-      <translation>Strawberry-fel</translation>
+      <source>NASAQ Error</source>
+      <translation>NASAQ-fel</translation>
     </message>
   </context>
   <context>
@@ -3033,8 +3033,8 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
       <translation>Använd X11-kortkommandon när de är tillgängliga</translation>
     </message>
     <message>
-      <source>You need to launch System Preferences and allow Strawberry to &quot;&lt;span style=&quot;font-style:italic&quot;&gt;control your computer&lt;/span&gt;&quot; to use global shortcuts in Strawberry.</source>
-      <translation>Du måste öppna Systeminställningar och tillåta Strawberry att &quot;&lt;span style=&quot;font-style:italic&quot;&gt;styra datorn&lt;/span&gt;&quot; för att kunna använda globala genvägar.</translation>
+      <source>You need to launch System Preferences and allow NASAQ to &quot;&lt;span style=&quot;font-style:italic&quot;&gt;control your computer&lt;/span&gt;&quot; to use global shortcuts in NASAQ.</source>
+      <translation>Du måste öppna Systeminställningar och tillåta NASAQ att &quot;&lt;span style=&quot;font-style:italic&quot;&gt;styra datorn&lt;/span&gt;&quot; för att kunna använda globala genvägar.</translation>
     </message>
     <message>
       <source>Action</source>
@@ -3364,8 +3364,8 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
   <context>
     <name>MainWindow</name>
     <message>
-      <source>Strawberry Music Player</source>
-      <translation>Strawberry Music Player</translation>
+      <source>NASAQ Music Player</source>
+      <translation>NASAQ Music Player</translation>
     </message>
     <message>
       <source>MenuPopupToolButton</source>
@@ -3480,8 +3480,8 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
       <translation>Ctrl+P</translation>
     </message>
     <message>
-      <source>&amp;About Strawberry</source>
-      <translation>&amp;Om Strawberry</translation>
+      <source>&amp;About NASAQ</source>
+      <translation>&amp;Om NASAQ</translation>
     </message>
     <message>
       <source>F1</source>
@@ -3768,12 +3768,12 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
       <translation>Sök efter uppdateringar…</translation>
     </message>
     <message>
-      <source>Strawberry running under Rosetta</source>
-      <translation>Strawberry körs under Rosetta</translation>
+      <source>NASAQ running under Rosetta</source>
+      <translation>NASAQ körs under Rosetta</translation>
     </message>
     <message>
-      <source>You are running Strawberry under Rosetta. Running Strawberry under Rosetta is unsupported and known to have issues. You should download Strawberry for the correct CPU architecture from %1</source>
-      <translation>Du kör Strawberry under Rosetta. Att köra Strawberry under Rosetta stöds inte och är känt för att ha problem. Du bör hämta Strawberry för korrekt CPU-arkitektur från %1</translation>
+      <source>You are running NASAQ under Rosetta. Running NASAQ under Rosetta is unsupported and known to have issues. You should download NASAQ for the correct CPU architecture from %1</source>
+      <translation>Du kör NASAQ under Rosetta. Att köra NASAQ under Rosetta stöds inte och är känt för att ha problem. Du bör hämta NASAQ för korrekt CPU-arkitektur från %1</translation>
     </message>
     <message>
       <source>Sponsoring Strawberry</source>
@@ -3864,8 +3864,8 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
       <translation>Ingen av de valda låtarna lämpar sig för kopiering till en enhet</translation>
     </message>
     <message>
-      <source>The version of Strawberry you&apos;ve just updated to requires a full collection rescan because of the new features listed below:</source>
-      <translation>Den version av Strawberry som du just har uppdaterat till kräver en fullständig omskanning av samlingen på grund av de nya funktionerna nedan:</translation>
+      <source>The version of NASAQ you&apos;ve just updated to requires a full collection rescan because of the new features listed below:</source>
+      <translation>Den version av NASAQ som du just har uppdaterat till kräver en fullständig omskanning av samlingen på grund av de nya funktionerna nedan:</translation>
     </message>
     <message>
       <source>Would you like to run a full rescan right now?</source>
@@ -4028,8 +4028,8 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
       <translation>Aviseringar</translation>
     </message>
     <message>
-      <source>Strawberry can show a message when the track changes.</source>
-      <translation>Strawberry kan visa ett meddelande vid byte av spår.</translation>
+      <source>NASAQ can show a message when the track changes.</source>
+      <translation>NASAQ kan visa ett meddelande vid byte av spår.</translation>
     </message>
     <message>
       <source>Notification type</source>
@@ -4141,7 +4141,7 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
       <translation>Basblå</translation>
     </message>
     <message>
-      <source>Strawberry Red</source>
+      <source>Classic Red</source>
       <translation>Jordgubbsröd</translation>
     </message>
     <message>
@@ -4261,8 +4261,8 @@ Om det inte finns några träffar används den största bilden i mappen.</transl
       <translation>&quot;Lyssnar på…&quot;</translation>
     </message>
     <message>
-      <source>Strawberry</source>
-      <translation>Strawberry</translation>
+      <source>NASAQ</source>
+      <translation>NASAQ</translation>
     </message>
     <message>
       <source>Artist name</source>
@@ -7566,12 +7566,12 @@ Are you sure you want to continue?</source>
       <translation>Avbruten.</translation>
     </message>
     <message>
-      <source>Received a %1 encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
-      <translation>En %1-krypterad ström togs emot från Tidal, vilket Strawberry inte stöder. Om Tidal levererar krypterade strömmar beror på det klient-ID som används. Försök att ändra klient-ID i Tidal-inställningarna.</translation>
+      <source>Received a %1 encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
+      <translation>En %1-krypterad ström togs emot från Tidal, vilket NASAQ inte stöder. Om Tidal levererar krypterade strömmar beror på det klient-ID som används. Försök att ändra klient-ID i Tidal-inställningarna.</translation>
     </message>
     <message>
-      <source>Received an encrypted stream from Tidal, which Strawberry does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
-      <translation>En krypterad ström togs emot från Tidal, vilket Strawberry inte stöder. Om Tidal levererar krypterade strömmar beror på det klient-ID som används. Försök att ändra klient-ID i Tidal-inställningarna.</translation>
+      <source>Received an encrypted stream from Tidal, which NASAQ does not support. Whether Tidal delivers encrypted streams depends on the client ID in use. Try changing the Client ID in the Tidal settings</source>
+      <translation>En krypterad ström togs emot från Tidal, vilket NASAQ inte stöder. Om Tidal levererar krypterade strömmar beror på det klient-ID som används. Försök att ändra klient-ID i Tidal-inställningarna.</translation>
     </message>
   </context>
   <context>
@@ -7581,8 +7581,8 @@ Are you sure you want to continue?</source>
       <translation>Tagghämtare</translation>
     </message>
     <message>
-      <source>Strawberry was unable to find results for this file</source>
-      <translation>Strawberry hittade inga resultat för den här filen</translation>
+      <source>NASAQ was unable to find results for this file</source>
+      <translation>NASAQ hittade inga resultat för den här filen</translation>
     </message>
     <message>
       <source>Select best possible match</source>

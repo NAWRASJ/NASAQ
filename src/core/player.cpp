@@ -1,3 +1,4 @@
+// Modified for CAM 0.2 on 2026-10-14: in-process commercial audio integration.
 /*
  * Strawberry Music Player
  * This file was part of Clementine.
@@ -598,6 +599,9 @@ void Player::PlayPause(const quint64 offset_nanosec, const Playlist::AutoScroll 
 }
 
 void Player::UnPause() {
+  if (property("camOperatorLocked").toBool() && !property("camAuthorized").toBool()) return;
+  // CAM foreground audio owns the output until it releases suspension.
+  if (property("camSuspended").toBool()) return;
 
   if (current_item_ && pause_time_.isValid()) {
     const Song &song = current_item_->EffectiveMetadata();
@@ -799,6 +803,9 @@ void Player::VolumeDown() {
 }
 
 void Player::PlayAt(const int index, const bool pause, const quint64 offset_nanosec, EngineBase::TrackChangeFlags change, const Playlist::AutoScroll autoscroll, const bool reshuffle, const bool force_inform) {
+  if (property("camOperatorLocked").toBool() && !property("camAuthorized").toBool() && !(change & EngineBase::TrackChangeType::Auto)) return;
+  // Reject manual, tray, shortcut and remote play requests during CAM interruptions.
+  if (property("camSuspended").toBool()) return;
 
   pause_time_ = pause ? QDateTime::currentDateTime() : QDateTime();
   play_offset_nanosec_ = offset_nanosec;

@@ -144,7 +144,8 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent), ui_{} {
   title_font.setPointSize(title_font.pointSize() + 4);
 
   ui_.label_title->setFont(title_font);
-  ui_.label_title->setText(windowTitle());
+  setWindowTitle(u"نسق NASAQ — About"_s);
+  ui_.label_title->setText(u"نسق NASAQ 0.2.1"_s);
   ui_.label_text->setText(MainHtml());
   ui_.text_contributors->document()->setDefaultStyleSheet(QStringLiteral("a {color: %1; }").arg(palette().text().color().name()));
   ui_.text_contributors->setText(ContributorsHtml());
@@ -156,6 +157,7 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent), ui_{} {
 QString AboutDialog::MainHtml() const {
 
   QString ret;
+  ret += u"<p><b>NASAQ — Commercial Audio Manager / إدارة الصوت التجاري</b><br/>Modified GPL-3.0-or-later build based on Strawberry. Original project credits and licences follow. NASAQ source accompanies this delivery.</p>"_s;
 
   ret += "<p>"_L1;
   ret += tr("Version %1").arg(QCoreApplication::applicationVersion());

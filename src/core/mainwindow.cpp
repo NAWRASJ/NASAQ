@@ -1,3 +1,4 @@
+// Modified for CAM 0.2 on 2026-10-14: in-process commercial audio integration.
 /*
  * Strawberry Music Player
  * This file was part of Clementine.
@@ -20,6 +21,7 @@
  */
 
 #include "config.h"
+#include "strawberry_cam.h"
 #include "version.h"
 
 #include <cstdlib>
@@ -971,10 +973,9 @@ MainWindow::MainWindow(Application *app,
   thumbbar_->SetActions(QList<QAction*>() << ui_->action_previous_track << ui_->action_play_pause << ui_->action_stop << ui_->action_next_track << nullptr << ui_->action_love);
 #endif
 
-#if defined(HAVE_SPARKLE) || defined(HAVE_QTSPARKLE)
-  QAction *action_check_updates = ui_->menu_tools->addAction(tr("Check for updates..."));
-  action_check_updates->setMenuRole(QAction::ApplicationSpecificRole);
-#endif
+  AttachCam(app_, this);
+
+// NASAQ updates are available from its commercial controls menu.
 
 #ifdef HAVE_GLOBALSHORTCUTS
   // Global shortcuts
@@ -1195,20 +1196,7 @@ MainWindow::MainWindow(Application *app,
     app_->scrobbler()->Start();
   }
 
-#ifdef HAVE_SPARKLE
-  SparkleUpdater *sparkle_updater = new SparkleUpdater(action_check_updates, this);
-  QObject::connect(action_check_updates, &QAction::triggered, sparkle_updater, &SparkleUpdater::CheckForUpdates);
-#endif
-
-#ifdef HAVE_QTSPARKLE
-  QUrl sparkle_url(QString::fromLatin1(QTSPARKLE_URL));
-  if (!sparkle_url.isEmpty()) {
-    qLog(Debug) << "Creating Qt Sparkle updater";
-    qtsparkle::Updater *updater = new qtsparkle::Updater(sparkle_url, this);
-    updater->SetVersion(QStringLiteral(STRAWBERRY_VERSION_PACKAGE));
-    QObject::connect(action_check_updates, &QAction::triggered, updater, &qtsparkle::Updater::CheckNow);
-  }
-#endif
+// The derivative must never offer upstream Strawberry binaries as NASAQ updates.
 
 #if defined(Q_OS_MACOS)
   if (Utilities::ProcessTranslated()) {
@@ -1221,32 +1209,12 @@ MainWindow::MainWindow(Application *app,
       rosetta_message->set_settings_group(QLatin1String(MainWindowSettings::kSettingsGroup));
       rosetta_message->set_do_not_show_message_again(QLatin1String(MainWindowSettings::kIgnoreRosetta));
       rosetta_message->setAttribute(Qt::WA_DeleteOnClose);
-      rosetta_message->ShowMessage(tr("Strawberry running under Rosetta"), tr("You are running Strawberry under Rosetta. Running Strawberry under Rosetta is unsupported and known to have issues. You should download Strawberry for the correct CPU architecture from %1").arg(QLatin1String("<a href=\"https://downloads.strawberrymusicplayer.org/\">downloads.strawberrymusicplayer.org</a>")), IconLoader::Load(u"dialog-warning"_s));
+      rosetta_message->ShowMessage(tr("NASAQ running under Rosetta"), tr("You are running NASAQ under Rosetta. Running NASAQ under Rosetta is unsupported and known to have issues. You should download NASAQ for the correct CPU architecture from %1").arg(QLatin1String("<a href=\"https://downloads.strawberrymusicplayer.org/\">downloads.strawberrymusicplayer.org</a>")), IconLoader::Load(u"dialog-warning"_s));
     }
   }
 #endif
 
-  {
-    bool asked_permission = true;
-    Settings s;
-#ifdef HAVE_QTSPARKLE
-    s.beginGroup("QtSparkle");
-    asked_permission = s.value(MainWindowSettings::kAskedPermission, false).toBool();
-    s.endGroup();
-#endif
-    if (asked_permission) {
-      s.beginGroup(MainWindowSettings::kSettingsGroup);
-      const bool do_not_show_sponsor_message = s.value(MainWindowSettings::kDoNotShowSponsorMessage, MainWindowSettings::kDefaultDoNotShowSponsorMessage).toBool();
-      s.endGroup();
-      if (!do_not_show_sponsor_message) {
-        MessageDialog *sponsor_message = new MessageDialog(this);
-        sponsor_message->set_settings_group(QLatin1String(MainWindowSettings::kSettingsGroup));
-        sponsor_message->set_do_not_show_message_again(QLatin1String(MainWindowSettings::kDoNotShowSponsorMessage));
-        sponsor_message->setAttribute(Qt::WA_DeleteOnClose);
-        sponsor_message->ShowMessage(tr("Sponsoring Strawberry"), tr("Strawberry is free and open source software. If you like Strawberry, please consider sponsoring the project. For more information about sponsorship see our website %1").arg(u"<a href= \"https://www.strawberrymusicplayer.org/\">www.strawberrymusicplayer.org</a>"_s), IconLoader::Load(u"dialog-information"_s));
-      }
-    }
-  }
+  // Upstream sponsorship links are retained in About / original project credits.
 
   qLog(Debug) << "Started" << QThread::currentThread();
   initialized_ = true;
@@ -1588,7 +1556,7 @@ void MainWindow::PlaylistsLoaded() {
 
 void MainWindow::MediaStopped() {
 
-  setWindowTitle(u"Strawberry Music Player"_s);
+  setWindowTitle(u"نسق NASAQ"_s);
 
   ui_->action_stop->setEnabled(false);
   ui_->action_stop_after_this_track->setEnabled(false);
@@ -1702,7 +1670,7 @@ void MainWindow::SongChanged(const Song &song) {
 
   song_playing_ = song;
   song_ = song;
-  setWindowTitle(song.PrettyTitleWithArtist());
+  setWindowTitle(song.PrettyTitleWithArtist() + u" — NASAQ"_s);
   systemtrayicon_->SetProgress(0);
 
 #ifdef HAVE_DBUS
@@ -3286,7 +3254,7 @@ void MainWindow::CheckFullRescanRevisions() {
 
   // If we have any...
   if (!reasons.isEmpty()) {
-    QString message = tr("The version of Strawberry you've just updated to requires a full collection rescan because of the new features listed below:") + u"<ul>"_s;
+    QString message = tr("The version of NASAQ you've just updated to requires a full collection rescan because of the new features listed below:") + u"<ul>"_s;
     for (const QString &reason : reasons) {
       message += "<li>"_L1 + reason + "</li>"_L1;
     }
