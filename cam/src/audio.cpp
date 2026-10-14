@@ -12,9 +12,10 @@ Audio::Audio(Store&s,QObject*p,MusicTransport*transport):QObject(p),store(s),mus
  connect(&speech,&QTextToSpeech::stateChanged,this,[this](auto st){if(st==QTextToSpeech::Ready && priority==40)release();if(st==QTextToSpeech::Error){log("tts_error",speech.errorString());if(priority==40)release();}});
 }
 void Audio::log(const QString&k,const QString&d){try{store.log(k,d);}catch(const std::exception&e){Q_EMIT status(QStringLiteral("Log storage failed: ")+QString::fromUtf8(e.what()));return;}Q_EMIT status(k+": "+d);}
-bool Audio::playMusic(const QStringList&files){bool accepted=music->replace(files);if(accepted&&priority>0)resume=true;return accepted;}
+bool Audio::playMusic(const QStringList&files){if(!licenseAllowed){Q_EMIT status("Activation required / يلزم التفعيل");return false;}bool accepted=music->replace(files);if(accepted&&priority>0)resume=true;return accepted;}
 void Audio::release(){if(transition||paging)return;priority=0;music->suspend(false);if(resume){resume=false;music->resume();}}
 bool Audio::dispatch(const Event&e){
+ if(!licenseAllowed)return false;
  if(e.kind=="prayer"){log("prayer_reminder",e.id);return true;}
  if(e.kind=="music")return playMusic(e.payload.split('\n',Qt::SkipEmptyParts));
  int requested=e.kind=="adhan"?60:e.kind=="tts"?40:50;
@@ -28,6 +29,7 @@ bool Audio::dispatch(const Event&e){
 }
 bool Audio::page(bool on){
  if(!on){if(!paging)return true;mic->stop();sink->stop();mic.reset();sink.reset();paging=false;log("paging","ended");release();return true;}
+ if(!licenseAllowed)return false;
  if(paging)return true;
  auto input=QMediaDevices::defaultAudioInput(),output=QMediaDevices::defaultAudioOutput();if(input.isNull()||output.isNull())return false;
  auto format=input.preferredFormat();if(!output.isFormatSupported(format))return false;

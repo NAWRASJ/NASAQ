@@ -388,6 +388,7 @@ void Player::HandleLoadResult(const UrlHandler::LoadResult &result) {
 
       if (is_current) {
         qLog(Debug) << "Playing song" << current_item->EffectiveMetadata().title() << Utilities::UrlForLog(result.stream_url_) << "position" << play_offset_nanosec_;
+        if (property("camLicenseDenied").toBool()) return;
         engine_->Play(result.media_url_, result.stream_url_, pause_, stream_change_type_, song.has_cue(), static_cast<quint64>(song.beginning_nanosec()), song.end_nanosec(), play_offset_nanosec_, song.ebur128_integrated_loudness_lufs());
         current_item_ = current_item;
         play_offset_nanosec_ = 0;
@@ -601,6 +602,7 @@ void Player::PlayPause(const quint64 offset_nanosec, const Playlist::AutoScroll 
 void Player::UnPause() {
   if (property("camOperatorLocked").toBool() && !property("camAuthorized").toBool()) return;
   // CAM foreground audio owns the output until it releases suspension.
+  if (property("camLicenseDenied").toBool()) return;
   if (property("camSuspended").toBool()) return;
 
   if (current_item_ && pause_time_.isValid()) {
@@ -646,8 +648,11 @@ void Player::RestartOrPrevious() {
 void Player::Stop(const bool stop_after) {
 
   engine_->Stop(stop_after);
-  playlist_manager_->active()->set_current_row(-1);
-  playlist_manager_->active()->reset_played_indexes();
+  // NASAQ can stop playback while startup is still loading the first playlist.
+  if (const auto playlist = playlist_manager_->active()) {
+    playlist->set_current_row(-1);
+    playlist->reset_played_indexes();
+  }
   current_item_.reset();
   pause_time_ = QDateTime();
   play_offset_nanosec_ = 0;
@@ -805,6 +810,7 @@ void Player::VolumeDown() {
 void Player::PlayAt(const int index, const bool pause, const quint64 offset_nanosec, EngineBase::TrackChangeFlags change, const Playlist::AutoScroll autoscroll, const bool reshuffle, const bool force_inform) {
   if (property("camOperatorLocked").toBool() && !property("camAuthorized").toBool() && !(change & EngineBase::TrackChangeType::Auto)) return;
   // Reject manual, tray, shortcut and remote play requests during CAM interruptions.
+  if (property("camLicenseDenied").toBool()) return;
   if (property("camSuspended").toBool()) return;
 
   pause_time_ = pause ? QDateTime::currentDateTime() : QDateTime();

@@ -23,6 +23,7 @@ class StrawberryMusic final:public MusicTransport {
  public:
  explicit StrawberryMusic(Application*application,QObject*parent=nullptr):MusicTransport(parent),app(application){
   connect(&*app->player(),&Player::Playing,this,[this]{
+   if(app->player()->property("camLicenseDenied").toBool()){app->player()->Stop();return;}
    if(suspended){app->player()->Pause();return;}
    const auto item=app->player()->GetCurrentItem();
    Q_EMIT event(QStringLiteral("play_started"),item?item->OriginalUrl().toString():QStringLiteral("strawberry"));
@@ -67,16 +68,35 @@ class CamHost final:public QObject {
   store=std::make_unique<Store>(dir+QStringLiteral("/cam.sqlite"));
   music=std::make_unique<StrawberryMusic>(app);
   window=std::make_unique<Window>(*store,music.get());
-  window->setWindowTitle(QStringLiteral("نسق NASAQ 0.2.1 — إدارة الصوت التجاري"));
+  window->setWindowTitle(QStringLiteral("نسق NASAQ 0.3.0 — إدارة الصوت التجاري"));
   auto action=main->menuBar()->addAction(QStringLiteral("نسق NASAQ / إدارة الصوت"));
   connect(action,&QAction::triggered,this,[this]{window->show();window->raise();window->activateWindow();});
   auto lockControls=[app,main](bool locked){main->setEnabled(!locked);app->player()->setProperty("camOperatorLocked",locked);};
   connect(window.get(),&Window::operatorLockChanged,this,lockControls);
   lockControls(window->operatorLocked());
+  auto licenseControls=[app](bool allowed){app->player()->setProperty("camLicenseDenied",!allowed);if(!allowed)app->player()->Stop();};
+  connect(window.get(),&Window::licenseAllowedChanged,this,licenseControls);
+  // Gate immediately; do not call Stop before MainWindow initializes the engine.
+  app->player()->setProperty("camLicenseDenied",!window->licenseAllowed());
+  if(!window->licenseAllowed())window->show();
   if(window->operatorLocked())window->show();
   // Scheduling remains active when its window is hidden; the host lasts until exit.
   store->log(QStringLiteral("integration"),QStringLiteral("Strawberry in-process music transport attached"));
   const QString smoke=qEnvironmentVariable("CAM_SMOKE_OUTPUT");
+  if(!smoke.isEmpty()&&!window->licenseAllowed()){
+   window->show();
+   QTimer::singleShot(1500,this,[this]{music->replace({qEnvironmentVariable("CAM_TEST_WAV")});});
+   QTimer::singleShot(3500,this,[this,app]{testResults.insert(QStringLiteral("playlistPlaybackBlocked"),!music->playing());app->player()->PlayPause();});
+   QTimer::singleShot(4500,this,[this,main,smoke]{
+    testResults.insert(QStringLiteral("manualPlaybackBlocked"),!music->playing());
+    testResults.insert(QStringLiteral("unactivated"),!window->licenseAllowed());music->stop();
+    testResults.insert(QStringLiteral("screenshotSaved"),window->grab().save(smoke+QStringLiteral(".png")));
+    bool passed=true;for(const auto&value:testResults)passed=passed&&value.toBool();testResults.insert(QStringLiteral("passed"),passed);
+    QFile output(smoke+QStringLiteral(".json"));if(output.open(QIODevice::WriteOnly))output.write(QJsonDocument(testResults).toJson());
+    QMetaObject::invokeMethod(main,"Exit",Qt::QueuedConnection);
+   });
+   return;
+  }
   if(!smoke.isEmpty()){
    window->show();
    QTimer::singleShot(3000,this,[this]{testResults.insert(QStringLiteral("playlistAccepted"),music->replace({qEnvironmentVariable("CAM_TEST_WAV")}));});
@@ -100,5 +120,6 @@ class CamHost final:public QObject {
  QJsonObject testResults;
 };
 void AttachCam(Application*app,QMainWindow*main){
+ app->player()->setProperty("camLicenseDenied",true);
  try{new CamHost(app,main);}catch(const std::exception&e){main->setEnabled(true);app->player()->setProperty("camOperatorLocked",false);app->player()->setProperty("camSuspended",false);QMessageBox::critical(main,QStringLiteral("NASAQ startup failed"),QString::fromUtf8(e.what()));}
 }

@@ -8,7 +8,7 @@ NASAQ is a modified, GPL-3.0-or-later fork of [Strawberry Music Player](https://
 
 ## Current status
 
-Engineering preview **0.2.1**, unsigned. Windows source builds and local tests have passed; this is not a production-ready or certified product. No SignPath acceptance or trusted signing has been obtained. See the [Code signing policy](docs/CODE-SIGNING-POLICY.md) and [readiness assessment](docs/SIGNPATH-READINESS.md).
+Engineering preview **0.3.0**, unsigned. Windows source builds and local tests have passed; this is not a production-ready or certified product. No SignPath acceptance or trusted signing has been obtained. See the [Code signing policy](docs/CODE-SIGNING-POLICY.md) and [readiness assessment](docs/SIGNPATH-READINESS.md).
 
 ## Features and limits
 
@@ -17,9 +17,11 @@ Engineering preview **0.2.1**, unsigned. Windows source builds and local tests h
 * Installed SAPI voices, microphone paging and coordinated audio priorities.
 * Local operator PIN, schedule recovery, music-licence document records and renewal reminders.
 * Local playback logs and CSV/PDF export; these do not grant music rights or certify compliance.
-* Keygen validation adapter and user-triggered GitHub release checks.
+* 16-character Keygen activation, device limits, signed offline allowance (up to 7 days), and user-triggered GitHub release checks.
 
-Recurring schedules/editing, automatic prayer calculation, SILMA/cloud voices, complete activation/offline policy, long-running recovery and hardware/install acceptance remain unfinished. Teletext is deferred.
+Recurring schedules/editing, automatic prayer calculation, SILMA/cloud voices, live-provider activation acceptance, long-running recovery and hardware/install acceptance remain unfinished. Teletext is deferred.
+
+The publisher account is not yet configured. This build opens its interface but denies playback until rebuilt with the public publisher identity and activated. No real customer keys have been issued.
 
 ## Build and use
 
@@ -29,7 +31,7 @@ Open **نسق NASAQ / إدارة الصوت** in the player. Legacy internal sto
 
 ## Verification
 
-The local MSVC/Qt build passed 7 core and 8 audio functional tests. The integrated silent-WAV smoke passed playlist loading, playback, suspension, blocked manual resume, resume and stop. It also passed with development tool directories removed from PATH. These results are local evidence, not GitHub CI results or clean-machine certification. Installer compilation succeeded; install/upgrade/uninstall and physical PA acceptance remain pending.
+The 0.3.0 local MSVC/Qt build passed 7 core and 12 activation functional tests plus 9 publisher-tool tests. Nine audio tests passed on the earlier candidate; Windows Application Control blocked the final rebuilt audio-test executable. The final unactivated integrated smoke passed startup and blocked playlist/manual playback with Smart App Control enabled. Activation tests use runtime-generated signing keys and simulated provider responses. Earlier 0.2.1 integrated playback passed; the new unconfigured build blocks playback until publisher configuration and activation. See [activation setup and limits](docs/ACTIVATION.md). These results are local evidence, not GitHub CI results or clean-machine certification. Installer compilation succeeded; install/upgrade/uninstall and physical PA acceptance remain pending.
 
 ## Project information
 

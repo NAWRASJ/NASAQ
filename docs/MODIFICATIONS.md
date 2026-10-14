@@ -17,3 +17,5 @@ is user-triggered and uses the configured project repository.
 The GitHub fork preserves upstream history. The initial independently-created
 repository remains at https://github.com/NAWRASJ/NASAQ-initial-20261014 .
 This publication does not claim Strawberry endorsement or SignPath approval.
+
+0.3.0 adds publisher-side 16-character key issuance, per-key term/device limits, client activation, signed offline certificates, DPAPI storage, and playback gating. Configuration/live-provider acceptance remain outstanding; see ACTIVATION.md.

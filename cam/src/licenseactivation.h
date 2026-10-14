@@ -2,11 +2,22 @@
 #pragma once
 #include <QObject>
 #include <QNetworkAccessManager>
-// Online validation adapter. No private vendor token; licence keys are transient.
+#include "licenselease.h"
+#include "store.h"
 class Activation:public QObject {
  Q_OBJECT
- public: explicit Activation(QObject*p=nullptr):QObject(p),network(this){}
- void validate(const QString &account,const QString &product,const QString &key);
- Q_SIGNALS:void result(bool valid,const QString &message);
- private:QNetworkAccessManager network;
+ public:
+ explicit Activation(Store &store,QObject *parent=nullptr,LicenseConfig config=LicenseConfig::production(),QNetworkAccessManager *transport=nullptr);
+ bool allowed()const{return lease.valid;}
+ QString description()const{return lease.message;}
+ void activate(const QString &key);
+ void tick();
+ Q_SIGNALS: void changed(bool allowed,const QString &message);
+ private:
+ using Reply=std::function<void(int,const QJsonObject&)>;
+ void request(const QString &path,const QJsonObject &body,const Reply &callback);
+ void validate(bool mayActivate);void checkout();void finish(const QString &message,bool revoke=false);void persist();void publish();
+ Store &store;LicenseConfig config;QNetworkAccessManager *network;
+ LicenseLease lease;QString fingerprint,key,licenseId;QByteArray certificate;
+ QDateTime lastSeen,lastSaved,nextRefresh;bool busy=false;
 };

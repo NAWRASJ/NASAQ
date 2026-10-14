@@ -1,17 +1,17 @@
-﻿; Evaluation installer. Sign the payload first, compile, then sign this installer.
+; Evaluation installer. Sign the payload first, compile, then sign this installer.
 #ifndef StageDir
   #error StageDir must point to a staged NASAQ payload
 #endif
 [Setup]
 AppId={{1D62081C-2250-4E92-9076-D25B6329D8EF}
 AppName=NASAQ — نسق
-AppVersion=0.2.1
+AppVersion=0.3.0
 DefaultDirName={localappdata}\Programs\NASAQ
 DefaultGroupName=NASAQ
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-OutputBaseFilename=NASAQ-0.2.1-setup
+OutputBaseFilename=NASAQ-0.3.0-setup
 OutputDir=..\installer
 Compression=lzma2
 SolidCompression=yes

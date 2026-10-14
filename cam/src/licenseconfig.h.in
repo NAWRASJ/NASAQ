@@ -1,0 +1,4 @@
+// Public release identity only. Never put an API token or private key here.
+#define NASAQ_KEYGEN_ACCOUNT "@NASAQ_KEYGEN_ACCOUNT@"
+#define NASAQ_KEYGEN_PRODUCT "@NASAQ_KEYGEN_PRODUCT@"
+#define NASAQ_KEYGEN_PUBLIC_KEY "@NASAQ_KEYGEN_PUBLIC_KEY@"

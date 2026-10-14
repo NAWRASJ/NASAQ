@@ -16,6 +16,7 @@ class Audio:public QObject {
  bool dispatch(const Event&e);
  bool page(bool on);
  void stop();
+ void setLicenseAllowed(bool allowed,bool stopPlayback=true){licenseAllowed=allowed;if(!allowed&&stopPlayback)stop();}
  int activePriority()const{return priority;}
  void setVoice(const QVoice&v){speech.setLocale(v.locale());speech.setVoice(v);}
  QList<QVoice> voices(){QList<QVoice> result;if(priority!=0)return result;auto previous=speech.locale();for(const auto&locale:speech.availableLocales()){speech.setLocale(locale);result.append(speech.availableVoices());}speech.setLocale(previous);return result;}
@@ -23,6 +24,7 @@ class Audio:public QObject {
  private:
  void release(); void log(const QString&,const QString&);
  Store &store; MusicTransport *music; QMediaPlayer overlay; QAudioOutput overlayOut; QTextToSpeech speech;
+ bool licenseAllowed=true;
  int priority=0; bool resume=false,paging=false,transition=false;
  std::unique_ptr<QAudioSource> mic; std::unique_ptr<QAudioSink> sink;
 };

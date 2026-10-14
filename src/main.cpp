@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
 
   QCoreApplication::setApplicationName(qEnvironmentVariableIsEmpty("CAM_SMOKE_OUTPUT") ? u"CAM-Strawberry"_s : u"CAM-Strawberry-Test"_s);
   QCoreApplication::setOrganizationName(u"CAMProject"_s);
-  QCoreApplication::setApplicationVersion(QStringLiteral("0.2.1"));
+  QCoreApplication::setApplicationVersion(QStringLiteral("0.3.0"));
   QCoreApplication::setOrganizationDomain(u"strawberrymusicplayer.org"_s);
 
   // This makes us show up nicely in gnome-volume-control
@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
   Utilities::IncreaseFDLimit();
 #endif
 
-  QGuiApplication::setApplicationDisplayName(u"نسق NASAQ 0.2.1"_s);
+  QGuiApplication::setApplicationDisplayName(u"نسق NASAQ 0.3.0"_s);
   QGuiApplication::setDesktopFileName(u"org.strawberrymusicplayer.strawberry"_s);
   QGuiApplication::setQuitOnLastWindowClosed(false);
 

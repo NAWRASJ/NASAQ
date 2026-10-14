@@ -1,8 +1,8 @@
 // NASAQ icon revision: vertical-n
 strawberry ICON "${CMAKE_SOURCE_DIR}/dist/windows/strawberry.ico"
 1 VERSIONINFO
-FILEVERSION     0,2,1,0
-PRODUCTVERSION  0,2,1,0
+FILEVERSION     0,3,0,0
+PRODUCTVERSION  0,3,0,0
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
@@ -10,11 +10,11 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "NASAQ Project"
       VALUE "FileDescription", "NASAQ Commercial Audio Manager"
-      VALUE "FileVersion", "0.2.1"
+      VALUE "FileVersion", "0.3.0"
       VALUE "InternalName", "strawberry"
       VALUE "OriginalFilename", "NASAQ.exe"
       VALUE "ProductName", "NASAQ"
-      VALUE "ProductVersion", "0.2.1"
+      VALUE "ProductVersion", "0.3.0"
     END
   END
 
