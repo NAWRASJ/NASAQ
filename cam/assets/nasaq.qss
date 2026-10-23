@@ -1,0 +1,62 @@
+/* NASAQ Midnight design system. Original artwork and styling, GPL-3.0-or-later. */
+QWidget { color: #e1eae9; }
+QMainWindow, QDialog, QMenuBar { background: #0c1114; }
+QLabel { background: transparent; }
+QLabel#brandHeading { font-size: 28px; font-weight: 600; }
+QLabel#subtitle { color: #9cafb3; font-size: 12px; }
+QLabel#licenseStatus { background: #192b2b; border: 1px solid #345b55; border-radius: 8px; padding: 12px; }
+QLabel#status { color: #b5c7c9; padding: 8px; }
+QPushButton, QToolButton { background: #1b272b; border: 1px solid #304146; border-radius: 7px; padding: 8px 12px; min-height: 22px; }
+QToolButton { padding: 7px; }
+QPushButton:hover, QToolButton:hover { background: #26383c; border-color: #5c8586; }
+QPushButton:pressed, QToolButton:pressed { background: #123f39; }
+QPushButton:focus, QToolButton:focus, QLineEdit:focus, QComboBox:focus, QDateTimeEdit:focus { border: 2px solid #29d3bb; }
+QPushButton:disabled, QToolButton:disabled { color: #7c9094; background: #141c1f; border-color: #263236; }
+QPushButton#primary { background: #29d3bb; color: #071512; border-color: #29d3bb; font-weight: 600; }
+QPushButton#primary:hover { background: #66e5d2; }
+QPushButton#danger { background: #3b2028; color: #ffb9c2; border-color: #8a4353; font-weight: 600; }
+QLineEdit, QComboBox, QSpinBox, QDateTimeEdit, QPlainTextEdit, QTextEdit { background: #101719; border: 1px solid #35494e; border-radius: 6px; padding: 8px; selection-background-color: #29d3bb; selection-color: #071512; }
+QAbstractItemView { background: #101719; alternate-background-color: #151e21; border: 1px solid #26363b; border-radius: 7px; selection-background-color: #214e48; selection-color: #f0fffc; outline: none; }
+QAbstractItemView::item { padding: 5px; min-height: 24px; }
+QAbstractItemView::item:hover { background: #1c3032; }
+QHeaderView::section { background: #182226; color: #9fb6ba; border: none; border-bottom: 1px solid #304146; padding: 10px; font-weight: 600; }
+QTableCornerButton::section { background: #182226; border: none; }
+QGroupBox { background: #101719; border: 1px solid #26363b; border-radius: 10px; margin-top: 16px; padding: 14px; }
+QGroupBox::title { subcontrol-origin: margin; left: 16px; padding: 0 6px; color: #a6bfc1; }
+QMenu { background: #142024; border: 1px solid #35494e; padding: 6px; }
+QMenu::item { padding: 8px 28px; border-radius: 4px; }
+QMenu::item:selected, QMenuBar::item:selected { background: #214e48; }
+QMenuBar::item { padding: 9px 13px; background: transparent; }
+QMenu::separator { height: 1px; background: #304146; margin: 5px; }
+QTabWidget::pane { border: none; }
+QTabBar::tab { background: #142024; color: #aec0c3; padding: 10px 16px; border-bottom: 2px solid transparent; }
+QTabBar::tab:selected { background: #1b302f; color: #eafffa; border-bottom-color: #29d3bb; }
+QScrollBar:vertical { width: 10px; background: #101719; margin: 0; }
+QScrollBar:horizontal { height: 10px; background: #101719; margin: 0; }
+QScrollBar::handle { background: #40555b; border-radius: 5px; min-height: 28px; min-width: 28px; }
+QScrollBar::add-line, QScrollBar::sub-line { width: 0; height: 0; }
+QScrollBar::add-page, QScrollBar::sub-page { background: none; }
+QSlider::groove:horizontal { height: 4px; background: #304146; border-radius: 2px; }
+QSlider::sub-page:horizontal { background: #29d3bb; border-radius: 2px; }
+QSlider::handle:horizontal { width: 12px; margin: -5px 0; background: #d9fff6; border-radius: 6px; }
+QSplitter::handle { background: #223137; }
+QStatusBar { background: #0c1114; color: #9cafb3; }
+QToolTip { background: #20383b; color: #edfffa; border: 1px solid #56797c; padding: 6px; }
+
+/* A tactile, momentary push-to-talk control. No latched/toggle appearance. */
+QPushButton#holdToTalk {
+ background: qlineargradient(x1:0,y1:0,x2:0,y2:1,stop:0 #39ddc5,stop:1 #159c89);
+ color:#062b25; border:2px solid #6debd6; border-bottom:8px solid #086354;
+ border-radius:18px; padding:20px 16px; font-size:22px; font-weight:700;
+}
+QPushButton#holdToTalk:hover { background:#50e3cc; }
+QPushButton#holdToTalk:focus { border-color:#edfffa; }
+QPushButton#holdToTalk:pressed {
+ background:#126b5e; color:#f0fffb; border-top:7px solid #074b40;
+ border-bottom:2px solid #3ed4b9; padding-top:25px; padding-bottom:15px;
+}
+QPushButton#holdToTalk[pagingState="waiting"] { background:#624c19; color:#fff0bf; }
+QPushButton#holdToTalk[pagingState="live"] { background:#126b5e; color:#f0fffb; }
+QPushButton#holdToTalk:disabled {
+ background:#243638; color:#9bafb0; border-color:#43595b; border-bottom:8px solid #142123;
+}

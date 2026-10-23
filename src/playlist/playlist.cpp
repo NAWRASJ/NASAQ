@@ -74,6 +74,7 @@
 #include "queue/queue.h"
 #include "playlist.h"
 #include "playlistitem.h"
+#include "nasaqlanguage.h"
 #include "playlistitemsavedata.h"
 #include "playlistview.h"
 #include "playlistsequence.h"
@@ -369,6 +370,7 @@ QVariant Playlist::data(const QModelIndex &idx, const int role) const {
         case Column::ArtistSort:         return song.artistsort();
         case Column::Album:              return song.album();
         case Column::AlbumSort:          return song.albumsort();
+        case Column::BusinessEnd:        return business_ends_.value(idx.row());
         case Column::Length:             return song.length_nanosec();
         case Column::Track:              return song.track();
         case Column::Disc:               return song.disc();
@@ -1703,6 +1705,7 @@ bool Playlist::CompareItems(const Column column, const Qt::SortOrder sort_order,
     case Column::ArtistSort:                return CompareStr(ma.artistsort(), mb.artistsort());
     case Column::Album:                     return CompareStr(ma.effective_albumsort(), mb.effective_albumsort());
     case Column::AlbumSort:                 return CompareStr(ma.albumsort(), mb.albumsort());
+    case Column::BusinessEnd:               return false;
     case Column::Length:                    return CompareVal(ma.length_nanosec(), mb.length_nanosec());
     case Column::Track:                     return CompareVal(ma.track(), mb.track());
     case Column::Disc:                      return CompareVal(ma.disc(), mb.disc());
@@ -1765,6 +1768,7 @@ QString Playlist::column_name(const Column column) {
     case Column::AlbumSort:                 return tr("Album Sort");
     case Column::Track:                     return tr("Track");
     case Column::Disc:                      return tr("Disc");
+    case Column::BusinessEnd:               return NasaqLanguage()==QStringLiteral("ar")?QStringLiteral("الانتهاء المتوقع"):tr("Estimated end");
     case Column::Length:                    return tr("Length");
     case Column::Year:                      return tr("Year");
     case Column::OriginalYear:              return tr("Original Year");
@@ -1830,6 +1834,7 @@ QString Playlist::abbreviated_column_name(const Column column) {
 }
 
 void Playlist::sort(const int sort_column_number, const Qt::SortOrder sort_order) {
+  if(sort_column_number==static_cast<int>(Column::BusinessEnd))return;
 
   // Remember the state before this operation, so the undo command can restore it (and the header's sort indicator along with it) on undo/redo.
   const bool old_is_sorted = is_sorted_;

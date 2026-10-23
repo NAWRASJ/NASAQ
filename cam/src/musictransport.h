@@ -13,6 +13,7 @@ class MusicTransport:public QObject {
  virtual void suspend(bool active)=0;
  virtual void resume()=0;
  virtual void stop()=0;
+ virtual void setGain(double gain){Q_UNUSED(gain)}
  Q_SIGNALS:
  void event(const QString &kind,const QString &detail);
 };
@@ -25,6 +26,7 @@ class QtMusicTransport:public MusicTransport {
  void suspend(bool active)override;
  void resume()override;
  void stop()override;
+ void setGain(double gain)override{output.setVolume(float(.5*qBound(0.0,gain,1.0)));}
  private:
  void next();QMediaPlayer player;QAudioOutput output;QStringList files;int index=-1;bool suspended=false;
 };

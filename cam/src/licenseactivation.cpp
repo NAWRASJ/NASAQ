@@ -20,9 +20,9 @@ void Activation::tick(){
  if(before!=lease.valid)publish();if(!busy&&!key.isEmpty()&&now>=nextRefresh)activate(key);
 }
 void Activation::activate(const QString&input){
- if(busy)return;
- if(!config.configured()||fingerprint.isEmpty()){lease.valid=false;lease.message="خدمة التفعيل غير مهيأة لدى الناشر / Publisher setup required";publish();return;}
- auto normalized=normalizeLicenseKey(input);if(normalized.isEmpty()){Q_EMIT changed(lease.valid,"أدخل مفتاحًا من 16 حرفًا ورقمًا / Enter a 16-character key");return;}
+ if(busy){Q_EMIT completed(false);return;}
+ if(!config.configured()||fingerprint.isEmpty()){lease.valid=false;lease.message="خدمة التفعيل غير مهيأة لدى الناشر / Publisher setup required";publish();Q_EMIT completed(false);return;}
+ auto normalized=normalizeLicenseKey(input);if(normalized.isEmpty()){lease.message="أدخل مفتاحًا من 16 حرفًا ورقمًا / Enter a 16-character key";publish();Q_EMIT completed(false);return;}
  key=normalized;busy=true;validate(true);
 }
 void Activation::request(const QString&path,const QJsonObject&body,const Reply&callback){
@@ -32,13 +32,13 @@ void Activation::request(const QString&path,const QJsonObject&body,const Reply&c
  auto reply=network->post(req,QJsonDocument(body).toJson(QJsonDocument::Compact));
  connect(reply,&QNetworkReply::finished,this,[this,reply,callback]{
   const int status=reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();const auto bytes=reply->readAll();const auto json=bytes.size()<=1024*1024?QJsonDocument::fromJson(bytes).object():QJsonObject();reply->deleteLater();
-  try{callback(status,json);}catch(const std::exception&){busy=false;certificate.clear();key.clear();lease.valid=false;lease.message="Activation storage failed; reconnect after fixing storage";publish();}
+  try{callback(status,json);}catch(const std::exception&){busy=false;certificate.clear();key.clear();lease.valid=false;lease.message="Activation storage failed; reconnect after fixing storage";publish();Q_EMIT completed(false);}
  });
 }
 void Activation::finish(const QString&message,bool revoke){
  busy=false;nextRefresh=QDateTime::currentDateTimeUtc().addSecs(3600);
  if(revoke){certificate.clear();key.clear();persist();}
- lease=verifyLicenseLease(certificate,config,fingerprint,QDateTime::currentDateTimeUtc(),lastSeen);lease.message=message+(lease.valid?" · "+lease.message:QString());publish();
+ lease=verifyLicenseLease(certificate,config,fingerprint,QDateTime::currentDateTimeUtc(),lastSeen);lease.message=message+(lease.valid?" · "+lease.message:QString());publish();Q_EMIT completed(false);
 }
 void Activation::validate(bool mayActivate){
  request("/licenses/actions/validate-key",{{"meta",QJsonObject{{"key",key},{"scope",QJsonObject{{"product",config.product},{"fingerprint",fingerprint}}}}}},[this,mayActivate](int status,const QJsonObject&root){
@@ -62,6 +62,6 @@ void Activation::checkout(){
   if(status!=200){finish("Offline certificate rejected",true);return;}
   auto candidate=root["data"].toObject()["attributes"].toObject()["certificate"].toString().toUtf8();auto checked=verifyLicenseLease(candidate,config,fingerprint,QDateTime::currentDateTimeUtc(),lastSeen);
   if(!checked.valid||checked.licenseId!=licenseId||checked.key!=key){finish("Invalid signed activation certificate",true);return;}
-  certificate=candidate;lease=checked;lastSeen=QDateTime::currentDateTimeUtc();persist();busy=false;nextRefresh=lastSeen.addSecs(3600);publish();
+  certificate=candidate;lease=checked;lastSeen=QDateTime::currentDateTimeUtc();persist();busy=false;nextRefresh=lastSeen.addSecs(3600);publish();Q_EMIT completed(true);
  });
 }

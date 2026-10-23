@@ -2,42 +2,61 @@
 
 ![NASAQ](branding/nasaq-128.png)
 
-**إدارة الصوت التجاري — Commercial Audio Manager**
+**إدارة الصوت والإعلانات المجدولة للأعمال — Commercial Audio Manager for Windows**
 
-NASAQ is a modified, GPL-3.0-or-later fork of [Strawberry Music Player](https://github.com/strawberrymusicplayer/strawberry), not an official Strawberry release. It combines Strawberry's music library/player with commercial scheduling and audio controls. Original copyright notices, contributors and GPL text are retained. See [upstream README](README-UPSTREAM.md), [COPYING](COPYING), and [modifications](docs/MODIFICATIONS.md).
+## Download / التحميل
 
-## Current status
+**[Download NASAQ from Microsoft Store](https://apps.microsoft.com/detail/9PH1T4418KTF)**
 
-Engineering preview **0.3.0**, unsigned. Windows source builds and local tests have passed; this is not a production-ready or certified product. No SignPath acceptance or trusted signing has been obtained. See the [Code signing policy](docs/CODE-SIGNING-POLICY.md) and [readiness assessment](docs/SIGNPATH-READINESS.md).
+**[تحميل نسق من متجر مايكروسوفت](https://apps.microsoft.com/detail/9PH1T4418KTF?hl=ar&gl=AE)**
 
-## Features and limits
+NASAQ is available on Microsoft Store, published by **Nawras Jarbouh**. The Store download is free; use requires a separately purchased license activated with a license key. Downloading the application does not include a usage license. Optional Google Cloud speech charges are separate.
 
-* Music playlists use Strawberry's in-process Player/PlaylistManager and GStreamer.
-* One-shot schedules, imported prayer timetables, optional adhan and announcements.
-* Installed SAPI voices, microphone paging and coordinated audio priorities.
-* Local operator PIN, schedule recovery, music-licence document records and renewal reminders.
-* Local playback logs and CSV/PDF export; these do not grant music rights or certify compliance.
-* 16-character Keygen activation, device limits, signed offline allowance (up to 7 days), and user-triggered GitHub release checks.
+التطبيق متاح على Microsoft Store باسم الناشر **Nawras Jarbouh**. التنزيل مجاني، لكن الاستخدام يتطلب ترخيصًا منفصلًا ومفتاح تفعيل. خدمة Google Cloud الصوتية اختيارية ولها تكاليف مستقلة.
 
-Recurring schedules/editing, automatic prayer calculation, SILMA/cloud voices, live-provider activation acceptance, long-running recovery and hardware/install acceptance remain unfinished. Teletext is deferred.
+## Source version
 
-The publisher account is not yet configured. This build opens its interface but denies playback until rebuilt with the public publisher identity and activated. No real customer keys have been issued.
+This repository contains the **NASAQ 0.3.10** source baseline for the **0.3.10.0 x64 MSIX** Store submission. The package identity is `NawrasJarbouh.NASAQ`; the Store product ID is `9PH1T4418KTF`.
 
-## Build and use
+See [Store source provenance](docs/STORE-RELEASE.md) for the archived package hashes, source reconstruction, and verification limits. The later local license-deactivation button is intentionally excluded from this baseline. GitHub source updates do not automatically update Microsoft Store; Store updates require a separate package submission.
 
-See [Windows build instructions](docs/BUILD.md). Source is in the upstream layout, with NASAQ modules in `cam/`. Brand assets are in `branding/`. The upstream build target is `strawberry.exe`; the branded distribution uses `NASAQ.exe`.
+## Features
 
-Open **نسق NASAQ / إدارة الصوت** in the player. Legacy internal storage identifiers `CAMProject`, `CAM-Strawberry`, `cam.sqlite`, and the `CAM_SMOKE_OUTPUT`/`CAM_TEST_WAV` test variables remain for compatibility. Do not rename or delete user databases when changing branding.
+- Audio playback, music libraries and playlists, using Strawberry's player and GStreamer.
+- Scheduled announcements, microphone paging and coordinated audio priorities.
+- Arabic and English interface; installed Windows text-to-speech voices.
+- Optional Google Cloud text-to-speech with your own service configuration and credentials.
+- Prayer-time playback pauses for the selected city, and optional adhan.
+- Operator PIN, schedule recovery, local logs and CSV/PDF reports.
+- 16-character Keygen activation, device limits and signed offline allowance of up to seven days.
+- MSIX packaging and package-aware startup/update behavior. External GitHub update checks are disabled when running as a Store package.
 
-## Verification
+An application license does not grant music broadcasting or public-performance rights. Users must obtain permissions for the audio they play. Reports and records do not constitute regulatory certification.
 
-The 0.3.0 local MSVC/Qt build passed 7 core and 12 activation functional tests plus 9 publisher-tool tests. Nine audio tests also passed on the final binary. Windows Application Control temporarily blocked that test executable; retrying the identical file later succeeded without changing protection settings. The final unactivated integrated smoke passed startup and blocked playlist/manual playback with Smart App Control enabled. Activation tests use runtime-generated signing keys and simulated provider responses. Earlier 0.2.1 integrated playback passed; the new unconfigured build blocks playback until publisher configuration and activation. See [activation setup and limits](docs/ACTIVATION.md). These results are local evidence, not GitHub CI results or clean-machine certification. Installer compilation succeeded; install/upgrade/uninstall and physical PA acceptance remain pending.
+## Build
+
+This is a modified **GPL-3.0-or-later fork of [Strawberry Music Player](https://github.com/strawberrymusicplayer/strawberry)**, not an official Strawberry release. Original copyright notices, contributors and license text are retained.
+
+- [Windows build instructions](docs/BUILD.md)
+- [Microsoft Store / MSIX packaging](docs/MSIX.md)
+- [Release configuration and provenance](docs/STORE-RELEASE.md)
+- [Activation setup](docs/ACTIVATION.md)
+- [Upstream README](README-UPSTREAM.md), [license](COPYING), [modifications](docs/MODIFICATIONS.md)
+
+The build target is `strawberry.exe`; the distribution executable is named `NASAQ.exe`. NASAQ modules are under `cam/`. Dependencies must be obtained from the documented upstream sources. Do not rename legacy storage identifiers or delete user databases when changing branding.
+
+## Verification and scope
+
+The archived pre-submission regression run recorded **236 passed, 0 failed and 6 skipped checks** across Arabic and English runs of seven suites. This is historical local test evidence, not a new GitHub CI run or a claim of exhaustive installed-package testing. [Store source provenance](docs/STORE-RELEASE.md) includes the recorded suite results.
+
+Microsoft Store availability has been checked on the public product page. Physical audio hardware, long-running venue operation and clean-machine installation coverage remain separate acceptance tasks. Publisher-managed speech credits, subscription billing and Teletext are not implemented.
 
 ## Project information
 
-* [Privacy and network behavior](docs/PRIVACY.md)
-* [Third-party inventory and release gates](docs/THIRD-PARTY.md)
-* [Code signing policy](docs/CODE-SIGNING-POLICY.md)
-* Repository owner: [NAWRASJ](https://github.com/NAWRASJ)
+- [Privacy and network behavior](docs/PRIVACY.md)
+- [Google Cloud speech setup](docs/GOOGLE-CLOUD-TTS.txt)
+- [Third-party inventory](docs/THIRD-PARTY.md)
+- [Code signing policy](docs/CODE-SIGNING-POLICY.md)
+- Maintainer: [NAWRASJ](https://github.com/NAWRASJ)
 
-The repository includes source, brand assets and documentation. No private keys, activation credentials, personal database, or Windows installer is intentionally included. Dependencies must be obtained from their documented upstream sources; the dependency-source compliance checklist is not yet complete.
+This repository publishes source, assets, build scripts and documentation. It does not contain customer license keys, publisher API tokens, private signing keys or personal application databases. Use the Microsoft Store link above for the consumer download.

@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(strawberry C CXX)
+include(cmake/NasaqVersion.cmake)
+project(strawberry VERSION ${NASAQ_VERSION} LANGUAGES C CXX)
+option(NASAQ_STORE_BUILD "Disable external updates for Microsoft Store distribution" OFF)
+add_compile_definitions(NASAQ_VERSION_STRING="${NASAQ_VERSION}")
+if(NASAQ_STORE_BUILD)
+  add_compile_definitions(NASAQ_STORE_BUILD)
+endif()
 
 if(APPLE)
   enable_language(OBJC OBJCXX)
@@ -390,6 +396,11 @@ optional_component(EBUR128 ON "EBU R 128 loudness normalization"
   DEPENDS "libebur128" LIBEBUR128_FOUND
 )
 
+if(NASAQ_STORE_BUILD)
+  set(ENABLE_SPARKLE OFF)
+  set(ENABLE_QTSPARKLE OFF)
+endif()
+
 if(APPLE)
   optional_component(SPARKLE ON "Sparkle integration"
     DEPENDS "Sparkle" SPARKLE
@@ -445,7 +456,7 @@ if(APPLE)
   set_target_properties(strawberry PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/dist/macos/Info.plist")
 endif()
 
-if(WIN32 AND NOT ENABLE_WIN32_CONSOLE)
+if(WIN32) # NASAQ desktop releases always use the GUI subsystem, including cached legacy builds.
   set_target_properties(strawberry PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
 
@@ -1822,4 +1833,17 @@ target_link_libraries(strawberry_lib PUBLIC cam_ui)
 if(MSVC)
   target_compile_options(strawberry_lib PRIVATE /utf-8)
   target_compile_options(strawberry PRIVATE /utf-8)
+endif()
+
+add_executable(nasaq_codec_probe cam/tests/codec_probe.cpp)
+target_link_libraries(nasaq_codec_probe PRIVATE PkgConfig::GSTREAMER)
+
+if(WIN32)
+  add_executable(nasaq_fileview_tests cam/tests/fileview_test.cpp)
+  set_target_properties(nasaq_fileview_tests PROPERTIES AUTOMOC ON)
+  target_include_directories(nasaq_fileview_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR}/src)
+  target_link_libraries(nasaq_fileview_tests PRIVATE strawberry_lib Qt6::Test)
+  if(MSVC)
+    target_compile_options(nasaq_fileview_tests PRIVATE /utf-8)
+  endif()
 endif()

@@ -129,6 +129,8 @@ class EngineBase : public QObject {
   // Both markers should be passed in nanoseconds. 'end' can be negative, indicating that the real length of 'u' stream is unknown.
   bool Play(const QUrl &media_url, const QUrl &stream_url, const bool pause, const TrackChangeFlags flags, const bool force_stop_at_end, const quint64 beginning_offset_nanosec, const qint64 end_offset_nanosec, const quint64 offset_nanosec, const std::optional<double> ebur128_integrated_loudness_lufs);
   void SetVolume(const uint volume);
+  void SetBusinessGain(double gain){business_gain_=qBound(0.0,gain,1.0);SetVolumeSW(static_cast<uint>(volume_*business_gain_));}
+  double business_gain_=1.0;
   void SetMute(const bool mute);
 
  public Q_SLOTS:

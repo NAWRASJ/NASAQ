@@ -1,0 +1,27 @@
+NASAQ 0.3.7 — Business playback controls
+
+Hold to talk: arm the microphone in Audio control, then hold the talk button.
+Music gain becomes 5% of the selected volume. Releasing the button restores gain
+smoothly over 1000 ms. Losing window focus or hiding the window releases paging.
+STOP ALL cancels paging and the fade. The selected master volume is preserved.
+Use an isolated PA output/headphones; an open microphone near speakers feeds back.
+
+The player top bar shows the total playlist length prominently, remaining length,
+and the shortage against business minutes (default 480; editable).
+Unknown lengths mean the displayed total is a lower bound, not guaranteed coverage.
+The Estimated end column uses the PC clock, current playback position and row order.
+It updates once per second, including seeks, pauses and reordering. Midnight shows
+the date. During pause it estimates resuming now. It does not forecast future
+announcements, prayer breaks, crossfade overlap or unknown-length streams.
+Shuffle, special repeat modes, queue overrides or skipped tracks suppress ETAs.
+Drag tracks within the playlist to reorder; native undo/redo is retained.
+
+Prayer settings: enable the monthly schedule, choose city/calculation authority and
+fetch the times. Pause music is enabled by default for 10 minutes (1–60 editable).
+An adhan file is optional. Missing adhan files still pause music. Announcements
+cannot override the prayer hold; paging remains available. Music resumes only if
+it was playing before the hold; STOP ALL prevents automatic resumption.
+An unexpired hold is persisted across restart. NASAQ must be open and awake.
+Verify downloaded times against the local mosque before deployment.
+
+GPL and Strawberry copyright/attribution remain in the source and legal materials.

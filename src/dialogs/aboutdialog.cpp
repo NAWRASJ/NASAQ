@@ -145,7 +145,7 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent), ui_{} {
 
   ui_.label_title->setFont(title_font);
   setWindowTitle(u"نسق NASAQ — About"_s);
-  ui_.label_title->setText(u"نسق NASAQ 0.2.1"_s);
+  ui_.label_title->setText(u"NASAQ 0.3.3"_s);
   ui_.label_text->setText(MainHtml());
   ui_.text_contributors->document()->setDefaultStyleSheet(QStringLiteral("a {color: %1; }").arg(palette().text().color().name()));
   ui_.text_contributors->setText(ContributorsHtml());

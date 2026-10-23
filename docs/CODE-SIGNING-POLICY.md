@@ -1,5 +1,11 @@
 # Code signing policy
 
+Microsoft Store is an additional distribution target: see [MSIX](MSIX.md).
+Submit the unsigned package with the exact public Partner Center identity;
+Microsoft signs it after certification. Local-test MSIX certificates are not
+production signing identities and must never be silently installed/trusted.
+The Inno/Authenticode workflow below remains available for non-Store releases.
+
 Status: preparation only; **not enrolled in or approved by SignPath Foundation**.
 There is currently no production signing identity. No binaries in this project
 should be described as SignPath-signed unless a verified release states otherwise.

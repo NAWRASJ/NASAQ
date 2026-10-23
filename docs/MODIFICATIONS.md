@@ -19,3 +19,7 @@ repository remains at https://github.com/NAWRASJ/NASAQ-initial-20261014 .
 This publication does not claim Strawberry endorsement or SignPath approval.
 
 0.3.0 adds publisher-side 16-character key issuance, per-key term/device limits, client activation, signed offline certificates, DPAPI storage, and playback gating. Configuration/live-provider acceptance remain outstanding; see ACTIVATION.md.
+
+The Midnight UI refresh replaces visible fruit artwork, adds NASAQ's black/turquoise design system and 86 original vector icons, redesigns navigation and activation, and fixes palette/style re-entry. See MIDNIGHT-UI.md for details and limits.
+
+0.3.10 keeps activation confirmation visible, displays verified license expiry separately from offline grace, reopens active licenses as a read-only status view, and forces the Windows GUI executable subsystem to avoid a console window. Regression tests cover successful activation/reopen, invalid keys, and network failure during cached grace.

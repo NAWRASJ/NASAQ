@@ -1,0 +1,14 @@
+NASAQ 0.3.8 — Announcement chimes
+
+Optional by design: No chime is the default for microphone and announcements.
+Audio control > Announcement chimes: import, preview, remove, select separate defaults, set volume and pre-speech delay. Import copies audio into the local user library. Maximum 10 seconds / 20 MB, decoder validated. Removing a library entry retains its immutable media file; it is no longer selectable. Source/license is kept with the entry.
+Announcement studio: choose default, No chime, or a specific cue per announcement. New schedules snapshot that choice. Existing schedules without a choice follow the announcement default. One cue per multilingual sequence; language gaps stay unchanged. Schedule time is cue start. Review duration includes cue and gap. After-completion cadence naturally includes the cue. Preview of an individual voice recording has no cue.
+Microphone: hold -> 5% music gain -> cue -> Speak now. Release before readiness cancels; no audio capture starts. Release while live closes capture and restores gain in 1 second. Focus loss, STOP and revoked activation cancel pending capture. Prayer hold still suppresses music. Announcements and their cues are interrupted by prayer; live operator microphone keeps its existing higher priority. No automatic cue before adhan.
+Missing/unplayable optional cue is skipped; log records playback failure; readiness follows. A 15-second watchdog prevents a broken cue hanging playback. No chime adds no deliberate pause.
+
+Bundled library:
+Copy licensed audio into the runtime chimes directory and add entries to manifest.json:
+[{"name":"Gentle bell","file":"gentle.wav","source":"Author, source URL and license","duration":2000}]
+The manifest currently contains []: no stock audio supplied. File names must be basenames, not paths. IDs are stock:<filename>. Adding bundled sounds does not change a customer's No chime preference. Preserve original sound license notices in the source package.
+
+Not in this increment: optional ending cue, repeat cue between languages, audio trimming/normalization, and hardware listening acceptance. These do not prevent opening cues or no-cue operation.

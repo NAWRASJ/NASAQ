@@ -11,7 +11,7 @@ struct LicenseConfig {
 struct LicenseLease {
  bool valid=false;
  QString message, licenseId, machineId, key;
- QDateTime until;
+ QDateTime until, expiresAt;
  int maxMachines=0;
 };
 QString licenseRelation(const QJsonObject &object,const QString &name);

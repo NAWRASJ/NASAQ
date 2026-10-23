@@ -394,24 +394,5 @@ void BlockAnalyzer::paletteChange(const QPalette &_palette) {
 }
 
 void BlockAnalyzer::drawBackground() {
-
-  if (background_.isNull()) {
-    return;
-  }
-
-  const QColor bg = palette().color(QPalette::Window);
-  const QColor bgdark = bg.darker(112);
-
-  background_.fill(bg);
-
-  QPainter p(&background_);
-
-  if (!p.paintEngine()) return;
-
-  for (int x = 0; x < columns_; ++x) {
-    for (int y = 0; y < rows_; ++y) {
-      p.fillRect(x * (kWidth + 1), y * (kHeight + 1) + y_, kWidth, kHeight, bgdark);
-    }
-  }
-
+  if (!background_.isNull()) background_.fill(QColor(12,17,20));
 }

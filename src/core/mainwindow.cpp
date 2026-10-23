@@ -504,7 +504,7 @@ MainWindow::MainWindow(Application *app,
 
   // Add the playing widget to the fancy tab widget
   ui_->tabs->AddBottomWidget(ui_->widget_playing);
-  ui_->tabs->SetBackgroundPixmap(QPixmap(u":/pictures/sidebar-background.png"_s));
+  ui_->tabs->SetBackgroundPixmap(QPixmap());
   ui_->tabs->LoadSettings(QLatin1String(MainWindowSettings::kSettingsGroup));
 
   track_position_timer_->setInterval(kTrackPositionUpdateTimeMs);
@@ -687,6 +687,7 @@ MainWindow::MainWindow(Application *app,
 
   PlaylistContainer::Actions playlist_actions;
   playlist_actions.new_playlist = ui_->action_new_playlist;
+  playlist_actions.add_audio = ui_->action_add_file;
   playlist_actions.load_playlist = ui_->action_load_playlist;
   playlist_actions.save_playlist = ui_->action_save_playlist;
   playlist_actions.clear_playlist = ui_->action_clear_playlist;
@@ -1107,6 +1108,10 @@ MainWindow::MainWindow(Application *app,
     ui_->splitter->setSizes(QList<int>() << 20 << (width() - 20));
   }
 
+  // Showing the Files tab initializes its model and emits PathChanged. Capture
+  // the saved location before that can write the default location to settings.
+  const QString saved_file_path = settings.value(MainWindowSettings::kFilePath, QDir::homePath()).toString();
+  file_view_->SetPath(saved_file_path);
   ui_->tabs->setCurrentIndex(settings.value(FancyTabWidget::kCurrentTab, 1).toInt());
   FancyTabWidget::Mode default_mode = FancyTabWidget::Mode::LargeSidebar;
   FancyTabWidget::Mode tab_mode = static_cast<FancyTabWidget::Mode>(settings.value(FancyTabWidget::kTabMode, static_cast<int>(default_mode)).toInt());
@@ -1114,8 +1119,6 @@ MainWindow::MainWindow(Application *app,
   ui_->tabs->SetMode(tab_mode);
 
   TabSwitched();
-
-  file_view_->SetPath(settings.value(MainWindowSettings::kFilePath, QDir::homePath()).toString());
 
   // Users often collapse one side of the splitter by mistake and don't know how to restore it. This must be set after the state is restored above.
   ui_->splitter->setChildrenCollapsible(false);
@@ -1556,7 +1559,7 @@ void MainWindow::PlaylistsLoaded() {
 
 void MainWindow::MediaStopped() {
 
-  setWindowTitle(u"نسق NASAQ"_s);
+  setWindowTitle(tr("Music library"));
 
   ui_->action_stop->setEnabled(false);
   ui_->action_stop_after_this_track->setEnabled(false);

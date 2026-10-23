@@ -49,6 +49,10 @@
 
 #include <QObject>
 #include <QApplication>
+#include <QRegularExpression>
+#include <QDateTime>
+#include "../cam/src/nasaqtheme.h"
+#include "../cam/src/packageidentity.h"
 #include <QCoreApplication>
 #include <QSysInfo>
 #include <QLibraryInfo>
@@ -150,7 +154,11 @@ int main(int argc, char *argv[]) {
 
   QCoreApplication::setApplicationName(qEnvironmentVariableIsEmpty("CAM_SMOKE_OUTPUT") ? u"CAM-Strawberry"_s : u"CAM-Strawberry-Test"_s);
   QCoreApplication::setOrganizationName(u"CAMProject"_s);
-  QCoreApplication::setApplicationVersion(QStringLiteral("0.3.0"));
+  if(!qEnvironmentVariableIsEmpty("NASAQ_BUSINESS_TEST_OUTPUT")&&!qEnvironmentVariableIsEmpty("CAM_SMOKE_OUTPUT")) QCoreApplication::setApplicationName(QStringLiteral("NASAQ-BusinessTest-%1").arg(QDateTime::currentMSecsSinceEpoch()));
+  // Persistence verification can reuse only a dedicated, UUID-named test profile.
+  const QString persistenceToken=qEnvironmentVariable("NASAQ_PERSIST_TEST_TOKEN");
+  if(!qEnvironmentVariableIsEmpty("NASAQ_BUSINESS_TEST_OUTPUT")&&!qEnvironmentVariableIsEmpty("CAM_SMOKE_OUTPUT")&&QRegularExpression(QStringLiteral("^[a-f0-9-]{36}$")).match(persistenceToken).hasMatch()) QCoreApplication::setApplicationName(QStringLiteral("NASAQ-PersistenceTest-")+persistenceToken);
+  QCoreApplication::setApplicationVersion(QStringLiteral(NASAQ_VERSION_STRING));
   QCoreApplication::setOrganizationDomain(u"strawberrymusicplayer.org"_s);
 
   // This makes us show up nicely in gnome-volume-control
@@ -169,7 +177,7 @@ int main(int argc, char *argv[]) {
     // Only start a core application now, so we can check if there's another instance without requiring an X server.
     // This MUST be done before parsing the commandline options so QTextCodec gets the right system locale for filenames.
     QCoreApplication core_app(argc, argv);
-    KDSingleApplication single_app(QCoreApplication::applicationName().toLower(), KDSingleApplication::Option::IncludeUsernameInSocketName);
+    KDSingleApplication single_app((QCoreApplication::applicationName().toLower() + (Nasaq::isPackaged() ? QStringLiteral("-msix") : QString())), KDSingleApplication::Option::IncludeUsernameInSocketName);
     // Parse commandline options - need to do this before starting the full QApplication, so it works without an X server
     if (!options.Parse()) return 1;
     logging::SetLevels(options.log_levels());
@@ -201,7 +209,7 @@ int main(int argc, char *argv[]) {
   Utilities::IncreaseFDLimit();
 #endif
 
-  QGuiApplication::setApplicationDisplayName(u"نسق NASAQ 0.3.0"_s);
+  QGuiApplication::setApplicationDisplayName(QStringLiteral("نسق NASAQ " NASAQ_VERSION_STRING));
   QGuiApplication::setDesktopFileName(u"org.strawberrymusicplayer.strawberry"_s);
   QGuiApplication::setQuitOnLastWindowClosed(false);
 
@@ -216,7 +224,7 @@ int main(int argc, char *argv[]) {
   }
 #endif
 
-  KDSingleApplication single_app(QCoreApplication::applicationName().toLower(), KDSingleApplication::Option::IncludeUsernameInSocketName);
+  KDSingleApplication single_app((QCoreApplication::applicationName().toLower() + (Nasaq::isPackaged() ? QStringLiteral("-msix") : QString())), KDSingleApplication::Option::IncludeUsernameInSocketName);
   if (!single_app.isPrimaryInstance()) {
     if (options.is_empty()) {
       qLog(Info) << "Strawberry is already running - activating existing window (2)";
@@ -318,6 +326,8 @@ int main(int argc, char *argv[]) {
     languages << QLocale::system().name();
   }
 
+  languages = QStringList{NasaqLanguage()};
+
   ScopedPtr<Translations> translations = make_unique<Translations>();
 
 #  if QT_VERSION >= QT_VERSION_CHECK(6, 8, 0)
@@ -367,6 +377,7 @@ int main(int argc, char *argv[]) {
 
 #endif  // HAVE_TRANSLATIONS
 
+  ApplyNasaqTheme();
   Application app;
 
   // Network proxy

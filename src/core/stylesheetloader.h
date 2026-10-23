@@ -53,6 +53,7 @@ class StyleSheetLoader : public QObject {
     StyleSheetData() {}
     QString filename_;
     QString stylesheet_template_;
+    bool updating_ = false;
   };
 
  private:

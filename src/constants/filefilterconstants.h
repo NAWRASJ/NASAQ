@@ -32,7 +32,7 @@ constexpr char kFileFilter[] =
     "*.ac3 *.dts "
     "*.mod *.s3m *.xm *.it "
     "*.spc *.vgm "
-    ".tak" ;
+    "*.tak" ;
 
 constexpr char kLoadImageFileFilter[] = QT_TRANSLATE_NOOP("FileFilter", "Images (*.png *.jpg *.jpeg *.bmp *.gif *.xpm *.pbm *.pgm *.ppm *.xbm *.webp)");
 constexpr char kSaveImageFileFilter[] = QT_TRANSLATE_NOOP("FileFilter", "Images (*.png *.jpg *.jpeg *.bmp *.xpm *.pbm *.ppm *.xbm *.webp)");

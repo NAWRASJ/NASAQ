@@ -64,6 +64,12 @@ void IconLoader::Init() {
 
 QIcon IconLoader::Load(const QString &name, const bool system_icon, const int fixed_size, const int min_size, const int max_size) {
 
+  const QString nasaq = u":/nasaq/32/"_s + name + u".png"_s;
+  if (QFile::exists(nasaq)) {
+    QIcon rendered;
+    for (int size : {16,22,32,48,64,128}) rendered.addFile(u":/nasaq/"_s + QString::number(size) + u"/"_s + name + u".png"_s, QSize(size,size));
+    return rendered;
+  }
   QIcon ret;
 
   if (name.isEmpty()) {

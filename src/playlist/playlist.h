@@ -148,6 +148,7 @@ class Playlist : public QAbstractListModel {
     BPM,
     Mood,
     InitialKey,
+    BusinessEnd,
     ColumnCount
   };
   using Columns = QList<Column>;
@@ -175,6 +176,8 @@ class Playlist : public QAbstractListModel {
 
   static bool CompareItems(const Column column, const Qt::SortOrder sort_order, PlaylistItemPtr a, PlaylistItemPtr b);
 
+  QStringList business_ends_;
+  void SetBusinessEndTimes(const QStringList &ends) { if(business_ends_==ends)return; business_ends_=ends; if(rowCount()) Q_EMIT dataChanged(index(0,static_cast<int>(Column::BusinessEnd)),index(rowCount()-1,static_cast<int>(Column::BusinessEnd))); }
   static QString column_name(const Column column);
   static QString abbreviated_column_name(const Column column);
 

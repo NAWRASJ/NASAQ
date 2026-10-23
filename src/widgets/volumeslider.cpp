@@ -106,40 +106,12 @@ void VolumeSlider::HandleWheel(const int delta) {
 }
 
 void VolumeSlider::paintEvent(QPaintEvent *e) {
-
-  Q_UNUSED(e)
-
-  QPainter p(this);
-
-  const int padding = 7;
-  const int offset = static_cast<int>(static_cast<double>((width() - 2 * padding) * value()) / qMax(1, maximum()));
-
-  // If theme changed since last paintEvent, redraw the volume pixmap with new theme colors
-  if (previous_theme_text_color_ != palette().color(QPalette::WindowText)) {
-    pixmap_inset_ = drawVolumePixmap();
-    previous_theme_text_color_ = palette().color(QPalette::WindowText);
-  }
-
-  if (previous_theme_highlight_color_ != palette().color(QPalette::Highlight)) {
-    drawVolumeSliderHandle();
-    previous_theme_highlight_color_ = palette().color(QPalette::Highlight);
-  }
-
-  p.drawPixmap(0, 0, pixmap_gradient_, 0, 0, offset + padding, 0);
-  p.drawPixmap(0, 0, pixmap_inset_);
-  p.drawPixmap(offset - handle_pixmaps_.value(0).width() / 2 + padding, 0, handle_pixmaps_[anim_count_]);
-
-  // Draw percentage number, or "Muted" in its place when muted
-  QStyleOptionViewItem opt;
-  p.setPen(opt.palette.color(QPalette::Normal, QPalette::Text));
-  QFont vol_font(opt.font);
-  vol_font.setPixelSize(9);
-  p.setFont(vol_font);
-
-  const QString text = muted_ ? tr("Muted") : QString::number(value()) + QLatin1Char('%');
-  const QRect rect(0, 0, 34, 15);
-  p.drawText(rect, Qt::AlignRight | Qt::AlignVCenter, text);
-
+  Q_UNUSED(e);
+  QPainter p(this); p.setRenderHint(QPainter::Antialiasing);
+  const int x = 7 + (width()-14) * value() / qMax(1, maximum());
+  p.setPen(Qt::NoPen); p.setBrush(QColor(48, 61, 65)); p.drawRoundedRect(QRect(7, 22, width()-14, 4), 2, 2);
+  p.setBrush(muted_ ? QColor(110, 126, 130) : QColor(41, 211, 187)); p.drawRoundedRect(QRect(7, 22, qMax(1,x-7), 4), 2, 2); p.drawEllipse(QPoint(x,24), 5, 5);
+  p.setPen(QColor(221,232,230)); p.drawText(QRect(7,0,width()-14,19), Qt::AlignLeft, muted_ ? u"Muted"_s : QString::number(value()) + u"%"_s);
 }
 
 void VolumeSlider::generateGradient() {

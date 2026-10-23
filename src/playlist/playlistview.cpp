@@ -317,6 +317,11 @@ void PlaylistView::LoadHeaderState() {
   Settings s;
   s.beginGroup(PlaylistSettings::kSettingsGroup);
   // Since we use serialized internal data structures, we cannot read anything but the current version
+  if (!s.value(u"nasaq_business_columns_v1"_s, false).toBool()) {
+    s.setValue(u"nasaq_previous_columns"_s, s.value(PlaylistSettings::kState));
+    s.remove(PlaylistSettings::kState);
+    s.setValue(u"nasaq_business_columns_v1"_s, true);
+  }
   const int header_state_version = s.value(PlaylistSettings::kStateVersion, PlaylistSettings::kDefaultStateVersion).toInt();
   if (s.contains(PlaylistSettings::kState)) {
     if (header_state_version == kHeaderStateVersion) {
@@ -371,6 +376,7 @@ void PlaylistView::ResetHeaderState() {
 }
 
 void PlaylistView::RestoreHeaderState() {
+  setDragEnabled(true);setAcceptDrops(true);setDropIndicatorShown(true);setDefaultDropAction(Qt::MoveAction);
 
   if (!header_state_loaded_) LoadHeaderState();
 
@@ -381,6 +387,7 @@ void PlaylistView::RestoreHeaderState() {
   if (set_initial_header_layout_) {
 
     header_->SetStretchEnabled(true);
+    header_->ShowSection(static_cast<int>(Playlist::Column::BusinessEnd));
 
     header_->HideSection(static_cast<int>(Playlist::Column::TitleSort));
     header_->HideSection(static_cast<int>(Playlist::Column::ArtistSort));
@@ -418,19 +425,21 @@ void PlaylistView::RestoreHeaderState() {
     header_->ShowSection(static_cast<int>(Playlist::Column::Title));
     header_->ShowSection(static_cast<int>(Playlist::Column::Artist));
     header_->ShowSection(static_cast<int>(Playlist::Column::Album));
-    header_->ShowSection(static_cast<int>(Playlist::Column::Samplerate));
-    header_->ShowSection(static_cast<int>(Playlist::Column::Bitdepth));
-    header_->ShowSection(static_cast<int>(Playlist::Column::Bitrate));
-    header_->ShowSection(static_cast<int>(Playlist::Column::Filetype));
-    header_->ShowSection(static_cast<int>(Playlist::Column::Source));
+    header_->HideSection(static_cast<int>(Playlist::Column::Samplerate));
+    header_->HideSection(static_cast<int>(Playlist::Column::Bitdepth));
+    header_->HideSection(static_cast<int>(Playlist::Column::Bitrate));
+    header_->HideSection(static_cast<int>(Playlist::Column::Filetype));
+    header_->HideSection(static_cast<int>(Playlist::Column::Source));
 
     header_->moveSection(header_->visualIndex(static_cast<int>(Playlist::Column::Track)), 0);
 
-    header_->SetColumnWidth(static_cast<int>(Playlist::Column::Track), 0.06);
-    header_->SetColumnWidth(static_cast<int>(Playlist::Column::Title), 0.23);
+    header_->SetColumnWidth(static_cast<int>(Playlist::Column::Track), 0.07);
+    header_->SetColumnWidth(static_cast<int>(Playlist::Column::BusinessEnd), 0.16);
+    header_->moveSection(header_->visualIndex(static_cast<int>(Playlist::Column::BusinessEnd)),header_->visualIndex(static_cast<int>(Playlist::Column::Length))+1);
+    header_->SetColumnWidth(static_cast<int>(Playlist::Column::Title), 0.21);
     header_->SetColumnWidth(static_cast<int>(Playlist::Column::Artist), 0.23);
     header_->SetColumnWidth(static_cast<int>(Playlist::Column::Album), 0.23);
-    header_->SetColumnWidth(static_cast<int>(Playlist::Column::Length), 0.04);
+    header_->SetColumnWidth(static_cast<int>(Playlist::Column::Length), 0.10);
     header_->SetColumnWidth(static_cast<int>(Playlist::Column::Samplerate), 0.05);
     header_->SetColumnWidth(static_cast<int>(Playlist::Column::Bitdepth), 0.04);
     header_->SetColumnWidth(static_cast<int>(Playlist::Column::Bitrate), 0.04);

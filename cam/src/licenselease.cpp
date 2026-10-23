@@ -58,6 +58,7 @@ LicenseLease verifyLicenseLease(const QByteArray&cert,const LicenseConfig&c,cons
  if(license.isEmpty()||licenseRelation(license,"account")!=c.account||licenseRelation(license,"product")!=c.product||a["suspended"].toBool(true)||a["status"].toString()!="ACTIVE"||a["maxMachines"].toInt()<1)return fail("Licence is not active");
  auto issued=QDateTime::fromString(meta["issued"].toString(),Qt::ISODate),expiry=QDateTime::fromString(meta["expiry"].toString(),Qt::ISODate),licenseExpiry=QDateTime::fromString(a["expiry"].toString(),Qt::ISODate);
  if(!issued.isValid()||!expiry.isValid()||!licenseExpiry.isValid()||issued>now.addSecs(300)||expiry<=issued||meta["ttl"].toDouble()<=0)return fail("Invalid licence dates");
+ r.expiresAt=licenseExpiry;
  r.until=qMin(qMin(expiry,issued.addSecs(c.graceSeconds)),licenseExpiry);
  if(now>=r.until)return fail("Licence or offline grace expired; reconnect / انتهى الترخيص أو السماح دون إنترنت");
  r.key=normalizeLicenseKey(a["key"].toString());if(r.key.isEmpty())return fail("Invalid licence key format");

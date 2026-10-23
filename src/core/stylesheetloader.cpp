@@ -41,6 +41,7 @@
 #include "logging.h"
 #include "utilities/colorutils.h"
 #include "stylesheetloader.h"
+#include <QScopedValueRollback>
 
 using namespace Qt::Literals::StringLiterals;
 
@@ -92,6 +93,10 @@ void StyleSheetLoader::SetStyleSheet(QWidget *widget, const QString &filename) {
 }
 
 void StyleSheetLoader::UpdateStyleSheet(QWidget *widget, SharedPtr<StyleSheetData> styledata) {
+  // Applying a stylesheet may synchronously emit PaletteChange again.
+  // NASAQ's application-wide theme must not recurse through that event.
+  if (styledata->updating_) return;
+  QScopedValueRollback<bool> guard(styledata->updating_, true);
 
   QString stylesheet = styledata->stylesheet_template_;
 
@@ -143,7 +148,7 @@ void StyleSheetLoader::UpdateStyleSheet(QWidget *widget, SharedPtr<StyleSheetDat
   stylesheet.replace(QLatin1String("macos"), QLatin1String("*"));
 #endif
 
-  widget->setStyleSheet(stylesheet);
+  if (widget->styleSheet() != stylesheet) widget->setStyleSheet(stylesheet);
 
 }
 

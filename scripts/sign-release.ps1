@@ -14,7 +14,9 @@ $binaries=Get-ChildItem -LiteralPath $stage -Recurse -File | Where-Object Extens
 if(!$binaries){throw 'No binaries to sign'}
 foreach($binary in $binaries){
  # Preserve already-valid vendor signatures. Sign all remaining executables/libraries.
- if((Get-AuthenticodeSignature -LiteralPath $binary.FullName).Status -ne 'Valid'){
+ $existing=Get-AuthenticodeSignature -LiteralPath $binary.FullName
+ if($existing.Status -notin 'Valid','NotSigned'){throw "Existing signature needs investigation: $($binary.FullName) [$($existing.Status)]"}
+ if($existing.Status -eq 'NotSigned'){
   & $SignTool sign /sha1 $CertificateThumbprint /fd SHA256 /tr $TimestampServer.AbsoluteUri /td SHA256 $binary.FullName
   if($LASTEXITCODE){throw "Signing failed: $($binary.Name)"}
  }

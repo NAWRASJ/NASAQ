@@ -92,8 +92,8 @@ AnalyzerContainer::AnalyzerContainer(QWidget *parent)
   AddAnalyzerType<TurbineAnalyzer>();
   AddAnalyzerType<SonogramAnalyzer>();
   AddAnalyzerType<WaveRubberAnalyzer>();
-  AddAnalyzerType<RainbowDashAnalyzer>();
-  AddAnalyzerType<NyanCatAnalyzer>();
+
+
 
   disable_action_ = context_menu_->addAction(tr("No analyzer"), this, &AnalyzerContainer::DisableAnalyzer);
   disable_action_->setCheckable(true);

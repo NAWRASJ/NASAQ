@@ -53,6 +53,7 @@ class PlaylistContainer : public QWidget {
   ~PlaylistContainer() override;
 
   struct Actions {
+    QAction *add_audio = nullptr;
     QAction *new_playlist = nullptr;
     QAction *load_playlist = nullptr;
     QAction *save_playlist = nullptr;

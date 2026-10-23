@@ -4,6 +4,7 @@
 #include <QJsonArray>
 #include <openssl/evp.h>
 #include "licenseactivation.h"
+#include "activationdialog.h"
 class MockReply:public QNetworkReply {
  QByteArray bytes; qint64 pos=0;
  public:
@@ -45,7 +46,17 @@ class LicenseTest:public QObject {
   rel["license"]=relation("license-test");
   data={{"data",QJsonObject{{"id","machine-test"},{"type","machines"},{"relationships",rel},{"attributes",QJsonObject{{"fingerprint",licenseFingerprint()}}}}},{"included",QJsonArray{license}},{"meta",QJsonObject{{"issued",now.addSecs(-10).toString(Qt::ISODate)},{"expiry",now.addDays(7).toString(Qt::ISODate)},{"ttl",604800}}}};
  }
- void validSignedLease(){auto r=verify(data);QVERIFY2(r.valid,qPrintable(r.message));QCOMPARE(r.maxMachines,2);QVERIFY(r.until<=now.addDays(7));}
+ void validSignedLease(){auto r=verify(data);QVERIFY2(r.valid,qPrintable(r.message));QCOMPARE(r.maxMachines,2);QVERIFY(r.until<=now.addDays(7));QCOMPARE(r.expiresAt.toSecsSinceEpoch(),now.addDays(30).toSecsSinceEpoch());}
+ void activationDialogConfirmsAndReopens(){
+  Store s(":memory:");MockNetwork net;net.replies={{200,validation(true)},{200,checkout()}};Activation a(s,nullptr,c,&net);
+  ActivationDialog d(a);d.show();auto key=d.findChild<QLineEdit*>("activationKey");auto button=d.findChild<QPushButton*>("activateLicense");key->setText("ABCD2345EFGH6789");button->click();
+  QTRY_VERIFY(a.allowed());QVERIFY(d.isVisible());QVERIFY(key->isHidden());QVERIFY(button->isHidden());
+  auto text=d.findChild<QLabel*>("activationMessage")->text();QVERIFY(text.contains(NasaqLanguage()=="ar"?QStringLiteral("تم التفعيل بنجاح"):QStringLiteral("Activation completed successfully")));QVERIFY(text.contains(a.details().expiresAt.toLocalTime().toString("yyyy-MM-dd HH:mm")));QVERIFY(text.contains(a.details().until.toLocalTime().toString("yyyy-MM-dd HH:mm")));QVERIFY(!text.contains("ABCD2345"));
+  d.close();Activation restarted(s,nullptr,c,&net);ActivationDialog reopened(restarted);reopened.show();QVERIFY(reopened.findChild<QLineEdit*>("activationKey")->isHidden());QVERIFY(reopened.findChild<QPushButton*>("activateLicense")->isHidden());QCOMPARE(net.urls.size(),2);
+  auto dir=qEnvironmentVariable("NASAQ_REVIEW_EVIDENCE");if(!dir.isEmpty())reopened.grab().save(dir+"/license-active.png");
+ }
+ void activationDialogInvalidKeyStaysOpen(){Store s(":memory:");MockNetwork net;Activation a(s,nullptr,c,&net);ActivationDialog d(a);d.show();d.findChild<QLineEdit*>("activationKey")->setText("1234");auto button=d.findChild<QPushButton*>("activateLicense");button->click();QVERIFY(d.isVisible());QVERIFY(button->isEnabled());QVERIFY(!a.allowed());QVERIFY(net.urls.isEmpty());}
+ void activationFailureIsNotSuccessDuringGrace(){Store s(":memory:");seed(s);MockNetwork net;net.replies={{0,{}}};Activation a(s,nullptr,c,&net);QSignalSpy done(&a,&Activation::completed);a.activate("ABCD2345EFGH6789");QTRY_COMPARE(done.count(),1);QVERIFY(!done[0][0].toBool());QVERIFY(a.allowed());}
  void tamperingRejected(){auto cert=sign(data);cert[70]=cert[70]=='A'?'B':'A';QVERIFY(!verifyLicenseLease(cert,c,licenseFingerprint(),now).valid);auto other=c;other.publicKey=QString(64,'0');QVERIFY(!verifyLicenseLease(sign(data),other,licenseFingerprint(),now).valid);}
  void wrongIdentityRejected(){QVERIFY(!verifyLicenseLease(sign(data),c,"other-device",now).valid);auto other=c;other.product="other";QVERIFY(!verifyLicenseLease(sign(data),other,licenseFingerprint(),now).valid);other=c;other.account="other";QVERIFY(!verifyLicenseLease(sign(data),other,licenseFingerprint(),now).valid);}
  void expiryAndGrace(){QVERIFY(!verifyLicenseLease(sign(data),c,licenseFingerprint(),now.addDays(8)).valid);auto arr=data["included"].toArray();auto l=arr[0].toObject(),a=l["attributes"].toObject();a["expiry"]=now.addSecs(-1).toString(Qt::ISODate);l["attributes"]=a;arr[0]=l;data["included"]=arr;QVERIFY(!verify(data).valid);}
@@ -58,5 +69,5 @@ class LicenseTest:public QObject {
  void offlineAndRevocation(){Store s(":memory:");seed(s);MockNetwork net;net.replies={{0,{}}};Activation a(s,nullptr,c,&net);QVERIFY(a.allowed());a.tick();QTRY_COMPARE(net.urls.size(),1);QTest::qWait(20);QVERIFY(a.allowed());net.replies={{200,validation(false,"SUSPENDED")}};a.activate("ABCD2345EFGH6789");QTRY_VERIFY(!a.allowed());Activation restarted(s,nullptr,c,&net);QVERIFY(!restarted.allowed());}
  void forgedCheckoutDenied(){Store s(":memory:");MockNetwork net;net.replies={{200,validation(true)},{200,QJsonObject{}}};Activation a(s,nullptr,c,&net);a.activate("ABCD2345EFGH6789");QTRY_COMPARE(net.urls.size(),2);QTest::qWait(20);QVERIFY(!a.allowed());}
 };
-QTEST_GUILESS_MAIN(LicenseTest)
+QTEST_MAIN(LicenseTest)
 #include "license_test.moc"

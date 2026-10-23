@@ -35,6 +35,8 @@
 #include <QLineEdit>
 #include <QToolButton>
 #include <QFileDialog>
+#include <QMenu>
+#include <QSignalBlocker>
 #include <QSpacerItem>
 #include <QtEvents>
 
@@ -82,7 +84,27 @@ FileView::FileView(QWidget *parent)
   QObject::connect(ui_->forward, &QToolButton::clicked, undo_stack_, &QUndoStack::redo);
   QObject::connect(ui_->home, &QToolButton::clicked, this, &FileView::FileHome);
   QObject::connect(ui_->up, &QToolButton::clicked, this, &FileView::FileUp);
-  QObject::connect(ui_->path, &QLineEdit::textChanged, this, &FileView::ChangeFilePath);
+  // Commit a complete path, rather than navigating midway through typing D:/songs.
+  ui_->path->setLayoutDirection(Qt::LeftToRight);
+  QObject::connect(ui_->path, &QLineEdit::returnPressed, this, [this]() {
+    ChangeFilePath(ui_->path->text());
+  });
+#ifdef Q_OS_WIN
+  auto *locations = new QMenu(ui_->home);
+  ui_->home->setMenu(locations);
+  ui_->home->setPopupMode(QToolButton::MenuButtonPopup);
+  QObject::connect(locations, &QMenu::aboutToShow, this, [this, locations]() {
+    locations->clear();
+    const bool arabic = layoutDirection() == Qt::RightToLeft;
+    locations->addAction(arabic ? QStringLiteral("هذا الكمبيوتر") : QStringLiteral("This PC"), this, [this]() { ChangeFilePath(QString()); });
+    locations->addSeparator();
+    // Refresh on every opening so newly attached drives are available immediately.
+    for (const QFileInfo &drive : QDir::drives()) {
+      const QString path = drive.absoluteFilePath();
+      locations->addAction(QStringLiteral("\u200e") + QDir::toNativeSeparators(path), this, [this, path]() { ChangeFilePath(path); });
+    }
+  });
+#endif
   QObject::connect(ui_->toggle_view, &QToolButton::clicked, this, &FileView::ToggleViewMode);
 
   QObject::connect(undo_stack_, &QUndoStack::canUndoChanged, ui_->back, &FileView::setEnabled);
@@ -157,7 +179,8 @@ void FileView::SetPath(const QString &path) {
     ChangeFilePathWithoutUndo(path);
   }
   else {
-    lazy_set_path_ = path;
+    // Null means no saved location; empty means the Windows drive overview.
+    lazy_set_path_ = path.isEmpty() ? QStringLiteral("") : path;
   }
 
 }
@@ -168,19 +191,24 @@ void FileView::SetTaskManager(SharedPtr<TaskManager> task_manager) {
 
 void FileView::FileUp() {
 
+  if (!model_ || model_->rootPath().isEmpty()) return;
   QDir dir(model_->rootDirectory());
-  dir.cdUp();
+  QString parent_path;
+  if (dir.cdUp()) parent_path = dir.path();
+#ifndef Q_OS_WIN
+  else return;
+#endif
 
   // Is this the same as going back?  If so just go back, so we can keep the view scroll position.
   if (undo_stack_->canUndo()) {
     const UndoCommand *last_dir = static_cast<const UndoCommand*>(undo_stack_->command(undo_stack_->index() - 1));
-    if (last_dir->undo_path() == dir.path()) {
+    if (last_dir->undo_path() == parent_path) {
       undo_stack_->undo();
       return;
     }
   }
 
-  ChangeFilePath(dir.path());
+  ChangeFilePath(parent_path);
 
 }
 
@@ -193,7 +221,7 @@ void FileView::ChangeFilePath(const QString &new_path_native) {
   QString new_path = QDir::fromNativeSeparators(new_path_native);
 
   QFileInfo info(new_path);
-  if (!info.exists() || !info.isDir()) {
+  if (!new_path.isEmpty() && (!info.exists() || !info.isDir())) {
     return;
   }
 
@@ -214,13 +242,24 @@ void FileView::ChangeFilePath(const QString &new_path_native) {
 
 void FileView::ChangeFilePathWithoutUndo(const QString &new_path) {
 
-  ui_->list->setRootIndex(model_->setRootPath(new_path));
-  ui_->path->setText(QDir::toNativeSeparators(new_path));
+  QString resolved_path = new_path;
+  if (!resolved_path.isEmpty() && !QFileInfo(resolved_path).isDir()) {
+    resolved_path = QStandardPaths::writableLocation(QStandardPaths::MusicLocation);
+    if (!QFileInfo(resolved_path).isDir()) resolved_path = QDir::homePath();
+  }
+  ui_->list->setRootIndex(model_->setRootPath(resolved_path));
+  const QSignalBlocker path_signals(ui_->path);
+  ui_->path->setText(QDir::toNativeSeparators(resolved_path));
+  ui_->path->setPlaceholderText(layoutDirection() == Qt::RightToLeft ? QStringLiteral("هذا الكمبيوتر") : QStringLiteral("This PC"));
 
-  QDir dir(new_path);
+  QDir dir(resolved_path);
+#ifdef Q_OS_WIN
+  ui_->up->setEnabled(!resolved_path.isEmpty());
+#else
   ui_->up->setEnabled(dir.cdUp());
+#endif
 
-  Q_EMIT PathChanged(new_path);
+  Q_EMIT PathChanged(resolved_path);
 
 }
 
@@ -346,9 +385,7 @@ void FileView::showEvent(QShowEvent *e) {
 
   SetupTreeView();
 
-  ChangeFilePathWithoutUndo(QDir::homePath());
-
-  if (!lazy_set_path_.isEmpty()) ChangeFilePathWithoutUndo(lazy_set_path_);
+  ChangeFilePathWithoutUndo(lazy_set_path_.isNull() ? QDir::homePath() : lazy_set_path_);
 
 }
 

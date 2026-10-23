@@ -157,7 +157,7 @@ void EngineBase::UpdateMute(const bool mute) {
 void EngineBase::SetVolume(const uint volume) {
 
   volume_ = volume;
-  SetVolumeSW(volume);
+  SetVolumeSW(static_cast<uint>(volume*business_gain_));
 
 }
 

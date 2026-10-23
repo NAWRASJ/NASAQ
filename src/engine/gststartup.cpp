@@ -100,6 +100,8 @@ void SetEnvironment() {
   QString gst_plugin_scanner;
 #  if defined(Q_OS_UNIX)
   gst_plugin_scanner = plugin_root_path + "/gst-plugin-scanner"_L1;
+#  elif defined(Q_OS_WIN32)
+  gst_plugin_scanner = plugin_root_path + "/gst-plugin-scanner.exe"_L1;
 #  endif
 
   // Set GStreamer plugin path
@@ -127,6 +129,7 @@ void SetEnvironment() {
     if (QFile::exists(gst_plugin_scanner)) {
       qLog(Debug) << "Setting GStreamer plugin scanner to" << gst_plugin_scanner;
       Utilities::SetEnv("GST_PLUGIN_SCANNER", gst_plugin_scanner);
+      Utilities::SetEnv("GST_PLUGIN_SCANNER_1_0", gst_plugin_scanner);
     }
     else {
       qLog(Error) << "GStreamer plugin scanner" << gst_plugin_scanner << "does not exist.";
@@ -139,6 +142,8 @@ void SetEnvironment() {
       Utilities::SetEnv("GST_PLUGIN_PATH", gst_plugin_path);
       // Never load plugins from anywhere else.
       Utilities::SetEnv("GST_PLUGIN_SYSTEM_PATH", gst_plugin_path);
+      Utilities::SetEnv("GST_PLUGIN_PATH_1_0", gst_plugin_path);
+      Utilities::SetEnv("GST_PLUGIN_SYSTEM_PATH_1_0", gst_plugin_path);
     }
     else {
       qLog(Error) << "GStreamer plugin path" << gst_plugin_path << "does not exist.";
@@ -149,8 +154,10 @@ void SetEnvironment() {
 
 #if defined(Q_OS_WIN32) || defined(Q_OS_MACOS)
   QString gst_registry_filename = StandardPaths::WritableLocation(StandardPaths::StandardLocation::AppLocalDataLocation) + QStringLiteral("/gst-registry-%1-bin").arg(QCoreApplication::applicationVersion());
+  QDir().mkpath(StandardPaths::WritableLocation(StandardPaths::StandardLocation::AppLocalDataLocation));
   qLog(Debug) << "Setting GStreamer registry file to" << gst_registry_filename;
   Utilities::SetEnv("GST_REGISTRY", gst_registry_filename);
+  Utilities::SetEnv("GST_REGISTRY_1_0", gst_registry_filename);
 #endif
 
 }

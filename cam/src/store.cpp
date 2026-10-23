@@ -19,9 +19,16 @@ void Store::exec(const QString&s,const QVariantList&a){query(s,a);}
 void Store::log(const QString&k,const QString&d){exec("INSERT INTO logs(utc,kind,detail) VALUES(?,?,?)",{QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs),k,d});}
 void Store::add(const Event&e){if(!e.due.isValid()||e.id.isEmpty())throw std::runtime_error("Invalid event");exec("INSERT INTO events(id,kind,payload,due,priority) VALUES(?,?,?,?,?)",{e.id,e.kind,e.payload.isNull()?QStringLiteral(""):e.payload,e.due.toMSecsSinceEpoch(),e.priority});}
 QList<Event> Store::due(const QDateTime&now){
- exec("UPDATE events SET status='missed' WHERE status='pending' AND due < ?",{now.addSecs(-60).toMSecsSinceEpoch()});
+ // After sleep/restart, retain prayer events while their pause window is still
+ // active. Announcements remain at-most-once and are not replayed late.
+ int minutes=get("prayer_pause_minutes").isEmpty()?10:qBound(1,get("prayer_pause_minutes").toInt(),60);
+ exec("UPDATE events SET status='missed' WHERE status='pending' AND ((kind NOT IN ('prayer','adhan') AND due < ?) OR (kind IN ('prayer','adhan') AND due <= ?))",{now.addSecs(-60).toMSecsSinceEpoch(),now.addSecs(-minutes*60).toMSecsSinceEpoch()});
  auto q=query("SELECT id,kind,payload,due,priority FROM events WHERE status='pending' AND due<=? ORDER BY priority DESC,due,id",{now.toMSecsSinceEpoch()}); QList<Event> out;
- while(q.next())out.append({q.value(0).toString(),q.value(1).toString(),q.value(2).toString(),QDateTime::fromMSecsSinceEpoch(q.value(3).toLongLong(),QTimeZone::UTC),q.value(4).toInt()});return out;
+ while(q.next()){
+  auto time=QDateTime::fromMSecsSinceEpoch(q.value(3).toLongLong(),QTimeZone::UTC);auto kind=q.value(1).toString();
+  if(kind=="adhan"&&time.secsTo(now)>60)kind="prayer"; // silent catch-up, never a late adhan
+  out.append({q.value(0).toString(),kind,q.value(2).toString(),time,q.value(4).toInt()});
+ }return out;
 }
 bool Store::claim(const QString&id){auto q=query("UPDATE events SET status='claimed' WHERE id=? AND status='pending'",{id});return q.numRowsAffected()==1;}
 void Store::finish(const QString&id,const QString&s){exec("UPDATE events SET status=? WHERE id=?",{s,id});}

@@ -1,4 +1,4 @@
-# Windows build — NASAQ 0.2.1
+# Windows build — NASAQ 0.3.10
 
 Requirements: Visual Studio Build Tools 2022 (MSVC x64, ATL, Windows SDK), CMake >=3.24,
 Ninja and a compatible Strawberry dependency prefix. The tested environment used
@@ -31,3 +31,7 @@ and signing a production installer.
 The smoke script requires tests/cam_tests.exe, tests/cam_audio_tests.exe and a silent
 tests/smoke.wav in a staged package. It uses a separate legacy-named test profile.
 The inherited GitHub workflow is an upstream workflow, not validated NASAQ Windows CI.
+
+## Microsoft Store target
+
+See [MSIX.md](MSIX.md) for identity configuration, runtime normalization, Store builds and the installed-package acceptance checklist.

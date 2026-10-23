@@ -1,0 +1,128 @@
+[
+  {
+    "suite": "cam_tests",
+    "lang": "ar",
+    "exit": 0,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 1.9
+  },
+  {
+    "suite": "cam_audio_tests",
+    "lang": "ar",
+    "exit": 0,
+    "passed": 31,
+    "failed": 0,
+    "skipped": 1,
+    "seconds": 26.4
+  },
+  {
+    "suite": "cam_license_tests",
+    "lang": "ar",
+    "exit": 0,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 2.1
+  },
+  {
+    "suite": "cam_cloud_tests",
+    "lang": "ar",
+    "exit": 0,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 1.6
+  },
+  {
+    "suite": "cam_business_tests",
+    "lang": "ar",
+    "exit": 0,
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 5.0
+  },
+  {
+    "suite": "cam_studio_tests",
+    "lang": "ar",
+    "exit": 0,
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 18.1
+  },
+  {
+    "suite": "cam_review_tests",
+    "lang": "ar",
+    "exit": 0,
+    "passed": 17,
+    "failed": 0,
+    "skipped": 2,
+    "seconds": 25.9
+  },
+  {
+    "suite": "cam_tests",
+    "lang": "en",
+    "exit": 0,
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 0.1
+  },
+  {
+    "suite": "cam_audio_tests",
+    "lang": "en",
+    "exit": 0,
+    "passed": 31,
+    "failed": 0,
+    "skipped": 1,
+    "seconds": 25.8
+  },
+  {
+    "suite": "cam_license_tests",
+    "lang": "en",
+    "exit": 0,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 0.8
+  },
+  {
+    "suite": "cam_cloud_tests",
+    "lang": "en",
+    "exit": 0,
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 0.4
+  },
+  {
+    "suite": "cam_business_tests",
+    "lang": "en",
+    "exit": 0,
+    "passed": 16,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 3.8
+  },
+  {
+    "suite": "cam_studio_tests",
+    "lang": "en",
+    "exit": 0,
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 16.5
+  },
+  {
+    "suite": "cam_review_tests",
+    "lang": "en",
+    "exit": 0,
+    "passed": 17,
+    "failed": 0,
+    "skipped": 2,
+    "seconds": 14.5
+  }
+]
