@@ -4,12 +4,28 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <QSettings>
+#include <QUrl>
+#include <vector>
 #if defined(Q_OS_WIN) && defined(_MSC_VER)
 #include <roapi.h>
 #include <winrt/Windows.ApplicationModel.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 #endif
+QString Nasaq::defaultAudioSettingsUri(){
+#ifdef Q_OS_WIN
+ if(isPackaged()){
+  UINT32 length=0;
+  if(GetCurrentApplicationUserModelId(&length,nullptr)==ERROR_INSUFFICIENT_BUFFER){
+   std::vector<wchar_t> id(length);
+   if(GetCurrentApplicationUserModelId(&length,id.data())==ERROR_SUCCESS)
+    return QStringLiteral("ms-settings:defaultapps?registeredAUMID=")+QString::fromLatin1(QUrl::toPercentEncoding(QString::fromWCharArray(id.data())));
+  }
+  return QStringLiteral("ms-settings:defaultapps");
+ }
+#endif
+ return QStringLiteral("ms-settings:defaultapps?registeredAppUser=NASAQ");
+}
 QString Nasaq::setWindowsStartup(bool enabled) {
 #ifdef Q_OS_WIN
  if(isPackaged()) {

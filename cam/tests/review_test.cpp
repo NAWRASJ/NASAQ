@@ -3,6 +3,7 @@
 #include <QtWidgets>
 #include "window.h"
 #include "prayers.h"
+#include "storeupdates.h"
 #include "nasaqlanguage.h"
 #include "livelanguage.h"
 class ReviewTest:public QObject {
@@ -12,6 +13,19 @@ class ReviewTest:public QObject {
  return QJsonDocument(QJsonObject{{"code",200},{"data",QJsonArray{QJsonObject{{"timings",timings}}}}}).toJson();
  }
 private slots:
+ void storeUpdateStates(){
+  int calls=0;StoreUpdates panel(true,nullptr,[&calls](quintptr){++calls;if(calls==1)return StoreUpdateResult{true,{}};if(calls==2)return StoreUpdateResult{false,"offline"};return StoreUpdateResult{};});
+  QSignalSpy available(&panel,&StoreUpdates::availabilityChanged);auto button=panel.findChild<QPushButton*>("checkStoreUpdates");QVERIFY(button);
+  panel.check();panel.check();QVERIFY(!button->isEnabled());QTRY_COMPARE(available.count(),1);QCOMPARE(calls,1);QVERIFY(available.at(0).at(0).toBool());QVERIFY(button->isEnabled());
+  panel.check();QTRY_VERIFY(button->isEnabled());QCOMPARE(available.count(),1);QCOMPARE(panel.findChild<QLabel*>("storeUpdateStatus")->toolTip(),QString("offline"));
+  panel.check();QTRY_COMPARE(available.count(),2);QVERIFY(!available.at(1).at(0).toBool());
+ }
+ void unpackagedDoesNotClaimStoreUpdateStatus(){int calls=0;StoreUpdates panel(false,nullptr,[&calls](quintptr){++calls;return StoreUpdateResult{};});panel.check();QCOMPARE(calls,0);QVERIFY(!panel.findChild<QPushButton*>("checkStoreUpdates")->isEnabled());QVERIFY(panel.findChild<QPushButton*>("openStoreUpdate")->isEnabled());}
+
+ void monthlyScheduleAlwaysEnabled_data(){QTest::addColumn<QString>("previous");QTest::newRow("first-use")<<QString();QTest::newRow("previously-disabled")<<QString("0");QTest::newRow("enabled")<<QString("1");}
+ void monthlyScheduleAlwaysEnabled(){QFETCH(QString,previous);Store s(":memory:");if(!previous.isNull())s.set("prayer_enabled",previous);s.set("prayer_pause_enabled","0");PrayerService service(s);QCOMPARE(s.get("prayer_enabled"),QString("1"));QCOMPARE(s.get("prayer_pause_enabled"),QString("0"));QVERIFY(s.get("prayer_city").isEmpty());QVERIFY(!PrayerService::nextPause(s,QDateTime::currentDateTimeUtc()).isValid());}
+
+ void firstUseWaitsForCity(){Store s(":memory:");PrayerService service(s);QSignalSpy completed(&service,&PrayerService::completed);QTest::qWait(5500);QVERIFY(completed.isEmpty());QVERIFY(s.get("prayer_city").isEmpty());QVERIFY(s.get("prayer_sync_date").isEmpty());}
  void adhanPopupOwnedByMainPlayer_data(){QTest::addColumn<bool>("minimized");QTest::newRow("visible-player")<<false;QTest::newRow("minimized-player")<<true;}
  void adhanPopupOwnedByMainPlayer(){
   QFETCH(bool,minimized);Store s(":memory:");s.set("prayer_city","Dubai");s.set("prayer_hold_until",QDateTime::currentDateTimeUtc().addSecs(8).toString(Qt::ISODate));
@@ -50,7 +64,7 @@ private slots:
  void workspaceSectionsKeepTasksSeparate(){
   Store s(":memory:");Window w(s);w.show();
   auto nav=w.findChild<QListWidget*>("sectionNavigation");auto stack=w.findChild<QStackedWidget*>("workspaceSections");
-  QVERIFY(nav);QVERIFY(stack);QCOMPARE(nav->count(),6);
+  QVERIFY(nav);QVERIFY(stack);QCOMPARE(nav->count(),6);QVERIFY(w.findChild<QPushButton*>("defaultAudioPlayer"));
   auto mic=w.findChild<QPushButton*>("holdToTalk");auto license=w.findChild<QLabel*>("licenseStatus");auto table=w.findChild<QTableWidget*>();
   QVERIFY(mic);QVERIFY(license);QVERIFY(table);
   QVERIFY(stack->widget(0)->isAncestorOf(mic));QVERIFY(stack->widget(5)->isAncestorOf(license));QVERIFY(stack->widget(2)->isAncestorOf(table));
@@ -90,12 +104,12 @@ private slots:
  }
  void dialogsOpen(){Store s(":memory:");Window w(s);w.show();QTimer dismiss;connect(&dismiss,&QTimer::timeout,&w,[&]{if(auto d=w.findChild<QDialog*>("activationDialog"))d->reject();});dismiss.start(30);QTest::qWait(1000);
  for(const auto &name:QStringList{"prayerSettings","announcementStudio"}){
-  bool seen=false;QTimer watcher;connect(&watcher,&QTimer::timeout,&w,[&]{if(auto d=w.findChild<QDialog*>(name)){seen=true;auto dir=qEnvironmentVariable("NASAQ_REVIEW_EVIDENCE");if(!dir.isEmpty())d->grab().save(dir+"/"+name+".png");d->reject();}});watcher.start(100);
+  bool seen=false;QTimer watcher;connect(&watcher,&QTimer::timeout,&w,[&]{if(auto d=w.findChild<QDialog*>(name)){seen=true;if(name=="prayerSettings"){QVERIFY(d->findChild<QLabel*>("prayerAutomaticSchedule"));const auto boxes=d->findChildren<QCheckBox*>();QCOMPARE(boxes.size(),1);QVERIFY(boxes.first()->isChecked());QVERIFY(!d->findChild<QLabel*>("prayerReadiness")->text().isEmpty());}auto dir=qEnvironmentVariable("NASAQ_REVIEW_EVIDENCE");if(!dir.isEmpty())d->grab().save(dir+"/"+name+".png");d->reject();}});watcher.start(100);
   for(auto b:w.findChildren<QPushButton*>()){bool match=name=="prayerSettings"?b->text()==NText("Prayer times"):b->text().contains(NasaqLanguage()=="ar"?QStringLiteral("استوديو الإعلانات"):QStringLiteral("Announcement studio"));if(match){b->click();break;}}
   QVERIFY2(seen,qPrintable(name));
  }
  }
- void realNetworkSync(){if(!qEnvironmentVariableIsSet("NASAQ_LIVE_NETWORK"))QSKIP("Live network test not requested");Store s(":memory:");PrayerService service(s);QSignalSpy spy(&service,&PrayerService::completed);service.sync("Dubai","AE",16,"",true);QTRY_VERIFY_WITH_TIMEOUT(!spy.isEmpty(),25000);QVERIFY2(spy.first().first().toBool(),qPrintable(spy.first().at(1).toString()));QCOMPARE(s.get("prayer_timezone"),QString("Asia/Dubai"));auto q=s.query("SELECT count(*) FROM events WHERE status='pending'");q.next();QVERIFY(q.value(0).toInt()>0);service.sync("Dubai","AE",16,"",false);q=s.query("SELECT count(*) FROM events WHERE status='pending'");q.next();QCOMPARE(q.value(0).toInt(),0);}
+ void realNetworkSync(){if(!qEnvironmentVariableIsSet("NASAQ_LIVE_NETWORK"))QSKIP("Live network test not requested");Store s(":memory:");PrayerService service(s);QSignalSpy spy(&service,&PrayerService::completed);service.sync("Dubai","AE",16,"");QTRY_VERIFY_WITH_TIMEOUT(!spy.isEmpty(),25000);QVERIFY2(spy.first().first().toBool(),qPrintable(spy.first().at(1).toString()));QCOMPARE(s.get("prayer_timezone"),QString("Asia/Dubai"));auto q=s.query("SELECT count(*) FROM events WHERE status='pending'");q.next();QVERIFY(q.value(0).toInt()>0);}
  void realServiceFixture(){auto path=qEnvironmentVariable("NASAQ_PRAYER_FIXTURE");if(path.isEmpty())QSKIP("No live fixture supplied");QFile file(path);QVERIFY(file.open(QIODevice::ReadOnly));auto rows=PrayerService::parseCalendar(file.readAll(),"live","",QDateTime::currentDateTimeUtc());QVERIFY(rows.size()>0);}
 };
 int main(int argc,char **argv){qputenv("QT_MEDIA_BACKEND","windows");QApplication app(argc,argv);app.setApplicationName("NASAQ-Review-Tests");ReviewTest test;return QTest::qExec(&test,argc,argv);}

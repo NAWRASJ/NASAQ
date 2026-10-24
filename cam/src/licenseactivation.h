@@ -12,6 +12,7 @@ class Activation:public QObject {
  QString description()const{return lease.message;}
  LicenseLease details()const{return lease;}
  void activate(const QString &key);
+ bool deactivateLocally();
  void tick();
  Q_SIGNALS: void changed(bool allowed,const QString &message);
  void completed(bool success);

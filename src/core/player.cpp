@@ -603,7 +603,7 @@ void Player::UnPause() {
   if (property("camOperatorLocked").toBool() && !property("camAuthorized").toBool()) return;
   // CAM foreground audio owns the output until it releases suspension.
   if (property("camLicenseDenied").toBool()) return;
-  if (property("camSuspended").toBool()) return;
+  if (property("camSuspended").toBool() || property("camStartupPrayerHoldUntil").toDateTime() > QDateTime::currentDateTimeUtc()) return;
 
   if (current_item_ && pause_time_.isValid()) {
     const Song &song = current_item_->EffectiveMetadata();
@@ -811,7 +811,7 @@ void Player::PlayAt(const int index, const bool pause, const quint64 offset_nano
   if (property("camOperatorLocked").toBool() && !property("camAuthorized").toBool() && !(change & EngineBase::TrackChangeType::Auto)) return;
   // Reject manual, tray, shortcut and remote play requests during CAM interruptions.
   if (property("camLicenseDenied").toBool()) return;
-  if (property("camSuspended").toBool()) return;
+  if (property("camSuspended").toBool() || property("camStartupPrayerHoldUntil").toDateTime() > QDateTime::currentDateTimeUtc()) return;
 
   pause_time_ = pause ? QDateTime::currentDateTime() : QDateTime();
   play_offset_nanosec_ = offset_nanosec;

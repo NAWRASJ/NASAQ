@@ -2782,6 +2782,8 @@ void MainWindow::CommandlineOptionsReceived(const CommandlineOptions &options) {
       }
     }
 #endif
+    if (isMinimized()) showNormal();
+    Raise();  // Reveal the existing player on file activation.
     MimeData *mimedata = new MimeData;
     mimedata->setUrls(options.urls());
     // Behaviour depends on command line options, so set it here
@@ -2806,6 +2808,11 @@ void MainWindow::CommandlineOptionsReceived(const CommandlineOptions &options) {
         break;
     }
 
+    if (app_->player()->property("camSuspended").toBool() || app_->player()->property("camStartupPrayerHoldUntil").toDateTime() > QDateTime::currentDateTimeUtc()) {
+      // Preserve the prayer pause and interrupted track; only append new files.
+      mimedata->play_now_ = false;
+      mimedata->clear_first_ = false;
+    }
     AddToPlaylist(mimedata);
   }
 

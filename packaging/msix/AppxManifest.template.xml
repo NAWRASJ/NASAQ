@@ -2,10 +2,11 @@
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
   xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap uap5 desktop rescap">
+  IgnorableNamespaces="uap uap3 uap5 desktop rescap">
 
   <!-- Name and Publisher MUST be copied exactly from Partner Center > Product identity -->
   <Identity Name="{IDENTITY_NAME}"
@@ -40,6 +41,19 @@
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
       </uap:VisualElements>
       <Extensions>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap3:FileTypeAssociation Name="nasaq.audio" Parameters="--play --append &quot;%1&quot;">
+            <uap:DisplayName>NASAQ Audio</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.mp3</uap:FileType>
+              <uap:FileType>.wav</uap:FileType>
+              <uap:FileType>.flac</uap:FileType>
+              <uap:FileType>.ogg</uap:FileType>
+              <uap:FileType>.m4a</uap:FileType>
+              <uap:FileType>.opus</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap3:FileTypeAssociation>
+        </uap:Extension>
         <!-- Optional auto-start at sign-in. Disabled by default; the user can enable it in
              Settings > Apps > Startup (replaces the HKCU\...\Run key, which MSIX ignores). -->
         <desktop:Extension Category="windows.startupTask" Executable="NASAQ.exe" EntryPoint="Windows.FullTrustApplication">

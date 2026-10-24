@@ -33,7 +33,9 @@
 // Qt provides only foreground announcement, SAPI and live microphone services.
 class StrawberryMusic final:public MusicTransport {
  public:
- explicit StrawberryMusic(Application*application,QObject*parent=nullptr):MusicTransport(parent),app(application){
+ explicit StrawberryMusic(Application*application,QObject*parent=nullptr,const QDateTime &heldUntil={}):MusicTransport(parent),app(application){
+  // Block early file activation without touching the not-yet-initialized engine.
+  app->player()->setProperty("camStartupPrayerHoldUntil",heldUntil);
   connect(&*app->player(),&Player::Playing,this,[this]{
    if(app->player()->property("camLicenseDenied").toBool()){app->player()->Stop();return;}
    if(suspended){app->player()->Pause();return;}
@@ -64,7 +66,7 @@ class StrawberryMusic final:public MusicTransport {
  }
  void setGain(double gain)override{app->player()->engine()->SetBusinessGain(gain);}
  bool playing()const override{return app->player()->GetState()==EngineBase::State::Playing;}
- void suspend(bool active)override{suspended=active;app->player()->setProperty("camSuspended",active);if(active)app->player()->Pause();}
+ void suspend(bool active)override{app->player()->setProperty("camStartupPrayerHoldUntil",QDateTime());suspended=active;app->player()->setProperty("camSuspended",active);if(active)app->player()->Pause();}
  void resume()override{if(!suspended&&!pending)authorizedPlay(false);}
  void stop()override{pending=false;++loadGeneration;disconnect(rowsConnection);app->player()->Stop();}
  private:
@@ -104,7 +106,7 @@ class CamHost final:public QObject {
    if(result.unknown)text+=ar?QStringLiteral(" • توجد مدد غير معروفة"):QStringLiteral(" • Unknown durations present");
    text+=ordered?(ar?QStringLiteral("\nالانتهاء تقديري حسب ساعة الكمبيوتر؛ يتغير عند التوقف والإعلانات."):QStringLiteral("\nEnd times use the PC clock; pauses and announcements shift estimates.")):(ar?QStringLiteral("\nأوقات الانتهاء تتطلب ترتيبًا متسلسلًا دون تخطي أو قائمة انتظار."):QStringLiteral("\nEnd times require sequential order without skips or queued tracks."));coverage->setText(text);
   });clock->start(1000);
-  music=std::make_unique<StrawberryMusic>(app);
+  music=std::make_unique<StrawberryMusic>(app,nullptr,store->get(QStringLiteral("prayer_pause_enabled"))!=QStringLiteral("0") ? QDateTime::fromString(store->get(QStringLiteral("prayer_hold_until")),Qt::ISODate) : QDateTime());
   window=std::make_unique<Window>(*store,music.get(),main);
   const auto sectionNames=Window::sectionNames();
   for(int i=0;i<sectionNames.size();++i){

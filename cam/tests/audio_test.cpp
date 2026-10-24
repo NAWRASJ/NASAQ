@@ -15,6 +15,12 @@ class FakeMusic:public MusicTransport {
 class AudioTest:public QObject {
  Q_OBJECT
 private slots:
+ void openingAudioDuringPrayerDoesNotPlay(){
+  QTemporaryDir dir;auto file=dir.filePath(QStringLiteral("أغنية جديدة.wav"));QVERIFY(writeSilence(file));Store s(":memory:");QtMusicTransport music;Audio audio(s,nullptr,&music);QSignalSpy events(&music,&MusicTransport::event);
+  const auto now=QDateTime::currentDateTimeUtc();QVERIFY(audio.dispatch({"pause","prayer","",now,60}));QVERIFY(music.replace({file}));music.resume();QTest::qWait(400);QVERIFY(!music.playing());QVERIFY(audio.prayerActive());
+  for(const auto &event:events)QVERIFY(event.at(0).toString()!=QStringLiteral("play_started"));
+ }
+
  void adhanToggleStopsCurrentHoldAndSkipsFutureAdhan(){
   Store s(":memory:");FakeMusic music;Audio a(s,nullptr,&music);const auto now=QDateTime::currentDateTimeUtc();
   a.setPrayerPauseEnabled(true);QVERIFY(a.dispatch({"current","prayer","",now,60}));QVERIFY(music.held);

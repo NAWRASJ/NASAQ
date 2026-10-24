@@ -5,4 +5,5 @@ namespace Nasaq {
 // Called on a worker thread: WinRT operations must not block the UI apartment.
 QString setWindowsStartup(bool enabled);
 bool microphonePrivacyDenied();
+QString defaultAudioSettingsUri();
 }

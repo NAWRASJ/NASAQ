@@ -6,7 +6,7 @@ class PrayerService:public QObject {
  Q_OBJECT
 public:
  explicit PrayerService(Store &store,QObject *parent=nullptr);
- void sync(const QString &city,const QString &country,int method,const QString &adhan,bool enabled);
+ void sync(const QString &city,const QString &country,int method,const QString &adhan);
  static QList<Event> parseCalendar(const QByteArray &json,const QString &identity,const QString &audio,const QDateTime &now);
  static void saveCalendar(Store &store,const QList<Event> &events);
  static QDateTime nextPause(Store &store,const QDateTime &now);

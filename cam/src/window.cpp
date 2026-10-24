@@ -4,6 +4,7 @@
 #include "window.h"
 #include "packageidentity.h"
 #include "windowsstartup.h"
+#include "storeupdates.h"
 #include <QtConcurrent/QtConcurrentRun>
 #include <QFutureWatcher>
 #include "nasaqtheme.h"
@@ -61,7 +62,7 @@ Window::Window(Store&s,MusicTransport*transport,QWidget*notificationHost):store(
  auto updateAdhan=[this,pauseToggle,readiness]{
   QSignalBlocker block(pauseToggle);const bool on=store.get("prayer_pause_enabled")!="0";pauseToggle->setChecked(on);const bool ar=NasaqLanguage()=="ar";
   const auto next=PrayerService::nextPause(store,QDateTime::currentDateTimeUtc());
-  readiness->setText(!on?(ar?QStringLiteral("التوقف التلقائي: متوقف"):QStringLiteral("Automatic pause: off")):next.isValid()?(ar?QStringLiteral("التوقف التلقائي: مفعّل • الأذان القادم (%1): %2"):QStringLiteral("Automatic pause: on • Next adhan (%1): %2")).arg(store.get("prayer_city"),next.toLocalTime().toString("yyyy-MM-dd HH:mm t")):(ar?QStringLiteral("التوقف مفعّل، لكن لا توجد مواقيت محفوظة قادمة. افتح أوقات الأذان واختر المدينة ثم احفظ واجلب المواقيت."):QStringLiteral("Pause is enabled, but no upcoming times are saved. Open Adhan times, choose the city, then save and fetch times.")));
+  readiness->setText(!on?(ar?QStringLiteral("التوقف التلقائي: متوقف"):QStringLiteral("Automatic pause: off")):next.isValid()?(ar?QStringLiteral("التوقف التلقائي: مفعّل • الأذان القادم (%1): %2"):QStringLiteral("Automatic pause: on • Next adhan (%1): %2")).arg(store.get("prayer_city"),next.toLocalTime().toString("yyyy-MM-dd HH:mm t")):(ar?QStringLiteral("التوقف مفعّل، لكن لا توجد مواقيت محفوظة قادمة. افتح أوقات الأذان واختر المدينة ثم اضغط حفظ وتحديث المواقيت."):QStringLiteral("Pause is enabled, but no upcoming times are saved. Open Adhan times, choose the city, then Save and update prayer times.")));
  };
  connect(pauseToggle,&QCheckBox::clicked,this,[this,updateAdhan](bool on){guarded([this,on]{audio.setPrayerPauseEnabled(on);});updateAdhan();});
  auto adhanTimer=new QTimer(this);connect(adhanTimer,&QTimer::timeout,this,updateAdhan);adhanTimer->start(1000);connect(this,&Window::interfaceLanguageChanged,this,updateAdhan);updateAdhan();
@@ -92,6 +93,17 @@ Window::Window(Store&s,MusicTransport*transport,QWidget*notificationHost):store(
   watcher->setFuture(QtConcurrent::run([enabled=choice==choices.first()]{return Nasaq::setWindowsStartup(enabled);}));
  });});
 #endif
+ auto defaultPlayer=new QPushButton;defaultPlayer->setObjectName("defaultAudioPlayer");pages[5]->addWidget(defaultPlayer);
+ auto defaultHelp=new QLabel;defaultHelp->setWordWrap(true);pages[5]->addWidget(defaultHelp);
+ auto defaultText=[defaultPlayer,defaultHelp]{const bool ar=NasaqLanguage()=="ar";defaultPlayer->setText(ar?QStringLiteral("اجعل نسق المشغّل الافتراضي"):QStringLiteral("Make NASAQ the default audio player"));defaultHelp->setText(ar?QStringLiteral("اختر نسق للملفات الصوتية في إعدادات ويندوز التي ستفتح. أثناء توقف الأذان تُضاف الملفات إلى القائمة دون تشغيلها."):QStringLiteral("Choose NASAQ for audio files in Windows Settings. Files opened during a prayer pause are added without starting playback."));};defaultText();connect(this,&Window::interfaceLanguageChanged,defaultPlayer,defaultText);
+ connect(defaultPlayer,&QPushButton::clicked,this,[this]{if(!QDesktopServices::openUrl(QUrl(Nasaq::defaultAudioSettingsUri()))&&!QDesktopServices::openUrl(QUrl("ms-settings:defaultapps")))QMessageBox::warning(this,"NASAQ",NasaqLanguage()=="ar"?QStringLiteral("افتح إعدادات ويندوز > التطبيقات > التطبيقات الافتراضية، ثم اختر نسق."):QStringLiteral("Open Windows Settings > Apps > Default apps and choose NASAQ."));});
+ auto storeUpdates=new StoreUpdates(Nasaq::storeManaged(),this);pages[5]->addWidget(storeUpdates);
+ connect(this,&Window::interfaceLanguageChanged,storeUpdates,&StoreUpdates::updateLanguage);
+ auto updateNotice=new QPushButton;updateNotice->setObjectName("storeUpdateNotice");layout->insertWidget(1,updateNotice);updateNotice->hide();
+ auto updateNoticeText=[updateNotice]{updateNotice->setText(NasaqLanguage()=="ar"?QStringLiteral("يتوفر تحديث جديد — افتح Microsoft Store"):QStringLiteral("Update available — open Microsoft Store"));};updateNoticeText();
+ connect(this,&Window::interfaceLanguageChanged,updateNotice,updateNoticeText);
+ connect(storeUpdates,&StoreUpdates::availabilityChanged,updateNotice,&QWidget::setVisible);
+ connect(updateNotice,&QPushButton::clicked,storeUpdates,[storeUpdates]{storeUpdates->findChild<QPushButton*>("openStoreUpdate")->click();});
  if(!Nasaq::storeManaged()) add(NText(QStringLiteral("Updates")),[this]{guarded([this]{updates();});});
  add(NasaqLanguage()=="ar"?QStringLiteral("حالة الترخيص"):QStringLiteral("License status"),[this]{guarded([this]{showActivationDialog();});});
 

@@ -9,6 +9,16 @@ Activation::Activation(Store&s,QObject*p,LicenseConfig c,QNetworkAccessManager*n
  lease=verifyLicenseLease(certificate,config,fingerprint,QDateTime::currentDateTimeUtc(),lastSeen);key=lease.key;nextRefresh=QDateTime::currentDateTimeUtc();
 }
 void Activation::publish(){Q_EMIT changed(lease.valid,lease.message);}
+bool Activation::deactivateLocally(){
+ // Do not let an outstanding renewal restore the certificate after removal.
+ if(busy)return false;
+ // Commit before changing memory, so a storage failure keeps the current state.
+ store.set("activation_sealed_v1",QStringLiteral(""));
+ certificate.clear();key.clear();licenseId.clear();
+ lastSeen={};lastSaved={};nextRefresh={};lease=LicenseLease();
+ lease.message="تم إلغاء التفعيل على هذا الجهاز / License removed from this device";
+ publish();return true;
+}
 void Activation::persist(){
  auto sealed=protectLicenseData(QJsonDocument(QJsonObject{{"certificate",QString::fromUtf8(certificate)},{"lastSeen",lastSeen.toString(Qt::ISODate)}}).toJson(QJsonDocument::Compact));
  if(sealed.isEmpty())throw std::runtime_error("Windows could not protect activation data");

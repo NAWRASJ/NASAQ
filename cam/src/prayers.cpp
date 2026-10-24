@@ -9,6 +9,8 @@
 #include <QCryptographicHash>
 #include <stdexcept>
 PrayerService::PrayerService(Store &s,QObject *parent):QObject(parent),store(s){
+ // Monthly refresh is automatic; the separate pause preference controls playback.
+ store.set("prayer_enabled","1");
  auto timer=new QTimer(this);connect(timer,&QTimer::timeout,this,&PrayerService::refreshSaved);timer->start(3600000);
  QTimer::singleShot(5000,this,&PrayerService::refreshSaved);
 }
@@ -18,7 +20,7 @@ QDateTime PrayerService::nextPause(Store &s,const QDateTime &now){
  return q.next()?QDateTime::fromMSecsSinceEpoch(q.value(0).toLongLong(),QTimeZone::UTC):QDateTime();
 }
 void PrayerService::refreshSaved(){
- try{if(store.get("prayer_enabled")=="1"&&store.get("prayer_sync_date")!=QDate::currentDate().toString(Qt::ISODate))sync(store.get("prayer_city"),store.get("prayer_country"),store.get("prayer_method").toInt(),store.get("prayer_audio"),true);}catch(const std::exception&e){Q_EMIT completed(false,QString::fromUtf8(e.what()));}
+ try{if(!store.get("prayer_city").trimmed().isEmpty()&&!store.get("prayer_country").trimmed().isEmpty()&&store.get("prayer_sync_date")!=QDate::currentDate().toString(Qt::ISODate))sync(store.get("prayer_city"),store.get("prayer_country"),store.get("prayer_method").toInt(),store.get("prayer_audio"));}catch(const std::exception&e){Q_EMIT completed(false,QString::fromUtf8(e.what()));}
 }
 QList<Event> PrayerService::parseCalendar(const QByteArray &json,const QString &identity,const QString &audio,const QDateTime &now){
  QJsonParseError error;auto doc=QJsonDocument::fromJson(json,&error);auto root=doc.object();
@@ -45,9 +47,8 @@ void PrayerService::saveCalendar(Store&s,const QList<Event>&events){
   s.exec("COMMIT");
  }catch(...){s.exec("ROLLBACK");throw;}
 }
-void PrayerService::sync(const QString &city,const QString &country,int method,const QString &adhan,bool enabled){
+void PrayerService::sync(const QString &city,const QString &country,int method,const QString &adhan){
  if(busy){Q_EMIT completed(false,QStringLiteral("Prayer sync already running"));return;}
- if(!enabled){store.set("prayer_enabled","0");saveCalendar(store,{});Q_EMIT completed(true,QStringLiteral("Automatic prayer schedule disabled"));return;}
  if(city.trimmed().isEmpty()||country.trimmed().isEmpty()||(!adhan.isEmpty()&&!QFileInfo(adhan).isFile())){Q_EMIT completed(false,QStringLiteral("Choose a city, country and an existing adhan file"));return;}
  busy=true;
  auto date=QDate::currentDate();QUrl url(QString("https://api.aladhan.com/v1/calendarByCity/%1/%2").arg(date.year()).arg(date.month()));
