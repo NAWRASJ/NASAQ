@@ -4,8 +4,8 @@ $repo=Split-Path $PSScriptRoot -Parent
 $temp=Join-Path ([IO.Path]::GetTempPath()) ('nasaq-msix-test-'+[guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $temp | Out-Null
 $stage=Join-Path $temp 'stage'
-New-Item -ItemType Directory -Path $stage,"$stage/platforms","$stage/gstreamer-plugins" | Out-Null
-foreach($f in 'NASAQ.exe','gst-plugin-scanner.exe','platforms/qwindows.dll','gstreamer-plugins/gstcoreelements.dll') { Set-Content -LiteralPath (Join-Path $stage $f) -Value 'fixture' }
+New-Item -ItemType Directory -Path $stage,"$stage/platforms","$stage/gstreamer-plugins","$stage/gio-modules" | Out-Null
+foreach($f in 'NASAQ.exe','gst-plugin-scanner.exe','platforms/qwindows.dll','gstreamer-plugins/gstcoreelements.dll','gstreamer-plugins/gstsoup.dll','gstreamer-plugins/gsticydemux.dll','soup-3.0-0.dll','gio-modules/gioopenssl.dll') { Set-Content -LiteralPath (Join-Path $stage $f) -Value 'fixture' }
 Copy-Item -LiteralPath "$stage/platforms/qwindows.dll" -Destination "$stage/qwindows.dll"
 Set-Content -LiteralPath "$stage/Qt6Core.dll" -Value 'core library must remain'
 & "$PSScriptRoot/normalize-runtime.ps1" -StageDir $stage
@@ -15,6 +15,12 @@ if((Get-Content -LiteralPath "$stage/qt.conf" -Raw) -notmatch 'Plugins=\.'){thro
 Write-Output 'PASS: exact plugin duplicate removed; core preserved; relative qt.conf'
 & "$PSScriptRoot/normalize-runtime.ps1" -StageDir $stage
 Write-Output 'PASS: normalization is idempotent'
+Move-Item "$stage/gstreamer-plugins/gstsoup.dll" "$temp/gstsoup.dll"
+$rejected=$false
+try { & "$PSScriptRoot/normalize-runtime.ps1" -StageDir $stage } catch { $rejected=$_.Exception.Message -like '*gstsoup.dll*' }
+if(-not $rejected){throw 'Missing HTTPS plugin accepted'}
+Move-Item "$temp/gstsoup.dll" "$stage/gstreamer-plugins/gstsoup.dll"
+Write-Output 'PASS: missing HTTPS source rejects the runtime'
 Set-Content -LiteralPath "$stage/qwindows.dll" -Value 'conflicting version'
 $rejected=$false
 try { & "$PSScriptRoot/normalize-runtime.ps1" -StageDir $stage } catch { $rejected=$_.Exception.Message -like '*Conflicting plugin copies*' }

@@ -17,7 +17,7 @@ foreach($dir in $plugins) {
   }
  }
 }
-foreach($required in @('platforms/qwindows.dll','gstreamer-plugins/gstcoreelements.dll','gst-plugin-scanner.exe')) {
+foreach($required in @('platforms/qwindows.dll','gstreamer-plugins/gstcoreelements.dll','gst-plugin-scanner.exe','gstreamer-plugins/gstsoup.dll','gstreamer-plugins/gsticydemux.dll','soup-3.0-0.dll','gio-modules/gioopenssl.dll')) {
  if(-not(Test-Path -LiteralPath (Join-Path $root $required))){throw "Missing plugin runtime: $required"}
 }
 Set-Content -LiteralPath (Join-Path $root 'qt.conf') -Encoding ascii -Value "[Paths]`nPrefix=.`nPlugins=."

@@ -5,8 +5,8 @@
 [Setup]
 AppId={{1D62081C-2250-4E92-9076-D25B6329D8EF}
 AppName=NASAQ — نسق
-AppVersion=0.3.11
-VersionInfoVersion=0.3.11.0
+AppVersion=0.3.12
+VersionInfoVersion=0.3.12.0
 WizardStyle=modern dynamic
 DisableWelcomePage=no
 DisableDirPage=no
@@ -21,7 +21,7 @@ PrivilegesRequired=lowest
 ChangesAssociations=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-OutputBaseFilename=NASAQ-0.3.11-setup
+OutputBaseFilename=NASAQ-0.3.12-setup
 OutputDir=..\installer
 Compression=lzma2/fast
 SolidCompression=yes

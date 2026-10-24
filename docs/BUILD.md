@@ -35,3 +35,14 @@ The inherited GitHub workflow is an upstream workflow, not validated NASAQ Windo
 ## Microsoft Store target
 
 See [MSIX.md](MSIX.md) for identity configuration, runtime normalization, Store builds and the installed-package acceptance checklist.
+
+### Radio runtime acceptance (0.3.12+)
+Before normalizing or packaging the runtime, run in the Visual Studio developer shell:
+```powershell
+./scripts/stage-radio-runtime.ps1 -StageDir $stage -DependencyPrefix $prefix
+./scripts/normalize-runtime.ps1 -StageDir $stage
+./scripts/test-radio-runtime.ps1 -StageDir $stage -ProbePath "$build/nasaq_codec_probe.exe"
+```
+Use the exact dependency prefix used to build the player. The probe uses a private
+registry and a clean PATH, and decodes audio into a silent sink. A successful
+probe does not replace installed-app checks of prayer pauses and file activation.
