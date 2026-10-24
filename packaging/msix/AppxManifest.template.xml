@@ -42,7 +42,7 @@
       </uap:VisualElements>
       <Extensions>
         <uap:Extension Category="windows.fileTypeAssociation">
-          <uap3:FileTypeAssociation Name="nasaq.audio" Parameters="--play --append &quot;%1&quot;">
+          <uap3:FileTypeAssociation Name="nasaq.audio" Parameters="--open-files &quot;%1&quot;">
             <uap:DisplayName>NASAQ Audio</uap:DisplayName>
             <uap:SupportedFileTypes>
               <uap:FileType>.mp3</uap:FileType>

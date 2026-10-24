@@ -80,6 +80,7 @@ constexpr char kHelpText[] =
     "%20:\n"
     "  -c, --create <name>        %21\n"
     "  -a, --append               %22\n"
+    "      --open-files           Open files once; reuse existing playlist entries\n"
     "  -l, --load                 %23\n"
     "  -k, --play-track <n>       %24\n"
     "  -i, --play-playlist <name> %25\n"
@@ -173,6 +174,7 @@ bool CommandlineOptions::Parse() {
       { OPTSTR("restart-or-previous"), no_argument, nullptr, LongOptions::RestartOrPrevious },
       { OPTSTR("create"), required_argument, nullptr, 'c' },
       { OPTSTR("append"), no_argument, nullptr, 'a' },
+      { OPTSTR("open-files"), no_argument, nullptr, LongOptions::OpenFiles },
       { OPTSTR("load"), no_argument, nullptr, 'l' },
       { OPTSTR("play-track"), required_argument, nullptr, 'k' },
       { OPTSTR("play-playlist"), required_argument, nullptr, 'i' },
@@ -273,6 +275,10 @@ bool CommandlineOptions::Parse() {
         break;
       case 'a':
         url_list_action_ = UrlListAction::Append;
+        break;
+      case LongOptions::OpenFiles:
+        url_list_action_ = UrlListAction::OpenFiles;
+        player_action_ = PlayerAction::Play;
         break;
       case 'l':
         url_list_action_ = UrlListAction::Load;

@@ -48,7 +48,8 @@ class CommandlineOptions {
     Append = 0,
     Load = 1,
     None = 2,
-    CreateNew = 3
+    CreateNew = 3,
+    OpenFiles = 4
   };
   enum class PlayerAction {
     None = 0,
@@ -102,6 +103,7 @@ class CommandlineOptions {
     VolumeDecreaseBy,
     RestartOrPrevious,
     CreateFingerPrint,
+    OpenFiles,
   };
 
   void RemoveArg(const QString &starts_with, int count);

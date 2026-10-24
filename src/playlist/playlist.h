@@ -329,6 +329,8 @@ class Playlist : public QAbstractListModel {
   void SetColumnAlignment(const ColumnAlignmentMap &alignment);
 
   void InsertUrls(const QList<QUrl> &urls, const int pos = -1, const bool play_now = false, const bool enqueue = false, const bool enqueue_next = false, const bool signal = false);
+  // Returns the existing row for the first URL, or -1 when new/pending.
+  int OpenUrlsUnique(const QList<QUrl> &urls, const bool play_now);
   // Removes items with given indices from the playlist. This operation is not undoable.
   void RemoveItemsWithoutUndo(const QList<int> &indicesIn);
 
@@ -441,6 +443,7 @@ class Playlist : public QAbstractListModel {
   bool favorite_;
 
   PlaylistItemPtrList items_;
+  QSet<QString> pending_open_files_;
 
   // The rows of the items in items_, rebuilt when needed after items_ changed, so finding the rows of an item doesn't scan the whole playlist.
   mutable QMultiHash<const PlaylistItem*, int> item_rows_;

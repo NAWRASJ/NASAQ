@@ -2784,6 +2784,31 @@ void MainWindow::CommandlineOptionsReceived(const CommandlineOptions &options) {
 #endif
     if (isMinimized()) showNormal();
     Raise();  // Reveal the existing player on file activation.
+    // Old installed associations used --play --append. Keep those safe too;
+    // explicit --append without --play remains an intentional enqueue operation.
+    const bool open_unique = options.url_list_action() == CommandlineOptions::UrlListAction::OpenFiles ||
+        (options.url_list_action() == CommandlineOptions::UrlListAction::Append &&
+         options.player_action() == CommandlineOptions::PlayerAction::Play);
+    if (open_unique) {
+      Playlist *playlist = app_->playlist_manager()->current();
+      const bool held = app_->player()->property("camSuspended").toBool() ||
+          app_->player()->property("camStartupPrayerHoldUntil").toDateTime() > QDateTime::currentDateTimeUtc();
+      if (playlist) {
+        const int row = playlist->OpenUrlsUnique(options.urls(), !held);
+        if (row >= 0) {
+          const QModelIndex selected = playlist->filter()->mapFromSource(playlist->index(row, 0));
+          ui_->playlist->view()->selectionModel()->setCurrentIndex(selected, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+          ui_->playlist->view()->scrollTo(selected);
+          const bool already_playing = app_->playlist_manager()->active() == playlist &&
+              playlist->current_row() == row && app_->player()->GetState() == EngineBase::State::Playing;
+          if (!held && !already_playing) {
+            app_->playlist_manager()->SetActivePlaylist(playlist->id());
+            app_->player()->PlayAt(row, false, 0, EngineBase::TrackChangeType::Manual, Playlist::AutoScroll::Always, true);
+          }
+        }
+      }
+    }
+    else {
     MimeData *mimedata = new MimeData;
     mimedata->setUrls(options.urls());
     // Behaviour depends on command line options, so set it here
@@ -2797,6 +2822,7 @@ void MainWindow::CommandlineOptionsReceived(const CommandlineOptions &options) {
         mimedata->clear_first_ = true;
         break;
       case CommandlineOptions::UrlListAction::Append:
+      case CommandlineOptions::UrlListAction::OpenFiles:
         // Nothing to do
         break;
       case CommandlineOptions::UrlListAction::None:
@@ -2814,6 +2840,7 @@ void MainWindow::CommandlineOptionsReceived(const CommandlineOptions &options) {
       mimedata->clear_first_ = false;
     }
     AddToPlaylist(mimedata);
+    }
   }
 
   if (options.set_volume() != -1) app_->player()->SetVolume(static_cast<uint>(qBound(0, options.set_volume(), 100)));

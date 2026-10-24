@@ -5,8 +5,8 @@
 [Setup]
 AppId={{1D62081C-2250-4E92-9076-D25B6329D8EF}
 AppName=NASAQ — نسق
-AppVersion=0.3.12
-VersionInfoVersion=0.3.12.0
+AppVersion=0.3.13
+VersionInfoVersion=0.3.13.0
 WizardStyle=modern dynamic
 DisableWelcomePage=no
 DisableDirPage=no
@@ -21,7 +21,7 @@ PrivilegesRequired=lowest
 ChangesAssociations=yes
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-OutputBaseFilename=NASAQ-0.3.12-setup
+OutputBaseFilename=NASAQ-0.3.13-setup
 OutputDir=..\installer
 Compression=lzma2/fast
 SolidCompression=yes
@@ -56,7 +56,7 @@ Filename: "{app}\NASAQ.exe"; Description: "{cm:LaunchApp}"; Flags: nowait postin
 [Registry]
 Root: HKCU; Subkey: "Software\Classes\NASAQ.Audio"; ValueType: string; ValueName: ""; ValueData: "NASAQ Audio"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\NASAQ.Audio\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\NASAQ.exe,0"
-Root: HKCU; Subkey: "Software\Classes\NASAQ.Audio\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\NASAQ.exe"" --play --append ""%1"""
+Root: HKCU; Subkey: "Software\Classes\NASAQ.Audio\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\NASAQ.exe"" --open-files ""%1"""
 Root: HKCU; Subkey: "Software\Classes\Applications\NASAQ.exe\Capabilities"; ValueType: string; ValueName: "ApplicationName"; ValueData: "NASAQ"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\Applications\NASAQ.exe\Capabilities"; ValueType: string; ValueName: "ApplicationDescription"; ValueData: "NASAQ audio player"
 Root: HKCU; Subkey: "Software\RegisteredApplications"; ValueType: string; ValueName: "NASAQ"; ValueData: "Software\Classes\Applications\NASAQ.exe\Capabilities"; Flags: uninsdeletevalue
@@ -76,7 +76,7 @@ Root: HKCU; Subkey: "Software\Classes\Applications\NASAQ.exe\Capabilities\FileAs
 ; Executable registration enables discovery in the Windows Open With picker.
 Root: HKCU; Subkey: "Software\Classes\Applications\NASAQ.exe"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "NASAQ — نسق"; Flags: uninsdeletekey
 Root: HKCU; Subkey: "Software\Classes\Applications\NASAQ.exe\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\NASAQ.exe,0"
-Root: HKCU; Subkey: "Software\Classes\Applications\NASAQ.exe\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\NASAQ.exe"" --play --append ""%1"""
+Root: HKCU; Subkey: "Software\Classes\Applications\NASAQ.exe\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\NASAQ.exe"" --open-files ""%1"""
 Root: HKCU; Subkey: "Software\Classes\Applications\NASAQ.exe\Capabilities"; ValueType: string; ValueName: "ApplicationIcon"; ValueData: "{app}\NASAQ.exe,0"
 Root: HKCU; Subkey: "Software\Classes\Applications\NASAQ.exe\SupportedTypes"; ValueType: string; ValueName: ".mp3"; ValueData: ""
 Root: HKCU; Subkey: "Software\Classes\Applications\NASAQ.exe\SupportedTypes"; ValueType: string; ValueName: ".wav"; ValueData: ""

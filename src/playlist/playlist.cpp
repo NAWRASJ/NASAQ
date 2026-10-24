@@ -39,6 +39,7 @@
 #include <QDataStream>
 #include <QBuffer>
 #include <QFile>
+#include <QFileInfo>
 #include <QList>
 #include <QMap>
 #include <QHash>
@@ -1115,6 +1116,50 @@ bool Playlist::dropMimeData(const QMimeData *data, Qt::DropAction action, const 
 
   return true;
 
+}
+
+int Playlist::OpenUrlsUnique(const QList<QUrl> &urls, const bool play_now) {
+  auto keyFor = [](const QUrl &url) {
+    if (!url.isLocalFile()) return url.toString(QUrl::FullyEncoded);
+    const QFileInfo file(url.toLocalFile());
+    QString path = file.canonicalFilePath();
+    if (path.isEmpty()) path = file.absoluteFilePath();
+#ifdef Q_OS_WIN32
+    path = path.toCaseFolded();
+#endif
+    return path;
+  };
+  QHash<QString, int> existing;
+  for (int row = 0; row < rowCount(); ++row) {
+    const QString key = keyFor(item_at(row)->OriginalUrl());
+    if (!existing.contains(key)) existing.insert(key, row);
+  }
+  QList<QUrl> fresh;
+  QSet<QString> reserved;
+  int first_existing = -1;
+  bool play_fresh = false;
+  for (int i = 0; i < urls.size(); ++i) {
+    const QString key = keyFor(urls.at(i));
+    if (existing.contains(key)) {
+      if (i == 0) first_existing = existing.value(key);
+      continue;
+    }
+    if (pending_open_files_.contains(key)) continue;
+    pending_open_files_.insert(key);
+    reserved.insert(key);
+    fresh.append(urls.at(i));
+    if (i == 0) play_fresh = play_now;
+  }
+  if (!fresh.isEmpty()) {
+    auto *inserter = new SongLoaderInserter(task_manager_, tagreader_client_, url_handlers_, collection_backend_);
+    QObject::connect(inserter, &SongLoaderInserter::Error, this, &Playlist::Error);
+    // Keep reservations through asynchronous metadata loading, including failures.
+    QObject::connect(inserter, &QObject::destroyed, this, [this, reserved]() {
+      pending_open_files_.subtract(reserved);
+    });
+    inserter->Load(this, -1, play_fresh, false, false, fresh);
+  }
+  return first_existing;
 }
 
 void Playlist::InsertUrls(const QList<QUrl> &urls, const int pos, const bool play_now, const bool enqueue, const bool enqueue_next, const bool signal) {
