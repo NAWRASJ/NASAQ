@@ -54,7 +54,7 @@ target_link_libraries(cam_audio_tests PRIVATE cam_ui Qt6::Test)
 add_test(NAME cam_audio COMMAND cam_audio_tests)
 install(TARGETS CAM RUNTIME DESTINATION .)
 
-qt_add_resources(cam_ui nasaq_brand PREFIX "/nasaq" BASE assets FILES assets/nasaq-128.png assets/nasaq.qss)
+qt_add_resources(cam_ui nasaq_brand PREFIX "/nasaq" BASE assets FILES assets/nasaq-128.png assets/nasaq.qss assets/control-up.png assets/control-up-disabled.png assets/control-down.png assets/control-down-disabled.png)
 
 add_executable(cam_license_tests tests/license_test.cpp)
 target_link_libraries(cam_license_tests PRIVATE cam_ui Qt6::Test)

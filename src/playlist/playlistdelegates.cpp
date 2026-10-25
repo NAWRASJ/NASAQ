@@ -20,6 +20,8 @@
  */
 
 #include "config.h"
+#include "liveradiorole.h"
+#include <chrono>
 
 #include <cmath>
 
@@ -224,6 +226,30 @@ QSize PlaylistDelegateBase::sizeHint(const QStyleOptionViewItem &option, const Q
 
 void PlaylistDelegateBase::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &idx) const {
 
+  const bool radio=idx.data(NasaqLiveRadioRole).toBool();
+  const bool duration=idx.column()==static_cast<int>(Playlist::Column::Length);
+  if(radio&&(duration||idx.column()==static_cast<int>(Playlist::Column::BusinessEnd))){
+    QStyleOptionViewItem opt=Adjusted(option,idx);initStyleOption(&opt,idx);opt.text.clear();
+    const QStyle *style=opt.widget?opt.widget->style():QApplication::style();
+    style->drawControl(QStyle::CE_ItemViewItem,&opt,painter,opt.widget);
+    painter->save();painter->setRenderHint(QPainter::Antialiasing);
+    const bool current=idx.data(Playlist::Role_IsCurrent).toBool();
+    const QColor red=current?QColor("#ff9a91"):QColor("#b93037");
+    if(duration){
+      const bool animate=current&&!idx.data(Playlist::Role_IsPaused).toBool()&&view_&&view_->viewport()->property("nasaqRadioAnimating").toBool();
+      const double now=std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+      const double phase=animate?std::fmod(now/1.5,1.0):0.0;
+      const QPointF center=QRectF(opt.rect).center();
+      painter->setPen(Qt::NoPen);painter->setBrush(red);painter->drawEllipse(center,2.5,2.5);
+      for(int band=0;band<3;++band){
+        const double wave=animate?std::fmod(phase+band/3.0,1.0):(band+1)/3.0;
+        const qreal radius=5+wave*9;QColor color=red;color.setAlphaF(animate?1.0-wave*0.85:0.7);
+        painter->setBrush(Qt::NoBrush);painter->setPen(QPen(color,1.5,Qt::SolidLine,Qt::RoundCap));
+        QRectF ring(center.x()-radius,center.y()-radius,2*radius,2*radius);painter->drawArc(ring,-45*16,90*16);painter->drawArc(ring,135*16,90*16);
+      }
+    }else{painter->setPen(red);QFont font=opt.font;font.setWeight(QFont::DemiBold);painter->setFont(font);painter->drawText(opt.rect.adjusted(5,0,-5,0),Qt::AlignCenter,idx.data().toString());}
+    painter->restore();return;
+  }
   QueuedItemDelegate::paint(painter, Adjusted(option, idx), idx);
 
   // Stop after indicator

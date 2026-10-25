@@ -31,6 +31,9 @@
 #include <QSize>
 #include <QAction>
 #include <QMovie>
+#include <QTimer>
+#include <QElapsedTimer>
+#include <functional>
 
 #include "includes/scoped_ptr.h"
 #include "core/song.h"
@@ -56,6 +59,9 @@ class PlayingWidget : public QWidget {
   explicit PlayingWidget(QWidget *parent = nullptr);
 
   void Init(AlbumCoverChoiceController *album_cover_choice_controller);
+  void SetFallbackCover(bool fallback);
+  void SetPlaybackActive(bool active);
+  void SetPlaybackProbe(std::function<bool()> probe) { playback_probe_ = std::move(probe); }
   bool IsEnabled() const { return enabled_; }
   void SetEnabled(const bool enabled);
   void SetEnabled();
@@ -127,6 +133,14 @@ class PlayingWidget : public QWidget {
   QPixmap pixmap_cover_;
   QPixmap pixmap_previous_track_;
   ScopedPtr<QMovie> spinner_animation_;
+  QTimer vinyl_timer_;
+  QElapsedTimer vinyl_clock_;
+  bool fallback_cover_ = false;
+  bool playback_active_ = false;
+  qreal vinyl_angle_ = 0;
+  std::function<bool()> playback_probe_;
+  void UpdateVinylAnimation();
+  void DrawCover(QPainter *p, const QRect &rect);
 
   void SetVisible(const bool visible);
   void CreateModeAction(const Mode mode, const QString &text, QActionGroup *group);

@@ -36,18 +36,18 @@
 }
 
 QToolButton[accessibleName="MenuPopupToolButton"] {
-  border: 2px solid transparent;
-  border-radius: 3px;
+  border: 1px solid transparent;
+  border-radius: 6px;
   padding: 1px;
 }
 
 QToolButton:hover[accessibleName="MenuPopupToolButton"] {
-  border: 2px solid %palette-highlight;
+  border: 1px solid %palette-highlight;
   background-color: %palette-highlight-lighter;
 }
 
 QToolButton:pressed[accessibleName="MenuPopupToolButton"] {
-  border: 2px solid %palette-highlight-darker;
+  border: 1px solid %palette-highlight-darker;
   background-color: %palette-highlight-lighter;
 }
 

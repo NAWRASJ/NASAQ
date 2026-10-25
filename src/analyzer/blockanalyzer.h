@@ -23,56 +23,19 @@
 
 #ifndef BLOCKANALYZER_H
 #define BLOCKANALYZER_H
-
-#include <QtGlobal>
-#include <QObject>
-#include <QList>
-#include <QString>
-#include <QPixmap>
-#include <QPainter>
-#include <QPalette>
-
+#include <array>
 #include "analyzerbase.h"
-
-class QWidget;
-class QResizeEvent;
-
 class BlockAnalyzer : public AnalyzerBase {
   Q_OBJECT
-
  public:
   Q_INVOKABLE explicit BlockAnalyzer(QWidget *parent);
-
   static const char *kName;
-
  protected:
   void transform(Scope &s) override;
-  void analyze(QPainter &p, const Scope &s, const bool new_frame) override;
-  void resizeEvent(QResizeEvent *e) override;
-  virtual void paletteChange(const QPalette &_palette);
-  void framerateChanged() override;
-
-  void drawBackground();
-  void determineStep();
-
+  void analyze(QPainter &p, const Scope &s, bool new_frame) override;
+  void demo(QPainter &p) override;
  private:
-  QPixmap *bar() { return &barpixmap_; }
-
-  int columns_, rows_;  // number of rows and columns of blocks
-  int y_;               // y-offset from top of widget
-  QPixmap barpixmap_;
-  QPixmap topbarpixmap_;
-  QPixmap background_;
-  QPixmap canvas_;
-  Scope scope_;  // so we don't create a vector every frame
-  QList<double> store_;  // current bar heights
-  QList<double> yscale_;
-
-  QList<QPixmap> fade_bars_;
-  QList<int> fade_pos_;
-  QList<int> fade_intensity_;
-
-  double step_;  // rows to fall per frame
+  std::array<float, 32> levels_{};
+  std::array<float, 32> peaks_{};
 };
-
-#endif  // BLOCKANALYZER_H
+#endif

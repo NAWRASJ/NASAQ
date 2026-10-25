@@ -262,6 +262,9 @@ void OSDPretty::Load() {
   foreground_color_ = QColor(static_cast<QRgb>(s.value(OSDPrettySettings::kForegroundColor, OSDPrettySettings::kDefaultForegroundColor).toInt()));
   background_color_ = QColor(static_cast<QRgb>(s.value(OSDPrettySettings::kBackgroundColor, OSDPrettySettings::kPresetBlue).toInt()));
   background_opacity_ = s.value(OSDPrettySettings::kBackgroundOpacity, OSDPrettySettings::kDefaultBackgroundOpacity).toFloat();
+  if (qApp->property("nasaqIvoryTheme").toBool()) {
+    foreground_color_ = QColor(21,62,52); background_color_ = QColor(248,247,242);
+  }
   font_.fromString(s.value(OSDPrettySettings::kFont, QLatin1String(OSDPrettySettings::kDefaultFont)).toString());
   disable_duration_ = s.value(OSDPrettySettings::kDisableDuration, OSDPrettySettings::kDefaultDisableDuration).toBool();
 #ifdef Q_OS_WIN32
@@ -341,6 +344,7 @@ void OSDPretty::paintEvent(QPaintEvent *e) {
   p.setOpacity(background_opacity_);
   p.drawRoundedRect(box, kBorderRadius, kBorderRadius);
 
+  if (!qApp->property("nasaqIvoryTheme").toBool()) {
   // Background pattern
   QPainterPath background_path;
   background_path.addRoundedRect(box, kBorderRadius, kBorderRadius);
@@ -356,6 +360,8 @@ void OSDPretty::paintEvent(QPaintEvent *e) {
   p.setBrush(gradient);
   p.drawRoundedRect(box, kBorderRadius, kBorderRadius);
 
+  }
+  p.setOpacity(1.0);
   // Box border
   p.setBrush(QBrush());
   p.setPen(QPen(background_color_.darker(150), 2));

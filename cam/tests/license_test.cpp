@@ -47,6 +47,10 @@ class LicenseTest:public QObject {
   data={{"data",QJsonObject{{"id","machine-test"},{"type","machines"},{"relationships",rel},{"attributes",QJsonObject{{"fingerprint",licenseFingerprint()}}}}},{"included",QJsonArray{license}},{"meta",QJsonObject{{"issued",now.addSecs(-10).toString(Qt::ISODate)},{"expiry",now.addDays(7).toString(Qt::ISODate)},{"ttl",604800}}}};
  }
  void validSignedLease(){auto r=verify(data);QVERIFY2(r.valid,qPrintable(r.message));QCOMPARE(r.maxMachines,2);QVERIFY(r.until<=now.addDays(7));QCOMPARE(r.expiresAt.toSecsSinceEpoch(),now.addDays(30).toSecsSinceEpoch());}
+ void oversizedServiceResponsePreservesSignedLease(){
+  Store s(":memory:");seed(s);MockNetwork net;net.replies={{200,QJsonObject{{"padding",QString(1024*1024+128,QLatin1Char('x'))}}}};
+  Activation a(s,nullptr,c,&net);QSignalSpy done(&a,&Activation::completed);a.tick();QTRY_COMPARE(done.count(),1);QVERIFY(a.allowed());QCOMPARE(net.urls.size(),1);
+ }
  void localDeactivationPersistsAndAllowsDifferentKey(){
   Store s(":memory:");seed(s);s.set("unrelated-setting","preserved");MockNetwork net;Activation a(s,nullptr,c,&net);QVERIFY(a.allowed());QSignalSpy changed(&a,&Activation::changed);
   QVERIFY(a.deactivateLocally());QVERIFY(!a.allowed());QVERIFY(s.get("activation_sealed_v1").isEmpty());QCOMPARE(s.get("unrelated-setting"),QString("preserved"));QCOMPARE(changed.count(),1);QVERIFY(!changed[0][0].toBool());

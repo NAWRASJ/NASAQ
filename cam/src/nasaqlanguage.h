@@ -100,7 +100,7 @@ inline const QHash<QString,QPair<QString,QString>>& NasaqCatalog(){static const 
 {QStringLiteral("Invalid licence signature"), {QStringLiteral("Invalid licence signature"), QStringLiteral("توقيع الترخيص غير صالح")}},
 {QStringLiteral("Licence or offline grace expired; reconnect"), {QStringLiteral("Licence or offline grace expired; reconnect"), QStringLiteral("انتهى الترخيص أو السماح دون إنترنت؛ أعد الاتصال")}},
 {QStringLiteral("Clock rollback detected; restore the correct time"), {QStringLiteral("Clock rollback detected; restore the correct time"), QStringLiteral("تحقق من ضبط ساعة الجهاز")}},
-{QStringLiteral("NASAQ / نسق"), {QStringLiteral("NASAQ"), QStringLiteral("نسق")}},
+{QStringLiteral("NASAQ / نسق"), {QStringLiteral("NASAQ | نسق"), QStringLiteral("نسق | NASAQ")}},
 {QStringLiteral("AUDIO CONTROL / إدارة الصوت"), {QStringLiteral("Audio control"), QStringLiteral("إدارة الصوت")}},
 {QStringLiteral("مساحة عملك الصوتية — الموسيقى والجدولة والإعلانات في مكان واحد"), {QStringLiteral("Your audio workspace — music, scheduling and announcements in one place"), QStringLiteral("مساحة عملك الصوتية — الموسيقى والجدولة والإعلانات في مكان واحد")}},
 {QStringLiteral("المكتبة والجدولة / Library & scheduling"), {QStringLiteral("Library & scheduling"), QStringLiteral("المكتبة والجدولة")}},
@@ -133,7 +133,7 @@ inline const QHash<QString,QPair<QString,QString>>& NasaqCatalog(){static const 
 {QStringLiteral("تعذّر الاتصال؛ يُستخدم السماح المحفوظ إن كان صالحًا / Service unavailable"), {QStringLiteral("Service unavailable"), QStringLiteral("تعذّر الاتصال؛ يُستخدم السماح المحفوظ إن كان صالحًا")}},
 {QStringLiteral("رفض خدمة التفعيل / Activation request rejected"), {QStringLiteral("Activation request rejected"), QStringLiteral("رفض خدمة التفعيل")}},
 {QStringLiteral("الترخيص غير صالح أو بلغ حد الأجهزة / Licence validation denied: "), {QStringLiteral("Licence validation denied: "), QStringLiteral("الترخيص غير صالح أو بلغ حد الأجهزة")}},
-{QStringLiteral("مفعّل / Active · devices: %1 · offline until: %2"), {QStringLiteral("Active · devices: %1 · offline until: %2"), QStringLiteral("مفعّل")}},
+{QStringLiteral("مفعّل / Active · devices: %1 · offline until: %2"), {QStringLiteral("Active · devices: %1 · offline until: %2"), QStringLiteral("مفعّل · عدد الأجهزة: %1 · السماح دون إنترنت حتى: %2")}},
 {QStringLiteral("music"), {QStringLiteral("music"), QStringLiteral("موسيقى")}},
 {QStringLiteral("announcement"), {QStringLiteral("announcement"), QStringLiteral("إعلان")}},
 {QStringLiteral("adhan"), {QStringLiteral("adhan"), QStringLiteral("أذان")}},
@@ -250,6 +250,8 @@ inline const QHash<QString,QPair<QString,QString>>& NasaqCatalog(){static const 
 {QStringLiteral("Temporary pause for adhan"),{QStringLiteral("Temporary pause for adhan"),QStringLiteral("توقف مؤقت بمناسبة الأذان")}},
 {QStringLiteral("Skip and play"),{QStringLiteral("Skip and play"),QStringLiteral("تخطَّ وشغّل")}},
 {QStringLiteral("Keep paused"),{QStringLiteral("Keep paused"),QStringLiteral("متابعة التوقف")}},
+#include "nasaqplayertranslations.inc"
+#include "nasaqsettingstranslations.inc"
 };return m;}
 inline QString NText(const QString&s){
  if(s.contains(QStringLiteral(": "))){const auto code=s.section(u':',0,0);if(QStringList{QStringLiteral("play_started"),QStringLiteral("play_stopped"),QStringLiteral("audio_error"),QStringLiteral("tts_error"),QStringLiteral("prayer_reminder"),QStringLiteral("paging"),QStringLiteral("operator")}.contains(code))return NText(code);}

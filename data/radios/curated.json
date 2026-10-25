@@ -14,7 +14,7 @@
       "description": "The Teletext platform live station.",
       "description_ar": "البث المباشر الخاص بمنصة تليتكست",
       "url": "https://radio.teletext-ar.tech/listen/teletext/radio.mp3",
-      "homepage": "https://radio.teletext-ar.tech/public/teletext",
+      "homepage": "https://play.teletext-ar.tech/",
       "source": "https://radio.teletext-ar.tech/api/nowplaying/teletext"
     },
     {
@@ -215,10 +215,11 @@
       "genre": "chill",
       "venues": [
         "shops",
-        "cafes"
+        "cafes",
+        "gyms"
       ],
       "description": "A late night blend of deep-house and downtempo chill.",
-      "description_ar": "ديب هاوس وداون تمبو لأجواء مسائية",
+      "description_ar": "ديب هاوس وداون تمبو بإيقاعات أخف للإحماء والتمارين الهادئة والأجواء المسائية",
       "url": "https://ice2.somafm.com/beatblender-128-mp3",
       "homepage": "https://somafm.com/beatblender/",
       "source": "https://api.somafm.com/beatblender.pls"
@@ -264,6 +265,128 @@
       "url": "https://ice6.somafm.com/tikitime-256-mp3",
       "homepage": "https://somafm.com/tikitime/",
       "source": "https://api.somafm.com/tikitime256.pls"
+    },
+    {
+      "id": "quran-mix",
+      "name": "القرآن الكريم · العامة - متنوعة لمختلف القراء",
+      "genre": "quran",
+      "venues": [
+        "prayer_rooms"
+      ],
+      "description": "Quran recitation radio — Various reciters.",
+      "description_ar": "إذاعة تلاوات القرآن الكريم — العامة - متنوعة لمختلف القراء",
+      "url": "https://backup.qurango.net/radio/mix",
+      "homepage": "https://www.mp3quran.net/ar/radio",
+      "source": "https://mp3quran.net/api/v3/radios?language=ar"
+    },
+    {
+      "id": "quran-alafasi",
+      "name": "القرآن الكريم · مشاري العفاسي",
+      "genre": "quran",
+      "venues": [
+        "prayer_rooms"
+      ],
+      "description": "Quran recitation radio — Mishary Alafasy.",
+      "description_ar": "إذاعة تلاوات القرآن الكريم — مشاري العفاسي",
+      "url": "https://backup.qurango.net/radio/mishary_alafasi",
+      "homepage": "https://www.mp3quran.net/ar/radio",
+      "source": "https://mp3quran.net/api/v3/radios?language=ar"
+    },
+    {
+      "id": "quran-abdulbasit",
+      "name": "القرآن الكريم · عبدالباسط عبدالصمد",
+      "genre": "quran",
+      "venues": [
+        "prayer_rooms"
+      ],
+      "description": "Quran recitation radio — Abdulbasit Abdulsamad.",
+      "description_ar": "إذاعة تلاوات القرآن الكريم — عبدالباسط عبدالصمد",
+      "url": "https://backup.qurango.net/radio/abdulbasit_abdulsamad",
+      "homepage": "https://www.mp3quran.net/ar/radio",
+      "source": "https://mp3quran.net/api/v3/radios?language=ar"
+    },
+    {
+      "id": "quran-hussary",
+      "name": "القرآن الكريم · محمود خليل الحصري",
+      "genre": "quran",
+      "venues": [
+        "prayer_rooms"
+      ],
+      "description": "Quran recitation radio — Mahmoud Khalil Al-Hussary.",
+      "description_ar": "إذاعة تلاوات القرآن الكريم — محمود خليل الحصري",
+      "url": "https://backup.qurango.net/radio/mahmoud_khalil_alhussary",
+      "homepage": "https://www.mp3quran.net/ar/radio",
+      "source": "https://mp3quran.net/api/v3/radios?language=ar"
+    },
+    {
+      "id": "soma-poptron",
+      "name": "SomaFM PopTron",
+      "genre": "electronic",
+      "venues": [
+        "gyms"
+      ],
+      "description": "Electropop and indie dance rock with sparkle and pop.",
+      "description_ar": "إلكتروبوب وإندي دانس بإيقاع نشيط للتمارين",
+      "url": "https://ice2.somafm.com/poptron-128-mp3",
+      "homepage": "https://somafm.com/poptron/",
+      "source": "https://api.somafm.com/poptron.pls"
+    },
+    {
+      "id": "soma-dubstep",
+      "name": "SomaFM Dub Step Beyond",
+      "genre": "electronic",
+      "venues": [
+        "gyms"
+      ],
+      "description": "Dubstep, Dub and Deep Bass. May damage speakers at high volume.",
+      "description_ar": "دَبستِب وباس عميق للتمارين عالية النشاط",
+      "url": "https://ice2.somafm.com/dubstep-256-mp3",
+      "homepage": "https://somafm.com/dubstep/",
+      "source": "https://api.somafm.com/dubstep256.pls"
+    },
+    {
+      "id": "soma-cliqhop",
+      "name": "SomaFM cliqhop idm",
+      "genre": "electronic",
+      "venues": [
+        "gyms"
+      ],
+      "description": "Blips'n'beeps backed mostly w/beats. Intelligent Dance Music.",
+      "description_ar": "إيقاعات إلكترونية وIDM لتمارين الكارديو",
+      "url": "https://ice2.somafm.com/cliqhop-256-mp3",
+      "homepage": "https://somafm.com/cliqhop/",
+      "source": "https://api.somafm.com/cliqhop256.pls"
+    },
+    {
+      "id": "fip-world",
+      "name": "FIP Monde · موسيقى عالمية",
+      "genre": "world",
+      "venues": [
+        "cafes",
+        "restaurants",
+        "hotels",
+        "shops"
+      ],
+      "description": "A selection of music from around the world across styles and eras.",
+      "description_ar": "موسيقى عالمية من ثقافات وإيقاعات متنوعة للمقاهي والمطاعم والفنادق",
+      "url": "https://icecast.radiofrance.fr/fipworld-midfi.mp3?id=openapi",
+      "homepage": "https://www.radiofrance.fr/fip/radio-monde",
+      "source": "https://developers.radiofrance.fr/doc/tutorial-by-example/list-locals-and-webradios"
+    },
+    {
+      "id": "france-classique-plus",
+      "name": "France Musique · Classique Plus",
+      "genre": "classical",
+      "venues": [
+        "offices",
+        "restaurants",
+        "hotels"
+      ],
+      "description": "Classical repertoire including complete and less familiar works.",
+      "description_ar": "موسيقى كلاسيكية وأعمال كاملة ومختارات أقل شهرة لأجواء راقية",
+      "url": "https://icecast.radiofrance.fr/francemusiqueclassiqueplus-hifi.aac",
+      "homepage": "https://www.radiofrance.fr/francemusique/radio-classique-plus",
+      "source": "https://www.radiofrance.fr/francemusique/radio-classique-plus"
     }
   ]
 }

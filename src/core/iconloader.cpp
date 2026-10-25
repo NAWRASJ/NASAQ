@@ -30,12 +30,14 @@
 #include <QImageReader>
 #include <QSize>
 #include <QSettings>
+#include <QPainter>
 
 #include "logging.h"
 #include "standardpaths.h"
 #include "settings.h"
 #include "includes/iconmapper.h"
 #include "iconloader.h"
+#include "utilities/nasaqicons.h"
 #include "constants/appearancesettings.h"
 
 using namespace Qt::Literals::StringLiterals;
@@ -64,10 +66,28 @@ void IconLoader::Init() {
 
 QIcon IconLoader::Load(const QString &name, const bool system_icon, const int fixed_size, const int min_size, const int max_size) {
 
+  // App branding has its own contrast-safe background; never tint it as a toolbar glyph.
+  if (name == u"strawberry"_s) {
+    QIcon brand;
+    for (int size : {16,22,32,48,64,128})
+      brand.addFile(u":/nasaq/"_s + QString::number(size) + u"/strawberry.png"_s, QSize(size, size));
+    return brand;
+  }
+  if (const QIcon icon = NasaqLineIcon(name); !icon.isNull()) return icon;
   const QString nasaq = u":/nasaq/32/"_s + name + u".png"_s;
   if (QFile::exists(nasaq)) {
     QIcon rendered;
-    for (int size : {16,22,32,48,64,128}) rendered.addFile(u":/nasaq/"_s + QString::number(size) + u"/"_s + name + u".png"_s, QSize(size,size));
+    for (int size : {16,22,32,48,64,128}) {
+      const QPixmap original(u":/nasaq/"_s + QString::number(size) + u"/"_s + name + u".png"_s);
+      for (auto mode : {QIcon::Normal, QIcon::Selected, QIcon::Disabled}) {
+        QPixmap tinted = original.copy();
+        QPainter painter(&tinted);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(tinted.rect(), mode == QIcon::Selected ? QColor(255,254,250) : mode == QIcon::Disabled ? QColor(120,130,120) : QColor(21,62,52));
+        painter.end();
+        rendered.addPixmap(tinted, mode);
+      }
+    }
     return rendered;
   }
   QIcon ret;

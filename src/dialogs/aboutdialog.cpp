@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include "nasaqlanguage.h"
 
 #include <QCoreApplication>
 #include <QWidget>
@@ -144,8 +145,8 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent), ui_{} {
   title_font.setPointSize(title_font.pointSize() + 4);
 
   ui_.label_title->setFont(title_font);
-  setWindowTitle(u"نسق NASAQ — About"_s);
-  ui_.label_title->setText(u"NASAQ 0.3.3"_s);
+  setWindowTitle(NasaqLanguage()==u"ar"_s ? u"حول نسق | NASAQ"_s : u"About NASAQ | نسق"_s);
+  ui_.label_title->setText(u"نسق | NASAQ %1"_s.arg(QCoreApplication::applicationVersion()));
   ui_.label_text->setText(MainHtml());
   ui_.text_contributors->document()->setDefaultStyleSheet(QStringLiteral("a {color: %1; }").arg(palette().text().color().name()));
   ui_.text_contributors->setText(ContributorsHtml());
@@ -156,35 +157,16 @@ AboutDialog::AboutDialog(QWidget *parent) : QDialog(parent), ui_{} {
 
 QString AboutDialog::MainHtml() const {
 
-  QString ret;
-  ret += u"<p><b>NASAQ — Commercial Audio Manager / إدارة الصوت التجاري</b><br/>Modified GPL-3.0-or-later build based on Strawberry. Original project credits and licences follow. NASAQ source accompanies this delivery.</p>"_s;
-
-  ret += "<p>"_L1;
-  ret += tr("Version %1").arg(QCoreApplication::applicationVersion());
-  ret += "</p>"_L1;
-
-  ret += "<p>"_L1;
-  ret += tr("Strawberry is a music player and music collection organizer.");
-  ret += "<br />"_L1;
-  ret += tr("It is a fork of Clementine released in 2018 aimed at music collectors and audiophiles.");
-  ret += "</p>"_L1;
-
-  ret += "<p>"_L1;
-  ret += tr("Strawberry is free software released under GPL. The source code is available on %1").arg(QStringLiteral("<a style=\"color:%1;\" href=\"https://github.com/strawberrymusicplayer/strawberry\">GitHub</a>.").arg(palette().text().color().name()));
-  ret += "<br />"_L1;
-  ret += tr("You should have received a copy of the GNU General Public License along with this program.  If not, see %1").arg(QStringLiteral("<a style=\"color:%1;\" href=\"http://www.gnu.org/licenses/\">http://www.gnu.org/licenses/</a>").arg(palette().text().color().name()));
-  ret += "</p>"_L1;
-
-  ret += "<p>"_L1;
-  ret += tr("If you like Strawberry and can make use of it, consider sponsoring or donating.");
-  ret += "<br />"_L1;
-  ret += tr("You can sponsor the author on %1 or %2. You can also make a one-time payment through %3.").arg(
-    QStringLiteral("<a style=\"color:%1;\" href=\"https://www.patreon.com/jonaskvinge\">Patreon</a>").arg(palette().text().color().name()),
-    QStringLiteral("<a style=\"color:%1;\" href=\"https://github.com/sponsors/jonaski\">GitHub</a>").arg(palette().text().color().name()),
-    QStringLiteral("<a style=\"color:%1;\" href=\"https://paypal.me/jonaskvinge\">paypal.me/jonaskvinge</a>").arg(palette().text().color().name())
-  );
-
-  ret += "</p>"_L1;
+  const bool ar = NasaqLanguage() == u"ar"_s;
+  QString ret = ar
+    ? u"<p><b>نسق — إدارة الموسيقى والإعلانات للأنشطة التجارية</b></p><p><b>تطوير نسق: <span dir='ltr'>Nawras Jarbouh</span></b><br/>تطوير وتخصيص نسق وواجهته وميزاته للأنشطة التجارية.</p>"_s
+    : u"<p><b>NASAQ — Commercial Audio Manager</b></p><p><b>NASAQ developed by Nawras Jarbouh</b><br/>Development and customization of NASAQ, its interface and business features.</p>"_s;
+  ret += ar
+    ? u"<p>نسق مبني على مشروع Strawberry، المشتق من Clementine. تُحفظ حقوق واعتمادات مطوّري المشروعين الأصليين أدناه.</p>"_s
+    : u"<p>NASAQ is based on Strawberry, a fork of Clementine. Original project authors and contributors are credited below.</p>"_s;
+  ret += ar
+    ? u"<p>برنامج حر وفق رخصة <a href='https://www.gnu.org/licenses/gpl-3.0.html'>GPL-3.0-or-later</a>.<br/><a href='https://github.com/NAWRASJ/NASAQ'>المصدر البرمجي لنسق</a> · <a href='https://github.com/strawberrymusicplayer/strawberry'>المشروع الأصلي Strawberry</a></p>"_s
+    : u"<p>Free software under <a href='https://www.gnu.org/licenses/gpl-3.0.html'>GPL-3.0-or-later</a>.<br/><a href='https://github.com/NAWRASJ/NASAQ'>NASAQ source code</a> · <a href='https://github.com/strawberrymusicplayer/strawberry'>Original Strawberry project</a></p>"_s;
 
   return ret;
 
@@ -196,7 +178,7 @@ QString AboutDialog::ContributorsHtml() const {
 
   ret += "<p>"_L1;
   ret += "<b>"_L1;
-  ret += tr("Author and maintainer");
+  ret += (NasaqLanguage()==u"ar"_s ? u"مطوّر Strawberry والمسؤول عن صيانته"_s : tr("Author and maintainer"));
   ret += "</b>"_L1;
   for (const Person &person : strawberry_authors_) {
     ret += "<br />"_L1 + PersonToHtml(person);
@@ -205,7 +187,7 @@ QString AboutDialog::ContributorsHtml() const {
 
   ret += "<p>"_L1;
   ret += "<b>"_L1;
-  ret += tr("Contributors");
+  ret += (NasaqLanguage()==u"ar"_s ? u"المساهمون في Strawberry"_s : tr("Contributors"));
   ret += "</b>"_L1;
   for (const Person &person : strawberry_contributors_) {
     ret += "<br />"_L1 + PersonToHtml(person);
@@ -214,7 +196,7 @@ QString AboutDialog::ContributorsHtml() const {
 
   ret += "<p>"_L1;
   ret += "<b>"_L1;
-  ret += tr("Clementine authors");
+  ret += (NasaqLanguage()==u"ar"_s ? u"مطوّرو Clementine"_s : tr("Clementine authors"));
   ret += "</b>"_L1;
   for (const Person &person : clementine_authors_) {
     ret += "<br />"_L1 + PersonToHtml(person);
@@ -223,7 +205,7 @@ QString AboutDialog::ContributorsHtml() const {
 
   ret += "<p>"_L1;
   ret += "<b>"_L1;
-  ret += tr("Clementine contributors");
+  ret += (NasaqLanguage()==u"ar"_s ? u"المساهمون في Clementine"_s : tr("Clementine contributors"));
   ret += "</b>"_L1;
   for (const Person &person : clementine_contributors_) {
     ret += "<br />"_L1 + PersonToHtml(person);
@@ -232,7 +214,7 @@ QString AboutDialog::ContributorsHtml() const {
 
   ret += "<p>"_L1;
   ret += "<b>"_L1;
-  ret += tr("Thanks to");
+  ret += (NasaqLanguage()==u"ar"_s ? u"شكر وتقدير"_s : tr("Thanks to"));
   ret += "</b>"_L1;
   for (const Person &person : strawberry_thanks_) {
     ret += "<br />"_L1 + PersonToHtml(person);
@@ -240,7 +222,7 @@ QString AboutDialog::ContributorsHtml() const {
   ret += "</p>"_L1;
 
   ret += "<p>"_L1;
-  ret += tr("Thanks to all the other Amarok and Clementine contributors.");
+  ret += (NasaqLanguage()==u"ar"_s ? u"شكرًا لجميع المساهمين الآخرين في Amarok وClementine."_s : tr("Thanks to all the other Amarok and Clementine contributors."));
   ret += "</p>"_L1;
   return ret;
 

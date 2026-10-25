@@ -246,7 +246,7 @@ QString StringListToHTML(const QStringList &string_list) {
 
 QString UrlForLog(const QUrl &url) {
 
-  return url.adjusted(QUrl::RemoveUserInfo | QUrl::RemoveQuery).toString();
+  return url.adjusted(QUrl::RemoveUserInfo | QUrl::RemoveQuery | QUrl::RemoveFragment).toString();
 
 }
 

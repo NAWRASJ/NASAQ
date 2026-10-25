@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include "utilities/strutils.h"
 
 #include <algorithm>
 
@@ -357,7 +358,7 @@ void SongLoader::EffectiveSongLoad(Song *song) {
     const QString filename = song->url().toLocalFile();
     const TagReaderResult result = tagreader_client_->ReadFileBlocking(filename, song);
     if (!result.success()) {
-      qLog(Error) << "Could not read file" << song->url() << result.error_string();
+      qLog(Error) << "Could not read file" << Utilities::UrlForLog(song->url()) << result.error_string();
     }
   }
 
@@ -442,7 +443,7 @@ void SongLoader::StopTypefind() {
   timeout_timer_->stop();
 
   if (success_ && parser_) {
-    qLog(Debug) << "Parsing" << url_ << "with" << parser_->name();
+    qLog(Debug) << "Parsing" << Utilities::UrlForLog(url_) << "with" << parser_->name();
 
     // Parse the playlist
     QBuffer buf(&buffer_);
@@ -455,7 +456,7 @@ void SongLoader::StopTypefind() {
 
   }
   else if (success_) {
-    qLog(Debug) << "Loading" << url_ << "as raw stream";
+    qLog(Debug) << "Loading" << Utilities::UrlForLog(url_) << "as raw stream";
 
     // It wasn't a playlist - just put the URL in as a stream
     AddAsRawStream();
@@ -467,7 +468,7 @@ void SongLoader::StopTypefind() {
 
 SongLoader::Result SongLoader::LoadRemote() {
 
-  qLog(Debug) << "Loading remote file" << url_;
+  qLog(Debug) << "Loading remote file" << Utilities::UrlForLog(url_);
 
   // It's not a local file so we have to fetch it to see what it is.
   // We use gstreamer to do this since it handles funky URLs for us (http://, ssh://, etc) and also has typefinder plugins.
@@ -673,7 +674,7 @@ void SongLoader::MagicReady() {
   parser_ = playlist_parser_->ParserForMagic(buffer_, mime_type_);
 
   if (!parser_) {
-    qLog(Warning) << url_.toString() << "is text, but not a recognised playlist";
+    qLog(Warning) << Utilities::UrlForLog(url_) << "is text, but not a recognised playlist";
     // It doesn't look like a playlist, so just finish
     StopTypefindAsync(false);
     return;

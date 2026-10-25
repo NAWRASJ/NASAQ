@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include "core/iconloader.h"
 
 #include <cmath>
 #include <algorithm>
@@ -173,6 +174,13 @@ PlaylistView::PlaylistView(QWidget *parent)
   horizontalScrollBar()->installEventFilter(this);
   verticalScrollBar()->installEventFilter(this);
 
+  auto livePulse=new QTimer(this);livePulse->setInterval(50);
+  connect(livePulse,&QTimer::timeout,this,[this]{
+    const auto item=player_?player_->GetCurrentItem():PlaylistItemPtr();
+    const bool active=isVisible()&&item&&item->EffectiveMetadata().is_radio()&&player_->GetState()==EngineBase::State::Playing&&!player_->property("camSuspended").toBool()&&!player_->property("camLicenseDenied").toBool();
+    const bool wasActive=viewport()->property("nasaqRadioAnimating").toBool();viewport()->setProperty("nasaqRadioAnimating",active);
+    if(active||wasActive){const int col=static_cast<int>(Playlist::Column::Length);if(!header_->isSectionHidden(col))viewport()->update(QRect(header_->sectionViewportPosition(col),0,header_->sectionSize(col),viewport()->height()));}
+  });livePulse->start();
   dynamic_controls_->hide();
 
   // To proper scale all pixmaps
@@ -347,6 +355,9 @@ void PlaylistView::LoadHeaderState() {
     column_alignment_ = DefaultColumnAlignment();
   }
 
+  // Timing columns read as separate values in both RTL and LTR layouts.
+  column_alignment_[static_cast<int>(Playlist::Column::Length)] = Qt::AlignCenter;
+  column_alignment_[static_cast<int>(Playlist::Column::BusinessEnd)] = Qt::AlignCenter;
   header_state_loaded_ = true;
 
 }
@@ -555,6 +566,22 @@ void PlaylistView::drawRow(QPainter *painter, const QStyleOptionViewItem &option
   bool is_paused = idx.data(Playlist::Role_IsPaused).toBool();
 
   if (is_current) {
+
+    if (qApp->property("nasaqIvoryTheme").toBool()) {
+      painter->save();
+      painter->fillRect(opt.rect, QColor(21,62,52));
+      opt.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver);
+      painter->fillRect(QRect(opt.rect.left(), opt.rect.top()+3, 3, opt.rect.height()-6), QColor(165,178,153));
+      opt.palette.setColor(QPalette::Base, Qt::transparent);
+      opt.palette.setColor(QPalette::AlternateBase, Qt::transparent);
+      opt.palette.setColor(QPalette::Highlight, Qt::transparent);
+      opt.palette.setColor(QPalette::Text, QColor(255,254,250));
+      opt.palette.setColor(QPalette::HighlightedText, QColor(255,254,250));
+      QTreeView::drawRow(painter, opt, idx);
+      IconLoader::Load(is_paused ? u"media-playback-pause"_s : u"media-playback-start"_s).paint(painter, QRect(opt.rect.left()+7, opt.rect.center().y()-8, 16, 16), Qt::AlignCenter, QIcon::Selected);
+      painter->restore();
+      return;
+    }
 
     if (bars_enabled_) {
 
@@ -1434,6 +1461,8 @@ ColumnAlignmentMap PlaylistView::DefaultColumnAlignment() {
   ret[static_cast<int>(Playlist::Column::BPM)] =
  (Qt::AlignRight | Qt::AlignVCenter);
 
+  ret[static_cast<int>(Playlist::Column::Length)] = Qt::AlignCenter;
+  ret[static_cast<int>(Playlist::Column::BusinessEnd)] = Qt::AlignCenter;
   return ret;
 
 }

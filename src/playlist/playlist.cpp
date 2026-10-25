@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include "liveradiorole.h"
 
 #include <cstdlib>
 #include <algorithm>
@@ -354,6 +355,9 @@ QVariant Playlist::data(const QModelIndex &idx, const int role) const {
     case Role_QueuePosition:
       return queue_->PositionOf(idx);
 
+    case NasaqLiveRadioRole:
+      return items_[idx.row()]->EffectiveMetadata().is_radio();
+
     case Role_CanSetRating:
       return static_cast<Column>(idx.column()) == Column::Rating && items_[idx.row()]->IsLocalCollectionItem() && items_[idx.row()]->EffectiveMetadata().id() != -1;
 
@@ -371,7 +375,7 @@ QVariant Playlist::data(const QModelIndex &idx, const int role) const {
         case Column::ArtistSort:         return song.artistsort();
         case Column::Album:              return song.album();
         case Column::AlbumSort:          return song.albumsort();
-        case Column::BusinessEnd:        return business_ends_.value(idx.row());
+        case Column::BusinessEnd:        return song.is_radio() ? (NasaqLanguage()==QStringLiteral("ar")?QStringLiteral("بث مباشر"):QStringLiteral("Live radio")) : business_ends_.value(idx.row());
         case Column::Length:             return song.length_nanosec();
         case Column::Track:              return song.track();
         case Column::Disc:               return song.disc();

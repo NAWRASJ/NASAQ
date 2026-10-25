@@ -16,14 +16,15 @@ class RadioDiscoveryTest : public QObject {
     RadioViewContainer view;
     auto list = view.findChild<QListWidget *>(QStringLiteral("curatedStations"));
     auto search = view.findChild<QLineEdit *>(QStringLiteral("radioSearch"));
-    QVERIFY(list); QVERIFY(search); QCOMPARE(list->count(), 18);
+    QVERIFY(list); QVERIFY(search); QCOMPARE(list->count(), 27);
     QVERIFY(list->item(0)->text().contains(QStringLiteral("Teletext")));
     search->setText(QStringLiteral("تليتكست")); QCOMPARE(list->count(), 1);
     search->setText(QStringLiteral("no-such-radio")); QCOMPARE(list->count(), 0);
-    search->clear(); QCOMPARE(list->count(), 18);
+    search->clear(); QCOMPARE(list->count(), 27);
     for (auto button : view.findChildren<QPushButton *>())
       if (button->text() == QStringLiteral("Save favorite")) button->click();
     view.findChild<QCheckBox *>(QStringLiteral("radioFavoritesOnly"))->setChecked(true); QCOMPARE(list->count(), 1);
+    QSettings saved; saved.sync(); QVERIFY2(saved.status()==QSettings::NoError,qPrintable(saved.fileName())); QVERIFY(saved.value(QStringLiteral("RadioDiscovery/favorites")).toStringList().size()==1);
     RadioViewContainer restored;
     restored.findChild<QCheckBox *>(QStringLiteral("radioFavoritesOnly"))->setChecked(true);
     QCOMPARE(restored.findChild<QListWidget *>(QStringLiteral("curatedStations"))->count(), 1);
@@ -33,10 +34,24 @@ class RadioDiscoveryTest : public QObject {
     auto list = view.findChild<QListWidget *>(QStringLiteral("curatedStations"));
     auto genre = view.findChild<QComboBox *>(QStringLiteral("radioGenre"));
     auto venue = view.findChild<QComboBox *>(QStringLiteral("radioVenue"));
-    genre->setCurrentIndex(genre->findData(QStringLiteral("classical"))); QCOMPARE(list->count(), 3);
+    genre->setCurrentIndex(genre->findData(QStringLiteral("classical"))); QCOMPARE(list->count(), 4);
     venue->setCurrentIndex(venue->findData(QStringLiteral("wellness"))); QCOMPARE(list->count(), 0);
     genre->setCurrentIndex(0); QCOMPARE(list->count(), 1);
-    venue->setCurrentIndex(0); QCOMPARE(list->count(), 18);
+    venue->setCurrentIndex(0); QCOMPARE(list->count(), 27);
+  }
+  void quranAndGymFiltersStaySeparate() {
+    RadioViewContainer view;
+    auto list=view.findChild<QListWidget *>(QStringLiteral("curatedStations"));
+    auto genre=view.findChild<QComboBox *>(QStringLiteral("radioGenre"));
+    auto venue=view.findChild<QComboBox *>(QStringLiteral("radioVenue"));
+    auto search=view.findChild<QLineEdit *>(QStringLiteral("radioSearch"));
+    QVERIFY(genre->findData(QStringLiteral("quran"))>=0);
+    genre->setCurrentIndex(genre->findData(QStringLiteral("quran"))); QCOMPARE(list->count(),4);
+    search->setText(QStringLiteral("العفاسي")); QCOMPARE(list->count(),1); search->clear();
+    venue->setCurrentIndex(venue->findData(QStringLiteral("gyms"))); QCOMPARE(list->count(),0);
+    genre->setCurrentIndex(0); QCOMPARE(list->count(),4);
+    genre->setCurrentIndex(genre->findData(QStringLiteral("electronic"))); QCOMPARE(list->count(),3);
+    genre->setCurrentIndex(0); search->setText(QStringLiteral("gyms")); QCOMPARE(list->count(),4);
   }
   void actionsKeepExistingPlaylistAndUseGuardedTransport() {
     RadioViewContainer view;
@@ -62,6 +77,8 @@ class RadioDiscoveryTest : public QObject {
     QVERIFY(search->placeholderText().contains(QStringLiteral("ابحث")));
     search->setText(QStringLiteral("فنادق"));
     QVERIFY(view.findChild<QListWidget *>(QStringLiteral("curatedStations"))->count() > 0);
+    search->setText(QStringLiteral("القرآن")); QCOMPARE(view.findChild<QListWidget *>(QStringLiteral("curatedStations"))->count(),4);
+    search->setText(QStringLiteral("الجيم")); QCOMPARE(view.findChild<QListWidget *>(QStringLiteral("curatedStations"))->count(),4);
     qApp->setProperty("nasaqLiveLanguage", QStringLiteral("en"));
   }
 };

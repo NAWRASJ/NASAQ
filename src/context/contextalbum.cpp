@@ -18,6 +18,7 @@
  */
 
 #include "config.h"
+#include "utilities/nasaqvinyl.h"
 
 #include <utility>
 #include <memory>
@@ -63,7 +64,7 @@ ContextAlbum::ContextAlbum(QWidget *parent)
       downloading_covers_(false),
       timeline_fade_(new QTimeLine(kFadeTimeLineMs, this)),
       timer_scale_(new QTimer(this)),
-      image_strawberry_(u":/pictures/strawberry.png"_s),
+      image_strawberry_(NasaqVinylImage()),
       image_original_(image_strawberry_),
       pixmap_current_opacity_(1.0),
       desired_height_(width()) {

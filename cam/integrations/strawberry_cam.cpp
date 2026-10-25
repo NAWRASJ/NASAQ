@@ -115,22 +115,32 @@ class CamHost final:public QObject {
   auto strip=new QToolBar(main);strip->setObjectName(QStringLiteral("businessDuration"));strip->setMovable(false);main->addToolBar(Qt::TopToolBarArea,strip);
   auto prayerState=new QLabel(main);prayerState->setObjectName(QStringLiteral("prayerReadinessBanner"));prayerState->setWordWrap(true);strip->addWidget(prayerState);
   auto prayerTimer=new QTimer(this);auto updatePrayer=[this,prayerState]{
-   const bool ar=NasaqLanguage()==QStringLiteral("ar");auto next=PrayerService::nextPause(*store,QDateTime::currentDateTimeUtc());
+   const bool ar=NasaqLanguage()==QStringLiteral("ar");const bool enabled=store->get(QStringLiteral("prayer_pause_enabled"))!=QStringLiteral("0");
+   const auto now=QDateTime::currentDateTimeUtc();
+   // A timetable remains useful even when automatic music pauses are disabled.
+   auto query=store->query(QStringLiteral("SELECT due FROM events WHERE kind IN ('prayer','adhan') AND status='pending' AND due>=? ORDER BY due LIMIT 1"),{now.toMSecsSinceEpoch()});
+   const QDateTime next=query.next()?QDateTime::fromMSecsSinceEpoch(query.value(0).toLongLong(),QTimeZone::UTC):QDateTime();
    const auto hold=QDateTime::fromString(store->get(QStringLiteral("prayer_hold_until")),Qt::ISODate);
-   prayerState->setText(store->get(QStringLiteral("prayer_pause_enabled"))==QStringLiteral("0")?(ar?QStringLiteral("التوقف التلقائي عند الأذان: متوقف"):QStringLiteral("Automatic adhan pause: off")):hold>QDateTime::currentDateTimeUtc()?(ar?QStringLiteral("توقف الأذان جارٍ حتى "):QStringLiteral("Adhan pause until "))+hold.toLocalTime().toString(QStringLiteral("HH:mm")):
-    next.isValid()?(ar?QStringLiteral("توقف الأذان القادم: "):QStringLiteral("Next adhan pause: "))+next.toLocalTime().toString(QStringLiteral("ddd HH:mm t")):
-    (ar?QStringLiteral("تنبيه: لا يوجد موعد فعّال لتوقف الأذان — افتح أوقات الأذان"):QStringLiteral("Warning: no upcoming adhan pause — open Adhan times")));
-   prayerState->setStyleSheet(next.isValid()?QStringLiteral("color:#21cbbb;padding:8px"):QStringLiteral("color:#ffbf69;padding:8px"));
+   const QString prefix=enabled?(ar?QStringLiteral("التوقف للأذان القادم: "):QStringLiteral("Next adhan pause: ")):(ar?QStringLiteral("موعد الأذان القادم: "):QStringLiteral("Next adhan time: "));
+   QString message;
+   if(enabled&&hold>now)message=(ar?QStringLiteral("التوقف للأذان جارٍ حتى "):QStringLiteral("Adhan pause until "))+hold.toLocalTime().toString(QStringLiteral("HH:mm"));
+   else if(next.isValid())message=prefix+next.toLocalTime().toString(QStringLiteral("ddd HH:mm t"));
+   else message=prefix+(ar?QStringLiteral("لا تتوفر مواقيت — افتح أوقات الأذان"):QStringLiteral("No timetable — open Adhan times"));
+   prayerState->setText(message);
+   prayerState->setStyleSheet(enabled?QStringLiteral("color:#b93037;padding:8px;font-weight:600"):QStringLiteral("color:#365d49;padding:8px"));
   };connect(prayerTimer,&QTimer::timeout,this,updatePrayer);prayerTimer->start(1000);updatePrayer();
-  auto panel=new QWidget(strip);auto row=new QHBoxLayout(panel);auto total=new QLabel(panel);total->setObjectName(QStringLiteral("playlistTotalDuration"));total->setStyleSheet(QStringLiteral("font-size:26px;font-weight:600;color:#21cbbb;padding:8px"));auto coverage=new QLabel(panel);coverage->setWordWrap(true);auto target=new QSpinBox(panel);target->setRange(1,1440);target->setValue(store->get(QStringLiteral("coverage_minutes")).isEmpty()?480:store->get(QStringLiteral("coverage_minutes")).toInt());bool ar=NasaqLanguage()==QStringLiteral("ar");target->setSuffix(ar?QStringLiteral(" دقيقة عمل"):QStringLiteral(" business minutes"));row->addWidget(coverage,1);row->addWidget(target);row->addWidget(total);strip->addWidget(panel);panel->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
+  auto panel=new QWidget(strip);auto row=new QHBoxLayout(panel);row->setContentsMargins(8,8,8,8);row->setSpacing(16);auto total=new QLabel(panel);total->setObjectName(QStringLiteral("playlistTotalDuration"));total->setStyleSheet(QStringLiteral("font-size:24px;font-weight:600;color:#153e34;padding:8px"));auto coverage=new QLabel(panel);coverage->setObjectName(QStringLiteral("coverageSummary"));coverage->setWordWrap(true);auto target=new QSpinBox(panel);target->setRange(1,1440);target->setValue(store->get(QStringLiteral("coverage_minutes")).isEmpty()?480:store->get(QStringLiteral("coverage_minutes")).toInt());bool ar=NasaqLanguage()==QStringLiteral("ar");target->setSuffix(ar?QStringLiteral(" دقيقة عمل"):QStringLiteral(" business minutes"));row->addWidget(coverage,1);row->addWidget(target);row->addWidget(total);strip->addWidget(panel);panel->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
   connect(target,&QSpinBox::valueChanged,this,[this](int minutes){store->set(QStringLiteral("coverage_minutes"),QString::number(minutes));});
-  auto clock=new QTimer(this);connect(clock,&QTimer::timeout,this,[app,total,coverage,target]{
+  auto clock=new QTimer(this);connect(clock,&QTimer::timeout,this,[this,app,total,coverage,target]{
    const bool ar=NasaqLanguage()==QStringLiteral("ar");target->setSuffix(ar?QStringLiteral(" دقيقة عمل"):QStringLiteral(" business minutes"));
-   auto list=app->playlist_manager()->current();if(!list)return;QList<qint64> durations;bool skipped=false;for(int i=0;i<list->rowCount();++i){auto item=list->item_at(i);durations<<item->EffectiveMetadata().length_nanosec()/1000000;skipped|=item->GetShouldSkip();}
+   auto list=app->playlist_manager()->current();if(!list)return;QList<qint64> durations;QSet<int> liveRows;bool skipped=false;for(int i=0;i<list->rowCount();++i){auto item=list->item_at(i);durations<<item->EffectiveMetadata().length_nanosec()/1000000;if(item->EffectiveMetadata().is_radio())liveRows.insert(i);skipped|=item->GetShouldSkip();}
    auto seq=app->playlist_manager()->sequence();bool ordered=seq->shuffle_mode()==PlaylistSequence::ShuffleMode::Off&&(seq->repeat_mode()==PlaylistSequence::RepeatMode::Off||seq->repeat_mode()==PlaylistSequence::RepeatMode::Playlist)&&list->queue()->rowCount()==0&&!skipped;
    bool active=list==app->playlist_manager()->active()&&app->player()->GetState()!=EngineBase::State::Empty&&app->player()->GetState()!=EngineBase::State::Idle;
-   auto result=CalculateRundown(durations,active?list->current_row():0,active?app->player()->engine()->position_nanosec()/1000000:0,QDateTime::currentDateTime(),ordered);list->SetBusinessEndTimes(result.ends);
-   total->setText((ar?QStringLiteral("إجمالي القائمة  "):QStringLiteral("Playlist total  "))+RundownDuration(result.total));
+   auto result=CalculateRundown(durations,active?list->current_row():0,active?app->player()->engine()->position_nanosec()/1000000:0,QDateTime::currentDateTime(),ordered,liveRows);list->SetBusinessEndTimes(result.ends);
+   total->setText((ar?QStringLiteral("إجمالي القائمة  "):QStringLiteral("Playlist total  "))+(result.infinite?QStringLiteral("∞"):RundownDuration(result.total)));
+   total->setToolTip(result.infinite?(ar?QStringLiteral("تحتوي القائمة على بث راديو مباشر بلا مدة نهائية"):QStringLiteral("This playlist includes live radio with no fixed duration")):QString());
+   target->setVisible(!result.infinite);
+   if(result.infinite){const bool pauseEnabled=store->get(QStringLiteral("prayer_pause_enabled"))!=QStringLiteral("0");coverage->setText(ar?(pauseEnabled?QStringLiteral("مدة غير محدودة\nيتوقف للأذان ويستأنف وفق إعداداتك؛ يعتمد استمرار البث على اتصال المحطة."):QStringLiteral("مدة غير محدودة\nإيقاف الموسيقى للأذان غير مفعل؛ يعتمد استمرار البث على اتصال المحطة.")):(pauseEnabled?QStringLiteral("No fixed duration\nAdhan pauses still apply. Broadcast availability depends on the station connection."):QStringLiteral("No fixed duration\nAutomatic adhan pause is off. Broadcast availability depends on the station connection.")));return;}
    qint64 missing=qMax(qint64(0),qint64(target->value())*60000-result.total);
    QString text=(ar?QStringLiteral("المتبقي: "):QStringLiteral("Remaining: "))+RundownDuration(result.remaining)+(ar?QStringLiteral(" • نقص التغطية: "):QStringLiteral(" • Coverage shortfall: "))+RundownDuration(missing);
    if(result.unknown)text+=ar?QStringLiteral(" • توجد مدد غير معروفة"):QStringLiteral(" • Unknown durations present");

@@ -6,6 +6,9 @@
 class BusinessMusic:public MusicTransport{public:bool running=true,held=false;int resumes=0;bool replace(const QStringList&)override{return true;}bool playing()const override{return running;}void suspend(bool on)override{held=on;if(on)running=false;}void resume()override{if(!held){running=true;++resumes;}}void stop()override{running=false;}};
 class BusinessTest:public QObject{Q_OBJECT
 private slots:
+ void liveRadioHasNoEnd(){auto r=CalculateRundown({60000,180000,60000},0,0,QDateTime::currentDateTime(),true,{1});QVERIFY(r.infinite);QVERIFY(r.remainingInfinite);QCOMPARE(r.unknown,0);QCOMPARE(r.total,120000);QVERIFY(r.ends[0]!=QStringLiteral("—"));QCOMPARE(r.ends[1],QStringLiteral("—"));QCOMPARE(r.ends[2],QStringLiteral("—"));}
+ void leavingRadioRestoresFiniteRemaining(){auto r=CalculateRundown({-1,60000},1,10000,QDateTime::currentDateTime(),true,{0});QVERIFY(r.infinite);QVERIFY(!r.remainingInfinite);QCOMPARE(r.remaining,50000);QVERIFY(r.ends[1]!=QStringLiteral("—"));}
+ void unknownFileIsNotLiveRadio(){auto r=CalculateRundown({-1},0,0,QDateTime::currentDateTime());QVERIFY(!r.infinite);QCOMPARE(r.unknown,1);}
  void duckReturnsInOneSecond(){double gain=1;MusicDuck d([&](double v){gain=v;});d.press();QCOMPARE(gain,.05);d.release();QTest::qWait(300);QVERIFY(gain>.05&&gain<.6);double mid=gain;QTest::qWait(300);QVERIFY(gain>mid&&gain<1);QTRY_COMPARE_WITH_TIMEOUT(gain,1.,600);}
  void repeatedPressCancelsFade(){double gain=1;MusicDuck d([&](double v){gain=v;});d.press();d.release();QTest::qWait(250);d.press();QCOMPARE(gain,.05);QTest::qWait(1100);QCOMPARE(gain,.05);d.reset();QCOMPARE(gain,1.);}
  void stopCancelsFade(){double gain=1;MusicDuck d([&](double v){gain=v;});d.press();d.release();d.reset();QTest::qWait(1100);QCOMPARE(gain,1.);}

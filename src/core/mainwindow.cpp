@@ -21,6 +21,7 @@
  */
 
 #include "config.h"
+#include "utilities/strutils.h"
 #include "strawberry_cam.h"
 #include "version.h"
 
@@ -479,7 +480,7 @@ MainWindow::MainWindow(Application *app,
   ui_->tabs->AddTab(collection_view_, u"collection"_s, IconLoader::Load(u"library-music"_s, true, 0, 32), tr("Collection"));
   ui_->tabs->AddTab(queue_view_, u"queue"_s, IconLoader::Load(u"footsteps"_s, true, 0, 32), tr("Queue"));
   ui_->tabs->AddTab(playlist_list_, u"playlists"_s, IconLoader::Load(u"view-media-playlist"_s, true, 0, 32), tr("Playlists"));
-  ui_->tabs->AddTab(smartplaylists_view_, u"smartplaylists"_s, IconLoader::Load(u"view-media-playlist"_s, true, 0, 32), tr("Smart playlists"));
+  ui_->tabs->AddTab(smartplaylists_view_, u"smartplaylists"_s, IconLoader::Load(u"nasaq-smart-playlist"_s, true, 0, 32), tr("Smart playlists"));
   ui_->tabs->AddTab(file_view_, u"files"_s, IconLoader::Load(u"document-open"_s, true, 0, 32), tr("Files"));
   ui_->tabs->AddTab(radio_view_, u"radios"_s, IconLoader::Load(u"radio"_s, true, 0, 32), tr("Radios"));
   ui_->tabs->AddTab(device_view_, u"devices"_s, IconLoader::Load(u"device"_s, true, 0, 32), tr("Devices"));
@@ -1049,6 +1050,14 @@ MainWindow::MainWindow(Application *app,
   QObject::connect(&*app_->playlist_manager(), &PlaylistManager::CurrentSongChanged, ui_->widget_playing, &PlayingWidget::SongChanged);
   QObject::connect(&*app_->player(), &Player::PlaylistFinished, ui_->widget_playing, &PlayingWidget::Stopped);
   QObject::connect(&*app_->player(), &Player::Playing, ui_->widget_playing, &PlayingWidget::Playing);
+  ui_->widget_playing->SetPlaybackProbe([this] {
+    return app_->player()->GetState() == EngineBase::State::Playing &&
+      !app_->player()->property("camSuspended").toBool() &&
+      !app_->player()->property("camLicenseDenied").toBool();
+  });
+  QObject::connect(&*app_->player()->engine(), &EngineBase::StateChanged, ui_->widget_playing, [this](EngineBase::State state) {
+    ui_->widget_playing->SetPlaybackActive(state == EngineBase::State::Playing);
+  });
   QObject::connect(&*app_->player(), &Player::Stopped, ui_->widget_playing, &PlayingWidget::Stopped);
   QObject::connect(&*app_->player(), &Player::Error, ui_->widget_playing, &PlayingWidget::Error);
   QObject::connect(ui_->widget_playing, &PlayingWidget::ShowAboveStatusBarChanged, this, &MainWindow::PlayingWidgetPositionChanged);
@@ -2919,7 +2928,7 @@ bool MainWindow::LoadUrl(const QString &url) {
   }
 #endif
 
-  qLog(Error) << "Can't open" << url;
+  qLog(Error) << "Can't open" << Utilities::RedactUrls(url);
 
   return false;
 
@@ -3522,6 +3531,8 @@ void MainWindow::AlbumCoverLoaded(const Song &song, const AlbumCoverLoaderResult
 
   song_ = song;
   album_cover_ = result.album_cover;
+
+  ui_->widget_playing->SetFallbackCover(!result.success || result.type == AlbumCoverLoaderResult::Type::None || result.type == AlbumCoverLoaderResult::Type::Unset);
 
   Q_EMIT AlbumCoverReady(song, result.album_cover.image);
 

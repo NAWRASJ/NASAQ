@@ -9,6 +9,7 @@
 #include <QtConcurrent/QtConcurrentRun>
 #include <QFutureWatcher>
 #include "nasaqtheme.h"
+#include "nasaqbrand.h"
 #include "nasaqlanguage.h"
 #include "licenseactivation.h"
 #include "activationdialog.h"
@@ -26,7 +27,7 @@ Window::Window(Store&s,MusicTransport*transport,QWidget*notificationHost):store(
  setWindowTitle(NText(QStringLiteral("Audio control")));resize(1080,720);
  setLayoutDirection(NasaqLanguage()=="ar"?Qt::RightToLeft:Qt::LeftToRight);
  auto root=new QWidget;auto layout=new QVBoxLayout(root);layout->setContentsMargins(28,24,28,20);layout->setSpacing(16);auto scroll=new QScrollArea;scroll->setWidgetResizable(true);scroll->setFrameShape(QFrame::NoFrame);scroll->setWidget(root);setCentralWidget(scroll);
- auto logo=new QLabel;logo->setPixmap(QPixmap(":/nasaq/nasaq-128.png").scaled(56,56,Qt::KeepAspectRatio,Qt::SmoothTransformation));auto brandRow=new QHBoxLayout;layout->addLayout(brandRow);
+ auto logo=new NasaqBrandMark;auto brandRow=new QHBoxLayout;layout->addLayout(brandRow);
  auto heading=new QLabel(NText(QStringLiteral("NASAQ / نسق")));heading->setObjectName("brandHeading");brandRow->addWidget(logo);brandRow->addSpacing(12);brandRow->addWidget(heading,1);
  auto language=new QComboBox;language->addItem(NText(QStringLiteral("Follow Windows")),QStringLiteral("system"));language->addItem(QStringLiteral("العربية"),QStringLiteral("ar"));language->addItem(QStringLiteral("English"),QStringLiteral("en"));language->setObjectName("interfaceLanguage");language->setAccessibleName(NText(QStringLiteral("Language")));language->setCurrentIndex(qMax(0,language->findData(QSettings(QStringLiteral("NASAQ"),QStringLiteral("Preferences")).value(QStringLiteral("language"),QStringLiteral("system")))));connect(language,&QComboBox::activated,this,[this,language]{ApplyNasaqLanguage(language->currentData().toString());setLayoutDirection(NasaqLanguage()=="ar"?Qt::RightToLeft:Qt::LeftToRight);setWindowTitle(NText("NASAQ")+" — "+sectionNames().value(navigation->currentRow()));refresh();status->clear();Q_EMIT interfaceLanguageChanged();});
  auto body=new QHBoxLayout;layout->addLayout(body,1);

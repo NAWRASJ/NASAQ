@@ -35,6 +35,7 @@
 #include "albumcoverloader.h"
 #include "albumcoverloaderresult.h"
 #include "currentalbumcoverloader.h"
+#include "utilities/nasaqvinyl.h"
 
 using std::make_unique;
 using namespace Qt::Literals::StringLiterals;
@@ -49,7 +50,7 @@ CurrentAlbumCoverLoader::CurrentAlbumCoverLoader(const SharedPtr<AlbumCoverLoade
 
   options_.options = AlbumCoverLoaderOptions::Option::RawImageData | AlbumCoverLoaderOptions::Option::OriginalImage | AlbumCoverLoaderOptions::Option::ScaledImage;
   options_.desired_scaled_size = QSize(120, 120);
-  options_.default_cover = u":/pictures/cdcase.png"_s;
+  options_.default_cover = QString();
 
   QObject::connect(&*albumcover_loader, &AlbumCoverLoader::AlbumCoverLoaded, this, &CurrentAlbumCoverLoader::AlbumCoverReady);
 
@@ -82,6 +83,11 @@ void CurrentAlbumCoverLoader::AlbumCoverReady(const quint64 id, AlbumCoverLoader
 
   if (id != id_) return;
   id_ = 0;
+
+  if (!result.success || result.type == AlbumCoverLoaderResult::Type::None || result.type == AlbumCoverLoaderResult::Type::Unset) {
+    result.album_cover.image = NasaqVinylImage();
+    result.image_scaled = result.album_cover.image.scaled(120,120,Qt::KeepAspectRatio,Qt::SmoothTransformation);
+  }
 
   if (!result.album_cover.image.isNull()) {
     temp_cover_ = make_unique<TemporaryFile>(temp_file_pattern_);

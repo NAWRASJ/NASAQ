@@ -159,7 +159,8 @@ bool StretchHeaderView::RestoreState(const QByteArray &state) {
   setSortIndicator(sort_indicator_section, static_cast<Qt::SortOrder>(sort_indicator_order));
 
   if (stretch_enabled_) {
-    // In stretch mode, we've already set the proportional column widths so apply them now.
+    // Older states may reserve width for hidden columns. Reclaim that space.
+    NormaliseWidths();
     ResizeSections();
   }
 
@@ -213,7 +214,7 @@ void StretchHeaderView::SetStretchEnabled(const bool enabled) {
 
 void StretchHeaderView::SetColumnWidth(const int logical_index, const ColumnWidthType width) {
 
-  column_widths_[logical_index] = width;
+  column_widths_[logical_index] = isSectionHidden(logical_index) ? 0.0 : width;
 
   if (!stretch_enabled_) return;
 
@@ -232,6 +233,10 @@ void StretchHeaderView::NormaliseWidths(const QList<int> &sections) {
 
   if (!stretch_enabled_) return;
 
+  for (int i = 0; i < column_widths_.count(); ++i) {
+    if (isSectionHidden(i)) column_widths_[i] = 0.0;
+  }
+
   const ColumnWidthType total_sum = std::accumulate(column_widths_.begin(), column_widths_.end(), 0.0);
   ColumnWidthType selected_sum = total_sum;
 
@@ -244,7 +249,7 @@ void StretchHeaderView::NormaliseWidths(const QList<int> &sections) {
     }
   }
 
-  if (total_sum != 0.0 && !qFuzzyCompare(total_sum, 1.0)) {
+  if (selected_sum > 0.0 && total_sum > 0.0 && !qFuzzyCompare(total_sum, 1.0)) {
     const ColumnWidthType mult = (selected_sum + (1.0 - total_sum)) / selected_sum;
     for (int i = 0; i < column_widths_.count(); ++i) {
       if (sections.isEmpty() || sections.contains(i)) {

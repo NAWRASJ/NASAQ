@@ -109,9 +109,9 @@ void VolumeSlider::paintEvent(QPaintEvent *e) {
   Q_UNUSED(e);
   QPainter p(this); p.setRenderHint(QPainter::Antialiasing);
   const int x = 7 + (width()-14) * value() / qMax(1, maximum());
-  p.setPen(Qt::NoPen); p.setBrush(QColor(48, 61, 65)); p.drawRoundedRect(QRect(7, 22, width()-14, 4), 2, 2);
-  p.setBrush(muted_ ? QColor(110, 126, 130) : QColor(41, 211, 187)); p.drawRoundedRect(QRect(7, 22, qMax(1,x-7), 4), 2, 2); p.drawEllipse(QPoint(x,24), 5, 5);
-  p.setPen(QColor(221,232,230)); p.drawText(QRect(7,0,width()-14,19), Qt::AlignLeft, muted_ ? u"Muted"_s : QString::number(value()) + u"%"_s);
+  p.setPen(Qt::NoPen); p.setBrush(palette().color(QPalette::Mid)); p.drawRoundedRect(QRect(7, 22, width()-14, 4), 2, 2);
+  p.setBrush(muted_ ? palette().color(QPalette::Disabled, QPalette::Text) : palette().color(QPalette::Link)); p.drawRoundedRect(QRect(7, 22, qMax(1,x-7), 4), 2, 2); p.drawEllipse(QPoint(x,24), 5, 5);
+  p.setPen(palette().color(QPalette::Text)); p.drawText(QRect(7,0,width()-14,19), Qt::AlignLeft, muted_ ? u"Muted"_s : QString::number(value()) + u"%"_s);
 }
 
 void VolumeSlider::generateGradient() {

@@ -89,6 +89,18 @@ PlayingWidget::PlayingWidget(QWidget *parent)
 
   SetHeight(0);
 
+  vinyl_timer_.setInterval(33);
+  connect(&vinyl_timer_, &QTimer::timeout, this, [this] {
+    if (!fallback_cover_ || !playback_active_ || (playback_probe_ && !playback_probe_())) {
+      vinyl_timer_.stop(); return;
+    }
+    const qint64 elapsed = vinyl_clock_.restart();
+    if (!isVisible() || !enabled_) return;
+    vinyl_angle_ += qreal(elapsed) * 0.018; // One quiet revolution every twenty seconds.
+    while (vinyl_angle_ >= 360) vinyl_angle_ -= 360;
+    update();
+  });
+
   // Load settings
   Settings s;
   s.beginGroup(kSettingsGroup);
@@ -148,6 +160,33 @@ void PlayingWidget::Init(AlbumCoverChoiceController *album_cover_choice_controll
 
   QObject::connect(album_cover_choice_controller_, &AlbumCoverChoiceController::AutomaticCoverSearchDone, this, &PlayingWidget::AutomaticCoverSearchDone);
 
+}
+
+void PlayingWidget::SetFallbackCover(bool fallback) {
+  if (fallback_cover_ != fallback) { fallback_cover_ = fallback; vinyl_angle_ = 0; }
+  UpdateVinylAnimation();
+}
+
+void PlayingWidget::SetPlaybackActive(bool active) {
+  playback_active_ = active;
+  UpdateVinylAnimation();
+}
+
+void PlayingWidget::UpdateVinylAnimation() {
+  if (fallback_cover_ && playback_active_ && (!playback_probe_ || playback_probe_())) {
+    if (!vinyl_timer_.isActive()) { vinyl_clock_.restart(); vinyl_timer_.start(); }
+  }
+  else vinyl_timer_.stop();
+}
+
+void PlayingWidget::DrawCover(QPainter *p, const QRect &rect) {
+  p->save();
+  if (fallback_cover_) {
+    p->translate(rect.center());p->rotate(vinyl_angle_);
+    p->drawPixmap(QRect(-rect.width()/2,-rect.height()/2,rect.width(),rect.height()), pixmap_cover_);
+  }
+  else p->drawPixmap(rect,pixmap_cover_);
+  p->restore();
 }
 
 void PlayingWidget::SetEnabled(const bool enabled) {
@@ -410,7 +449,7 @@ void PlayingWidget::UpdateDetailsText() {
       html += "<p>"_L1;
       break;
     case Mode::LargeSongDetails:
-      details_->setTextWidth(desired_height_);
+      details_->setTextWidth(width());
       html += "<p align=center>"_L1;
       break;
   }
@@ -450,7 +489,7 @@ void PlayingWidget::DrawContents(QPainter *p) {
   switch (mode_) {
     case Mode::SmallSongDetails:
       // Draw the cover
-      p->drawPixmap(0, 0, small_ideal_height_, small_ideal_height_, pixmap_cover_);
+      DrawCover(p, QRect(0, 0, small_ideal_height_, small_ideal_height_));
       if (downloading_covers_ && spinner_animation_) {
         p->drawPixmap(small_ideal_height_ - 18, 6, 16, 16, spinner_animation_->currentPixmap());
       }
@@ -464,20 +503,20 @@ void PlayingWidget::DrawContents(QPainter *p) {
     case Mode::LargeSongDetails:
       // Work out how high the text is going to be
       const int text_height = static_cast<int>(details_->size().height());
-      const int cover_size = fit_width_ ? width() : qMin(kMaxCoverSize, width());
-      const int x_offset = (width() - desired_height_) / 2;
+      const int cover_size = qMax(0, qMin(fit_width_ ? width() : qMin(kMaxCoverSize, width()), height() - text_height - kTopBorder));
+      const int x_offset = (width() - cover_size) / 2;
 
       // Draw the cover
-      p->drawPixmap(x_offset, kTopBorder, cover_size, cover_size, pixmap_cover_);
+      DrawCover(p, QRect(x_offset, kTopBorder, cover_size, cover_size));
       if (downloading_covers_ && spinner_animation_) {
         p->drawPixmap(x_offset + 45, 35, 16, 16, spinner_animation_->currentPixmap());
       }
 
       // Draw the text below
       if (timeline_show_hide_->state() != QTimeLine::Running) {
-        p->translate(x_offset, height() - text_height);
+        p->translate(0, height() - text_height);
         details_->drawContents(p);
-        p->translate(-x_offset, -height() + text_height);
+        p->translate(0, -height() + text_height);
       }
 
       break;

@@ -307,7 +307,8 @@ int FancyTabWidget::IndexOfTab(QWidget *widget) {
 
 void FancyTabWidget::paintEvent(QPaintEvent *pe) {
   Q_UNUSED(pe);
-  QPainter p(this); p.fillRect(rect(), QColor(12, 17, 20));
+  QPainter p(this); p.fillRect(rect(), palette().color(QPalette::Window));
+  if(mode_!=Mode::Tabs&&mode_!=Mode::IconOnlyTabs){const QRect bar=tabBar()->geometry();p.fillRect(QRect(bar.x(),0,bar.width(),height()),QColor(239,238,231));}
 }
 
 void FancyTabWidget::TabBarUpdateGeometry() {

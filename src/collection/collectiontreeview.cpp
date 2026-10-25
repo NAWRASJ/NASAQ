@@ -134,8 +134,10 @@ void CollectionTreeView::paintEvent(QPaintEvent *event) {
     QPainter p(viewport());
     const QRect rect(viewport()->rect());
 
-    // Draw the confused strawberry
-    const QRect image_rect((rect.width() - nomusic_.width()) / 2, 50, nomusic_.width(), nomusic_.height());
+    // Use the current brand artwork at a stable logical size on high-DPI screens.
+    const int logoSize=qMin(128,qMax(32,rect.width()-32));
+    const QRect image_rect((rect.width() - logoSize) / 2, 50, logoSize, logoSize);
+    p.setRenderHint(QPainter::SmoothPixmapTransform);
     p.drawPixmap(image_rect, nomusic_);
 
     // Draw the title text

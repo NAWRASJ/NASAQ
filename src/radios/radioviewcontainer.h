@@ -34,6 +34,7 @@ class QLabel;
 class QPushButton;
 class QCheckBox;
 class QMimeData;
+class QGridLayout;
 
 class RadioViewContainer : public QWidget {
   Q_OBJECT
@@ -53,6 +54,7 @@ class RadioViewContainer : public QWidget {
 
  protected:
   void changeEvent(QEvent *event) override;
+  void resizeEvent(QResizeEvent *event) override;
 
  private:
   void SetupDiscovery();
@@ -73,6 +75,8 @@ class RadioViewContainer : public QWidget {
   QPushButton *add_ = nullptr;
   QPushButton *favorite_ = nullptr;
   QPushButton *homepage_ = nullptr;
+  QGridLayout *actions_ = nullptr;
+  int action_columns_ = 0;
   QJsonArray catalog_;
   QStringList favorites_;
   Ui_RadioViewContainer *ui_;

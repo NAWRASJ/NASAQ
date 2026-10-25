@@ -119,6 +119,7 @@ void AnalyzerBase::paintEvent(QPaintEvent *e) {
       // convert to mono here - our built in analyzers need mono, but the engines provide interleaved pcm
       // Clamp to the samples actually available so a short scope buffer can't be read past its end.
       const size_t scope_frames = thescope.size() / 2;
+      std::fill(lastscope_.begin(), lastscope_.end(), 0.0F);
       for (uint x = 0; static_cast<int>(x) < fht_->size() && x < scope_frames; ++x) {
         lastscope_[x] = static_cast<float>(thescope[i] + thescope[i + 1]) / (2 * (1U << 15U));
         i += 2;

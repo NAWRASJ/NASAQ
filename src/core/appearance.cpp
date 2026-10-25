@@ -130,6 +130,8 @@ void Appearance::LoadCustomPaletteColors() {
 void Appearance::SetCustomPaletteColors(const QMap<QPalette::ColorRole, QColor> &colors) {
 
   Q_ASSERT(QThread::currentThread() == qApp->thread());
+  // Keep legacy saved colors intact while the branded theme owns the palette.
+  if (qApp->property("nasaqIvoryTheme").toBool()) return;
 
   // Only set the active and inactive color groups here, the disabled color group is handled below so that disabled widgets still look greyed out with a custom color set.
   QPalette palette = QApplication::palette();

@@ -92,12 +92,13 @@ int FancyTabBar::width() const {
 
 QSize FancyTabBar::tabSizeHint(const int index) const {
   auto *tabs = qobject_cast<FancyTabWidget*>(parentWidget());
-  if (tabs && tabs->mode() == FancyTabWidget::Mode::IconsSidebar) return QSize(58,54);
+  const int sidebarHeight=tabs?qMax(54,(tabs->height()-4)/qMax(1,count())):54;
+  if (tabs && tabs->mode() == FancyTabWidget::Mode::IconsSidebar) return QSize(58,sidebarHeight);
   // Avoid asking the stylesheet-backed base style for a size: it can re-enter
   // this custom tab bar's sizeHint while the application's style is changing.
   if (tabs && (tabs->mode() == FancyTabWidget::Mode::Tabs || tabs->mode() == FancyTabWidget::Mode::IconOnlyTabs)) return QSize(150,44);
   Q_UNUSED(index);
-  return QSize(190,54);
+  return QSize(190,sidebarHeight);
 }
 
 void FancyTabBar::leaveEvent(QEvent *event) {
@@ -125,16 +126,24 @@ void FancyTabBar::paintEvent(QPaintEvent *pe) {
   auto *tabs = qobject_cast<FancyTabWidget*>(parentWidget());
   if (!tabs || tabs->mode() == FancyTabWidget::Mode::Tabs || tabs->mode() == FancyTabWidget::Mode::IconOnlyTabs) { QTabBar::paintEvent(pe); return; }
   QPainter p(this); p.setRenderHint(QPainter::Antialiasing);
-  p.fillRect(rect(), QColor(12, 17, 20));
+  p.fillRect(rect(), QColor(239, 238, 231));
   for (int i = 0; i < count(); ++i) {
     const QRect r = tabRect(i).adjusted(6, 4, -6, -4);
     const bool selected = i == currentIndex();
-    p.setPen(Qt::NoPen); p.setBrush(selected ? QColor(24, 58, 55) : i == mouseHoverTabIndex ? QColor(27, 35, 39) : QColor(12, 17, 20));
+    p.setPen(Qt::NoPen); p.setBrush(selected ? QColor(21, 62, 52) : i == mouseHoverTabIndex ? QColor(226, 231, 216) : QColor(239, 238, 231));
     p.drawRoundedRect(r, 8, 8);
-    if (selected) { p.setBrush(QColor(41, 211, 187)); p.drawRoundedRect(QRect(r.left(), r.top()+10, 3, r.height()-20), 1, 1); }
-    tabIcon(i).paint(&p, QRect(r.left()+14, r.center().y()-11, 22, 22));
-    p.setPen(isTabEnabled(i) ? QColor(221, 232, 230) : QColor(108, 122, 125));
-    if (tabs->mode() != FancyTabWidget::Mode::IconsSidebar)
-      p.drawText(r.adjusted(46, 0, -6, 0), Qt::AlignVCenter | Qt::AlignLeft, fontMetrics().elidedText(TabText(i), Qt::ElideRight, r.width()-52));
+    const bool rtl = layoutDirection() == Qt::RightToLeft;
+    if (selected) { p.setBrush(QColor(184, 199, 154)); p.drawRoundedRect(QRect(rtl ? r.right()-2 : r.left(), r.top()+10, 3, r.height()-20), 1, 1); }
+    const bool iconsOnly=tabs->mode()==FancyTabWidget::Mode::IconsSidebar;
+    const int iconSize=22,gap=10;
+    const QString text=fontMetrics().elidedText(TabText(i),rtl?Qt::ElideLeft:Qt::ElideRight,qMax(0,r.width()-iconSize-gap-24));
+    const int textWidth=iconsOnly?0:fontMetrics().horizontalAdvance(text);
+    const int groupWidth=iconSize+(iconsOnly?0:gap+textWidth);
+    const int groupLeft=r.left()+(r.width()-groupWidth)/2;
+    const int iconLeft=iconsOnly?groupLeft:rtl?groupLeft+textWidth+gap:groupLeft;
+    tabIcon(i).paint(&p,QRect(iconLeft,r.center().y()-iconSize/2,iconSize,iconSize),Qt::AlignCenter,!isTabEnabled(i)?QIcon::Disabled:selected?QIcon::Selected:QIcon::Normal);
+    p.setPen(isTabEnabled(i)?(selected?QColor(255,254,250):QColor(21,62,52)):QColor(120,130,120));
+    if(!iconsOnly)p.drawText(QRect(rtl?groupLeft:groupLeft+iconSize+gap,r.top(),textWidth,r.height()),Qt::AlignCenter,text);
+
   }
 }

@@ -40,8 +40,13 @@ void Activation::request(const QString&path,const QJsonObject&body,const Reply&c
  req.setHeader(QNetworkRequest::ContentTypeHeader,"application/vnd.api+json");req.setRawHeader("Accept","application/vnd.api+json");req.setRawHeader("Authorization","License "+key.toLatin1());
  req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,QNetworkRequest::ManualRedirectPolicy);req.setTransferTimeout(10000);
  auto reply=network->post(req,QJsonDocument(body).toJson(QJsonDocument::Compact));
+ // Bound memory while receiving, not only after readAll has allocated the response.
+ reply->setReadBufferSize(1024*1024+1);
+ connect(reply,&QNetworkReply::readyRead,this,[reply]{
+  if(reply->bytesAvailable()>1024*1024){reply->setProperty("responseTooLarge",true);reply->abort();}
+ });
  connect(reply,&QNetworkReply::finished,this,[this,reply,callback]{
-  const int status=reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();const auto bytes=reply->readAll();const auto json=bytes.size()<=1024*1024?QJsonDocument::fromJson(bytes).object():QJsonObject();reply->deleteLater();
+  const int status=reply->property("responseTooLarge").toBool()?0:reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();const auto bytes=reply->read(1024*1024+1);const auto json=bytes.size()<=1024*1024?QJsonDocument::fromJson(bytes).object():QJsonObject();reply->deleteLater();
   try{callback(status,json);}catch(const std::exception&){busy=false;certificate.clear();key.clear();lease.valid=false;lease.message="Activation storage failed; reconnect after fixing storage";publish();Q_EMIT completed(false);}
  });
 }

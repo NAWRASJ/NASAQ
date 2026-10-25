@@ -323,13 +323,13 @@ void Player::HandleLoadResult(const UrlHandler::LoadResult &result) {
       break;
 
     case UrlHandler::LoadResult::Type::NoMoreTracks:
-      qLog(Debug) << "URL handler for" << result.media_url_ << "said no more tracks" << is_current;
+      qLog(Debug) << "URL handler for" << Utilities::UrlForLog(result.media_url_) << "said no more tracks" << is_current;
       if (is_current) NextItem(stream_change_type_, autoscroll_);
       break;
 
     case UrlHandler::LoadResult::Type::TrackAvailable:{
 
-      qLog(Debug) << "URL handler for" << result.media_url_ << "returned" << Utilities::UrlForLog(result.stream_url_);
+      qLog(Debug) << "URL handler for" << Utilities::UrlForLog(result.media_url_) << "returned" << Utilities::UrlForLog(result.stream_url_);
 
       Song song;
       if (is_current) song = current_item->EffectiveMetadata();
@@ -402,7 +402,7 @@ void Player::HandleLoadResult(const UrlHandler::LoadResult &result) {
     }
 
     case UrlHandler::LoadResult::Type::WillLoadAsynchronously:
-      qLog(Debug) << "URL handler for" << result.media_url_ << "is loading asynchronously";
+      qLog(Debug) << "URL handler for" << Utilities::UrlForLog(result.media_url_) << "is loading asynchronously";
 
       // We'll get called again later with either NoMoreTracks or TrackAvailable
       loading_async_ << result.media_url_;
@@ -620,7 +620,7 @@ void Player::UnPause() {
       if (time >= 30) {  // Stream URL might be expired.
         // It's already loading again, for example when resume was pressed twice.
         if (loading_async_.contains(song.url())) return;
-        qLog(Debug) << "Re-requesting stream URL for" << song.url();
+        qLog(Debug) << "Re-requesting stream URL for" << Utilities::UrlForLog(song.url());
         play_offset_nanosec_ = static_cast<quint64>(engine_->position_nanosec());
         // The stream is loaded again to continue playing, not paused like the last PlayAt() might have been, and without crossfading into it.
         pause_ = false;
@@ -1091,7 +1091,7 @@ void Player::TrackAboutToEnd() {
         loading_async_ << url;
         return;
       case UrlHandler::LoadResult::Type::TrackAvailable:
-        qLog(Debug) << "URL handler for" << result.media_url_ << "returned" << Utilities::UrlForLog(result.stream_url_);
+        qLog(Debug) << "URL handler for" << Utilities::UrlForLog(result.media_url_) << "returned" << Utilities::UrlForLog(result.stream_url_);
         url = result.stream_url_;
         Song song = next_item->EffectiveMetadata();
         song.set_stream_url(url);

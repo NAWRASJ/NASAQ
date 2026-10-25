@@ -32,6 +32,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QVBoxLayout>
+#include <QGridLayout>
+#include <QResizeEvent>
 #include <QHBoxLayout>
 #include <QLineEdit>
 #include <QComboBox>
@@ -91,6 +93,10 @@ QString RadioText(const char *en, const char *ar) {
 }
 QString RadioCategory(const QString &id) {
   static const QHash<QString, QPair<const char *, const char *>> labels = {
+    {QStringLiteral("quran"), {"Holy Quran", "القرآن الكريم"}},
+    {QStringLiteral("electronic"), {"Electronic & dance", "إلكتروني ودانس"}},
+    {QStringLiteral("gyms"), {"Gyms & sports clubs", "الجيم والنوادي الرياضية"}},
+    {QStringLiteral("prayer_rooms"), {"Prayer rooms", "قاعات الصلاة"}},
     {QStringLiteral("classical"), {"Classical & piano", "كلاسيك وبيانو"}},
     {QStringLiteral("jazz"), {"Jazz", "جاز"}}, {QStringLiteral("bossa"), {"Bossa & island rhythms", "بوسا وإيقاعات الجزر"}},
     {QStringLiteral("lounge"), {"Lounge", "لاونج"}}, {QStringLiteral("chill"), {"Chill & downtempo", "تشيل وإيقاعات هادئة"}},
@@ -112,6 +118,7 @@ void RadioViewContainer::SetupDiscovery() {
   auto *layout = new QVBoxLayout(discovery_);
   search_ = new QLineEdit(discovery_);
   search_->setClearButtonEnabled(true);
+  search_->addAction(IconLoader::Load(QStringLiteral("edit-find")), QLineEdit::LeadingPosition);
   search_->setObjectName(QStringLiteral("radioSearch"));
   layout->addWidget(search_);
   auto *filters = new QHBoxLayout;
@@ -119,6 +126,11 @@ void RadioViewContainer::SetupDiscovery() {
   venue_ = new QComboBox(discovery_);
   genre_->setObjectName(QStringLiteral("radioGenre"));
   venue_->setObjectName(QStringLiteral("radioVenue"));
+  for (auto *combo : {genre_, venue_}) {
+    combo->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+    combo->setMinimumContentsLength(10);
+    combo->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed);
+  }
   favorites_only_ = new QCheckBox(discovery_);
   favorites_only_->setObjectName(QStringLiteral("radioFavoritesOnly"));
   filters->addWidget(genre_, 1); filters->addWidget(venue_, 1); filters->addWidget(favorites_only_);
@@ -132,11 +144,19 @@ void RadioViewContainer::SetupDiscovery() {
   description_->setWordWrap(true);
   description_->setTextFormat(Qt::PlainText);
   layout->addWidget(description_);
-  auto *buttons = new QHBoxLayout;
+  actions_ = new QGridLayout;
+  actions_->setHorizontalSpacing(8); actions_->setVerticalSpacing(8);
   play_ = new QPushButton(discovery_); add_ = new QPushButton(discovery_);
   favorite_ = new QPushButton(discovery_); homepage_ = new QPushButton(discovery_);
-  buttons->addWidget(play_); buttons->addWidget(add_); buttons->addWidget(favorite_); buttons->addWidget(homepage_);
-  layout->addLayout(buttons);
+  play_->setObjectName(QStringLiteral("radioPlay"));
+  play_->setIcon(IconLoader::Load(QStringLiteral("media-playback-start")));
+  add_->setIcon(IconLoader::Load(QStringLiteral("list-add")));
+  favorite_->setIcon(IconLoader::Load(QStringLiteral("love")));
+  homepage_->setIcon(IconLoader::Load(QStringLiteral("applications-internet")));
+  int position=0; for(auto *button : {play_,add_,favorite_,homepage_}) {
+    button->setIconSize(QSize(18,18)); actions_->addWidget(button,position/2,position%2); ++position;
+  }
+  action_columns_=2; layout->addLayout(actions_);
   note_ = new QLabel(discovery_); note_->setWordWrap(true); layout->addWidget(note_);
   ui_->tab_widget->insertTab(0, discovery_, QString());
   ui_->tab_widget->setCurrentIndex(0);
@@ -173,9 +193,9 @@ void RadioViewContainer::TranslateDiscovery() {
   genre_->clear(); venue_->clear();
   genre_->addItem(RadioText("All moods", "جميع الأنماط"), QString());
   venue_->addItem(RadioText("All venues", "جميع الأماكن"), QString());
-  for (const auto &key : {"arabic", "classical", "jazz", "bossa", "lounge", "chill", "ambient", "world", "acoustic", "vocals"})
+  for (const auto &key : {"arabic", "quran", "electronic", "classical", "jazz", "bossa", "lounge", "chill", "ambient", "world", "acoustic", "vocals"})
     genre_->addItem(RadioCategory(QString::fromUtf8(key)), QString::fromUtf8(key));
-  for (const auto &key : {"offices", "restaurants", "cafes", "shops", "hotels", "wellness"})
+  for (const auto &key : {"offices", "restaurants", "cafes", "shops", "hotels", "wellness", "gyms", "prayer_rooms"})
     venue_->addItem(RadioCategory(QString::fromUtf8(key)), QString::fromUtf8(key));
   genre_->setCurrentIndex(qMax(0, genre_->findData(selected_genre)));
   venue_->setCurrentIndex(qMax(0, venue_->findData(selected_venue)));
@@ -252,4 +272,16 @@ void RadioViewContainer::OpenStation(const bool play) {
 void RadioViewContainer::changeEvent(QEvent *event) {
   QWidget::changeEvent(event);
   if (event->type() == QEvent::LanguageChange || event->type() == QEvent::LayoutDirectionChange) TranslateDiscovery();
+}
+
+void RadioViewContainer::resizeEvent(QResizeEvent *event) {
+  QWidget::resizeEvent(event);
+  if (!actions_) return;
+  const int columns = event->size().width() >= 720 ? 4 : 2;
+  if (columns == action_columns_) return;
+  while (auto *item = actions_->takeAt(0)) delete item;
+  int position=0; for(auto *button : {play_,add_,favorite_,homepage_}) {
+    actions_->addWidget(button,position/columns,position%columns); ++position;
+  }
+  action_columns_=columns;
 }
