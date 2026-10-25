@@ -132,6 +132,21 @@ class Player : public PlayerInterface {
   void HandleLoadResult(const UrlHandler::LoadResult &result);
 
  private:
+  friend class RadioRecoveryTest;
+  bool event(QEvent *event) override;
+  void ConnectEngineSignals();
+  void EngineError(const QString &message);
+  bool RecoverRadio();
+  void CancelRadioRecovery();
+  void RetryRadio();
+  bool RadioBlocked() const;
+  QTimer *radio_retry_timer_ = nullptr;
+  PlaylistItemPtr radio_retry_item_;
+  int radio_retry_playlist_ = -1;
+  int radio_retry_attempt_ = 0;
+  bool radio_wanted_ = false;
+  bool radio_retry_call_ = false;
+
   void ResumePlayback();
 
   // Returns true if we were supposed to stop after this track.

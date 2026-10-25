@@ -67,7 +67,7 @@ class StrawberryMusic final:public MusicTransport {
   return true;
  }
  void setGain(double gain)override{requestedGain=gain;app->player()->engine()->SetBusinessGain(suspended?0.0:requestedGain);}
- bool playing()const override{return !suspended&&(app->player()->GetState()==EngineBase::State::Playing||app->player()->engine()->property("nasaqBuffering").toBool());}
+ bool playing()const override{return !suspended&&(app->player()->GetState()==EngineBase::State::Playing||app->player()->engine()->property("nasaqBuffering").toBool()||app->player()->property("nasaqRadioReconnecting").toBool());}
  void suspend(bool active)override{
   app->player()->setProperty("camStartupPrayerHoldUntil",QDateTime());suspended=active;app->player()->setProperty("camSuspended",active);
   // Silence is enforced independently of Pause: GStreamer may ignore Pause while buffering.
@@ -85,6 +85,8 @@ class StrawberryMusic final:public MusicTransport {
   if(suspended||pending)return;
   if(interruptedRadio){
    const auto item=interruptedRadio;interruptedRadio.reset();
+   // A manual Stop clears Player's item while an adhan engine-only stop preserves it.
+   if(app->player()->GetCurrentItem()!=item){interruptedPlaylist=-1;return;}
    auto playlist=app->playlist_manager()->playlist(interruptedPlaylist);interruptedPlaylist=-1;
    if(!playlist)return;
    for(int row=0;row<playlist->rowCount();++row)if(playlist->item_at(row)==item){
@@ -140,6 +142,9 @@ class CamHost final:public QObject {
    total->setText((ar?QStringLiteral("إجمالي القائمة  "):QStringLiteral("Playlist total  "))+(result.infinite?QStringLiteral("∞"):RundownDuration(result.total)));
    total->setToolTip(result.infinite?(ar?QStringLiteral("تحتوي القائمة على بث راديو مباشر بلا مدة نهائية"):QStringLiteral("This playlist includes live radio with no fixed duration")):QString());
    target->setVisible(!result.infinite);
+   if(app->player()->property("nasaqRadioReconnecting").toBool()){
+    coverage->setText(ar?QStringLiteral("انقطع اتصال الراديو — جارٍ إعادة الاتصال تلقائيًا…\nيمكنك الإيقاف أو اختيار محطة أخرى. يبقى التوقف للأذان فعالًا وفق إعداداتك."):QStringLiteral("Radio disconnected — reconnecting automatically…\nYou can stop or choose another station. Adhan pauses still follow your settings."));return;
+   }
    if(result.infinite){const bool pauseEnabled=store->get(QStringLiteral("prayer_pause_enabled"))!=QStringLiteral("0");coverage->setText(ar?(pauseEnabled?QStringLiteral("مدة غير محدودة\nيتوقف للأذان ويستأنف وفق إعداداتك؛ يعتمد استمرار البث على اتصال المحطة."):QStringLiteral("مدة غير محدودة\nإيقاف الموسيقى للأذان غير مفعل؛ يعتمد استمرار البث على اتصال المحطة.")):(pauseEnabled?QStringLiteral("No fixed duration\nAdhan pauses still apply. Broadcast availability depends on the station connection."):QStringLiteral("No fixed duration\nAutomatic adhan pause is off. Broadcast availability depends on the station connection.")));return;}
    qint64 missing=qMax(qint64(0),qint64(target->value())*60000-result.total);
    QString text=(ar?QStringLiteral("المتبقي: "):QStringLiteral("Remaining: "))+RundownDuration(result.remaining)+(ar?QStringLiteral(" • نقص التغطية: "):QStringLiteral(" • Coverage shortfall: "))+RundownDuration(missing);

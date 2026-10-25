@@ -21,6 +21,7 @@
  */
 
 #include "config.h"
+#include <QDynamicPropertyChangeEvent>
 
 #include "player.h"
 
@@ -112,6 +113,10 @@ Player::Player(const SharedPtr<TaskManager> task_manager, const SharedPtr<UrlHan
 
   QObject::connect(&*url_handlers, &UrlHandlers::Registered, this, &Player::UrlHandlerRegistered);
 
+  radio_retry_timer_ = new QTimer(this);
+  radio_retry_timer_->setSingleShot(true);
+  connect(radio_retry_timer_, &QTimer::timeout, this, &Player::RetryRadio);
+
 }
 
 void Player::Init() {
@@ -122,16 +127,7 @@ void Player::Init() {
 
   analyzer_->SetEngine(engine_);
 
-  QObject::connect(&*engine_, &EngineBase::Error, this, &Player::Error);
-  QObject::connect(&*engine_, &EngineBase::FatalError, this, &Player::FatalError);
-  QObject::connect(&*engine_, &EngineBase::ValidSongRequested, this, &Player::ValidSongRequested);
-  QObject::connect(&*engine_, &EngineBase::InvalidSongRequested, this, &Player::InvalidSongRequested);
-  QObject::connect(&*engine_, &EngineBase::StateChanged, this, &Player::EngineStateChanged);
-  QObject::connect(&*engine_, &EngineBase::TrackAboutToEnd, this, &Player::TrackAboutToEnd);
-  QObject::connect(&*engine_, &EngineBase::TrackEnded, this, &Player::TrackEnded);
-  QObject::connect(&*engine_, &EngineBase::MetaData, this, &Player::EngineMetadataReceived);
-  QObject::connect(&*engine_, &EngineBase::VolumeChanged, this, &Player::SetVolumeFromEngine);
-  QObject::connect(&*engine_, &EngineBase::MuteChanged, this, &Player::SetMuteFromEngine);
+  ConnectEngineSignals();
 
   // Equalizer
   QObject::connect(&*equalizer_, &Equalizer::StereoBalancerEnabledChanged, &*engine_, &EngineBase::SetStereoBalancerEnabled);
@@ -143,11 +139,81 @@ void Player::Init() {
   engine_->SetStereoBalance(equalizer_->stereo_balance());
   engine_->SetEqualizerEnabled(equalizer_->is_equalizer_enabled());
   engine_->SetEqualizerParameters(equalizer_->preamp_value(), equalizer_->gain_values());
-
   ReloadSettings();
-
   LoadVolume();
 
+}
+
+void Player::ConnectEngineSignals() {
+  QObject::connect(&*engine_, &EngineBase::Error, this, &Player::EngineError);
+  QObject::connect(&*engine_, &EngineBase::FatalError, this, &Player::FatalError);
+  QObject::connect(&*engine_, &EngineBase::ValidSongRequested, this, &Player::ValidSongRequested);
+  QObject::connect(&*engine_, &EngineBase::InvalidSongRequested, this, &Player::InvalidSongRequested);
+  QObject::connect(&*engine_, &EngineBase::StateChanged, this, &Player::EngineStateChanged);
+  QObject::connect(&*engine_, &EngineBase::TrackAboutToEnd, this, &Player::TrackAboutToEnd);
+  QObject::connect(&*engine_, &EngineBase::TrackEnded, this, &Player::TrackEnded);
+  QObject::connect(&*engine_, &EngineBase::MetaData, this, &Player::EngineMetadataReceived);
+  QObject::connect(&*engine_, &EngineBase::VolumeChanged, this, &Player::SetVolumeFromEngine);
+  QObject::connect(&*engine_, &EngineBase::MuteChanged, this, &Player::SetMuteFromEngine);
+
+
+}
+
+bool Player::RadioBlocked() const {
+  return property("camLicenseDenied").toBool() || property("camSuspended").toBool() ||
+         property("camStartupPrayerHoldUntil").toDateTime() > QDateTime::currentDateTimeUtc();
+}
+
+bool Player::event(QEvent *event) {
+  if (event->type() == QEvent::DynamicPropertyChange && radio_retry_timer_) {
+    const auto name = static_cast<QDynamicPropertyChangeEvent*>(event)->propertyName();
+    if ((name == "camSuspended" || name == "camLicenseDenied" || name == "camStartupPrayerHoldUntil") && RadioBlocked())
+      CancelRadioRecovery(); // CAM alone decides whether to resume after a hold.
+  }
+  return PlayerInterface::event(event);
+}
+
+void Player::CancelRadioRecovery() {
+  radio_retry_timer_->stop();
+  radio_retry_item_.reset();
+  radio_retry_playlist_ = -1;
+  radio_retry_attempt_ = 0;
+  radio_wanted_ = false;
+  setProperty("nasaqRadioReconnecting", false);
+}
+
+bool Player::RecoverRadio() {
+  if (!current_item_ || !current_item_->EffectiveMetadata().is_radio()) return false;
+  // Late engine errors during a stop/adhan remain silent, but cannot start a retry.
+  if (!radio_wanted_ || RadioBlocked()) return true;
+  if (radio_retry_timer_->isActive()) return true;
+  auto *list = playlist_manager_->active();
+  if (!list || list->current_item() != current_item_) return true;
+  radio_retry_item_ = current_item_;
+  radio_retry_playlist_ = playlist_manager_->active_id();
+  const int delays[] = {2000, 5000, 10000, 20000, 30000, 60000};
+  const int delay = delays[qMin(radio_retry_attempt_, 5)];
+  radio_retry_attempt_ = qMin(radio_retry_attempt_ + 1, 6);
+  setProperty("nasaqRadioReconnecting", true);
+  radio_retry_timer_->start(delay);
+  return true;
+}
+
+void Player::EngineError(const QString &message) {
+  if (RecoverRadio()) return;
+  Q_EMIT Error(message);
+}
+
+void Player::RetryRadio() {
+  if (!radio_wanted_ || RadioBlocked() || !radio_retry_item_ || current_item_ != radio_retry_item_ ||
+      playlist_manager_->active_id() != radio_retry_playlist_) { CancelRadioRecovery(); return; }
+  auto *list = playlist_manager_->active();
+  if (!list || list->current_item() != radio_retry_item_) { CancelRadioRecovery(); return; }
+  // Use normal playback gates and reload the live URL, without moving or duplicating the row.
+  radio_retry_call_ = true;
+  PlayAt(list->current_row(), false, 0, EngineBase::TrackChangeType::First | EngineBase::TrackChangeType::Auto,
+         Playlist::AutoScroll::Maybe, false);
+  radio_retry_call_ = false;
 }
 
 void Player::ReloadSettings() {
@@ -306,6 +372,7 @@ void Player::HandleLoadResult(const UrlHandler::LoadResult &result) {
 
   switch (result.type_) {
     case UrlHandler::LoadResult::Type::Error:
+      if (RecoverRadio()) break;
       // Continue with the next track from the event loop, a synchronous error for every track would otherwise recurse through PlayAt() and HandleLoadResult().
       // Only once for the failed track, it can be started again before the next track is.
       if (is_current && result.media_url_ != invalid_song_pending_url_) {
@@ -388,7 +455,7 @@ void Player::HandleLoadResult(const UrlHandler::LoadResult &result) {
 
       if (is_current) {
         qLog(Debug) << "Playing song" << current_item->EffectiveMetadata().title() << Utilities::UrlForLog(result.stream_url_) << "position" << play_offset_nanosec_;
-        if (property("camLicenseDenied").toBool()) return;
+        if (RadioBlocked() || (song.is_radio() && !radio_wanted_)) return;
         engine_->Play(result.media_url_, result.stream_url_, pause_, stream_change_type_, song.has_cue(), static_cast<quint64>(song.beginning_nanosec()), song.end_nanosec(), play_offset_nanosec_, song.ebur128_integrated_loudness_lufs());
         current_item_ = current_item;
         play_offset_nanosec_ = 0;
@@ -424,6 +491,12 @@ void Player::TrackPositionChanged(const int position) {
   }
   else if (position - playing_start_position_ >= kErrorResetPlayingSec) {
     nb_errors_received_ = 0;
+    if (radio_wanted_ && engine_->state() == EngineBase::State::Playing && !RadioBlocked()) {
+      radio_retry_attempt_ = 0;
+      radio_retry_timer_->stop();
+      radio_retry_item_.reset();
+      setProperty("nasaqRadioReconnecting", false);
+    }
   }
 
   if (play_end_sec_ <= 0 || play_end_sec_ > position) return;
@@ -549,6 +622,11 @@ bool Player::HandleStopAfter(const Playlist::AutoScroll autoscroll) {
 
 void Player::TrackEnded() {
 
+  if (current_item_ && current_item_->EffectiveMetadata().is_radio()) {
+    if (!HandleStopAfter(Playlist::AutoScroll::Maybe)) RecoverRadio();
+    return;
+  }
+
   // The track played, so it's not a series of errors.
   nb_errors_received_ = 0;
 
@@ -577,7 +655,7 @@ void Player::PlayPause(const quint64 offset_nanosec, const Playlist::AutoScroll 
       else {
         pause_time_ = QDateTime::currentDateTime();
         play_offset_nanosec_ = static_cast<quint64>(engine_->position_nanosec());
-        engine_->Pause();
+        Pause();
       }
       break;
     }
@@ -654,6 +732,8 @@ void Player::RestartOrPrevious() {
 }
 
 void Player::Stop(const bool stop_after) {
+
+  CancelRadioRecovery();
 
   engine_->Stop(stop_after);
   // NASAQ can stop playback while startup is still loading the first playlist.
@@ -732,7 +812,7 @@ void Player::EngineStateChanged(const EngineBase::State state) {
       Q_EMIT Playing();
       break;
     case EngineBase::State::Error:
-      Q_EMIT Error();
+      if (!RecoverRadio()) Q_EMIT Error();
       [[fallthrough]];
     case EngineBase::State::Empty:
     case EngineBase::State::Idle:
@@ -822,6 +902,7 @@ void Player::PlayAt(const int index, const bool pause, const quint64 offset_nano
   if (property("camSuspended").toBool() || property("camStartupPrayerHoldUntil").toDateTime() > QDateTime::currentDateTimeUtc()) return;
 
   pause_time_ = pause ? QDateTime::currentDateTime() : QDateTime();
+  if (!radio_retry_call_) CancelRadioRecovery();
   play_offset_nanosec_ = offset_nanosec;
   playing_start_position_ = -1;
 
@@ -848,6 +929,7 @@ void Player::PlayAt(const int index, const bool pause, const quint64 offset_nano
 
   Playlist *active_playlist = playlist_manager_->active();
   current_item_ = active_playlist->current_item();
+  radio_wanted_ = !pause && current_item_->EffectiveMetadata().is_radio();
 
   // play_offset_nanosec_ was already set to offset_nanosec above, and is only raised here if it's too low for the scan requirements.
   play_end_sec_ = 0;
@@ -869,7 +951,7 @@ void Player::PlayAt(const int index, const bool pause, const quint64 offset_nano
   // A stream URL from an earlier playback of the item can have expired, or contain credentials that are not valid anymore, load it with the URL handler again.
   // An automatic track change plays the stream URL that was just preloaded.
   QUrl url = current_item_->EffectiveUrl();
-  if (!(change & EngineBase::TrackChangeType::Auto) && current_item_->EffectiveMetadata().stream_url_can_expire() && url_handlers_->CanHandle(current_item_->OriginalUrl())) {
+  if ((radio_retry_call_ || !(change & EngineBase::TrackChangeType::Auto)) && current_item_->EffectiveMetadata().stream_url_can_expire() && url_handlers_->CanHandle(current_item_->OriginalUrl())) {
     url = current_item_->OriginalUrl();
   }
 
@@ -1000,7 +1082,7 @@ void Player::SetMuted(const bool mute) {
 
 }
 
-void Player::Pause() { engine_->Pause(); }
+void Player::Pause() { CancelRadioRecovery(); engine_->Pause(); }
 
 void Player::Play(const quint64 offset_nanosec) {
 
@@ -1045,6 +1127,8 @@ void Player::TogglePrettyOSD() {
 }
 
 void Player::TrackAboutToEnd() {
+
+  if (current_item_ && current_item_->EffectiveMetadata().is_radio()) return;
 
   const bool has_next_row = playlist_manager_->active()->next_row() != -1;
   PlaylistItemPtr next_item;
@@ -1111,6 +1195,7 @@ void Player::TrackAboutToEnd() {
 }
 
 void Player::FatalError() {
+  if (RecoverRadio()) return;
   nb_errors_received_ = 0;
   Stop();
 }
@@ -1120,6 +1205,8 @@ void Player::ValidSongRequested(const QUrl &url) {
 }
 
 void Player::InvalidSongRequested(const QUrl &url) {
+
+  if (current_item_ && (url == current_item_->OriginalUrl() || url == current_item_->EffectiveUrl()) && RecoverRadio()) return;
 
   if (greyout_) Q_EMIT SongChangeRequestProcessed(url, false);
 

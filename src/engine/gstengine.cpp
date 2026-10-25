@@ -654,11 +654,14 @@ void GstEngine::EndOfStreamReached(const int pipeline_id, const bool has_next_tr
 
 void GstEngine::HandlePipelineError(const int pipeline_id, const int domain, const int error_code, const QString &message, const QString &debugstr) {
 
+  // A pipeline replaced by another track or stopped for adhan cannot report a new player error.
+  const bool is_current = current_pipeline_ && current_pipeline_->id() == pipeline_id;
+
   qLog(Error) << "GStreamer error:" << domain << error_code << message;
 
-  Q_EMIT Error(message);
+  if (is_current) Q_EMIT Error(message);
 
-  if (!debugstr.isEmpty()) {
+  if (is_current && !debugstr.isEmpty()) {
     Q_EMIT Error(debugstr);
   }
 

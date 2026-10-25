@@ -1260,6 +1260,11 @@ void GstEnginePipeline::SourceSetupCallback(GstElement *playbin, GstElement *sou
     g_object_set(source, "user-agent", user_agent.constData(), nullptr);
   }
 
+  // A dead HTTP connection must report failure so the player can reconnect.
+  if (g_str_has_prefix(G_OBJECT_TYPE_NAME(source), "GstSoupHTTP") &&
+      g_object_class_find_property(G_OBJECT_GET_CLASS(source), "timeout"))
+    g_object_set(source, "timeout", guint(15), nullptr);
+
   if (g_object_class_find_property(G_OBJECT_GET_CLASS(source), "ssl-strict")) {
     qLog(Debug) << "Turning" << (instance->strict_ssl_enabled_.load() ? "on" : "off") << "strict SSL";
     g_object_set(source, "ssl-strict", instance->strict_ssl_enabled_.load() ? TRUE : FALSE, nullptr);
