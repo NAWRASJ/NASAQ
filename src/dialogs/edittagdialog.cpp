@@ -56,7 +56,7 @@
 #include <QListWidget>
 #include <QLocale>
 #include <QMenu>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QShortcut>
 #include <QSize>
 #include <QSpinBox>
@@ -389,7 +389,7 @@ void EditTagDialog::accept() {
     if (ref.current_.synced_lyrics() != ref.original_.synced_lyrics() && !Utilities::ParseLRC(ref.current_.synced_lyrics()).has_value()) {
       ui_->song_list->setCurrentRow(i);
       ui_->tab_widget->setCurrentWidget(ui_->tab_synced_lyrics);
-      QMessageBox::critical(this, tr("Invalid synchronized lyrics"), tr("The synchronized lyrics for %1 are not valid LRC. Lyric lines must start with a timestamp, for example [01:23.45]. Only blank lines and metadata tags such as [ar:Artist] can be without one.").arg(ref.current_.basefilename()));
+      SilentMessageBox::critical(this, tr("Invalid synchronized lyrics"), tr("The synchronized lyrics for %1 are not valid LRC. Lyric lines must start with a timestamp, for example [01:23.45]. Only blank lines and metadata tags such as [ar:Artist] can be without one.").arg(ref.current_.basefilename()));
       return;
     }
   }
@@ -1663,7 +1663,7 @@ void EditTagDialog::ResetPlayStatistics() {
   Song *song = &data_[idx_list.first().row()].current_;
   if (!song->is_valid()) return;
 
-  if (QMessageBox::question(this, tr("Reset song play statistics"), tr("Are you sure you want to reset this song's play statistics?"), QMessageBox::Reset, QMessageBox::Cancel) != QMessageBox::Reset) {
+  if (SilentMessageBox::question(this, tr("Reset song play statistics"), tr("Are you sure you want to reset this song's play statistics?"), SilentMessageBox::Reset, SilentMessageBox::Cancel) != SilentMessageBox::Reset) {
     return;
   }
 

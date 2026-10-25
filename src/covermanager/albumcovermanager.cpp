@@ -52,7 +52,7 @@
 #include <QStatusBar>
 #include <QLabel>
 #include <QListWidget>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QProgressBar>
 #include <QPushButton>
 #include <QToolButton>
@@ -280,10 +280,10 @@ void AlbumCoverManager::showEvent(QShowEvent *e) {
 void AlbumCoverManager::closeEvent(QCloseEvent *e) {
 
   if (!cover_fetching_tasks_.isEmpty()) {
-    ScopedPtr<QMessageBox> message_box(new QMessageBox(QMessageBox::Question, tr("Really cancel?"), tr("Closing this window will stop searching for album covers."), QMessageBox::Abort, this));
-    message_box->addButton(tr("Don't stop!"), QMessageBox::AcceptRole);
+    ScopedPtr<SilentMessageBox> message_box(new SilentMessageBox(SilentMessageBox::Question, tr("Really cancel?"), tr("Closing this window will stop searching for album covers."), SilentMessageBox::Abort, this));
+    message_box->addButton(tr("Don't stop!"), SilentMessageBox::AcceptRole);
 
-    if (message_box->exec() != QMessageBox::Abort) {
+    if (message_box->exec() != SilentMessageBox::Abort) {
       e->ignore();
       return;
     }
@@ -1076,7 +1076,7 @@ void AlbumCoverManager::ExportCovers() {
     cover_exporter_->StartExporting();
   }
   else {
-    QMessageBox msg;
+    SilentMessageBox msg;
     msg.setWindowTitle(tr("Export finished"));
     msg.setText(tr("No covers to export."));
     msg.exec();
@@ -1099,7 +1099,7 @@ void AlbumCoverManager::UpdateExportStatus(const int exported, const int skipped
     abort_progress_->hide();
     EnableCoversButtons();
 
-    QMessageBox msg;
+    SilentMessageBox msg;
     msg.setWindowTitle(tr("Export finished"));
     msg.setText(message);
     msg.exec();

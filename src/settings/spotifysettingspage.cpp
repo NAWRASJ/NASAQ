@@ -33,7 +33,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QSpinBox>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QEvent>
 #include <QVersionNumber>
 
@@ -222,7 +222,7 @@ void SpotifySettingsPage::LoginSuccess() {
 void SpotifySettingsPage::LoginFailure(const QString &failure_reason) {
 
   if (!isVisible()) return;
-  QMessageBox::warning(this, tr("Authentication failed"), failure_reason);
+  SilentMessageBox::warning(this, tr("Authentication failed"), failure_reason);
   ui_->button_login->setEnabled(true);
 
 }

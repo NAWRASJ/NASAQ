@@ -39,7 +39,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QSettings>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QInputDialog>
 #include <QToolButton>
 #include <QShowEvent>
@@ -371,7 +371,7 @@ void PlaylistListContainer::ItemMimeDataDropped(const QModelIndex &proxy_idx, co
   const int playlist_id = idx.data(PlaylistListModel::Role_PlaylistId).toInt();
   if (idx.data(PlaylistListModel::Role_Type).toInt() == PlaylistListModel::Type_Playlist && playlist_id != playlist_manager_->active_id()) {
     if (!playlist_manager_->IsPlaylistOpen(playlist_id)) {
-      QMessageBox::critical(this, tr("Copy songs to playlist"), tr("Playlist must be open first."));
+      SilentMessageBox::critical(this, tr("Copy songs to playlist"), tr("Playlist must be open first."));
       return;
     }
     playlist_manager_->playlist(playlist_id)->dropMimeData(q_mimedata, Qt::CopyAction, -1, 0, QModelIndex());
@@ -393,7 +393,7 @@ void PlaylistListContainer::CopyToDevice() {
     const int playlist_id = idx.data(PlaylistListModel::Role_PlaylistId).toInt();
 
     if (!playlist_manager_->IsPlaylistOpen(playlist_id)) {
-      QMessageBox::critical(this, tr("Copy to device"), tr("Playlist must be open first."));
+      SilentMessageBox::critical(this, tr("Copy to device"), tr("Playlist must be open first."));
       return;
     }
 
@@ -449,9 +449,9 @@ void PlaylistListContainer::Delete() {
 
   // Make sure the user really wants to unfavorite all these playlists.
   if (ids.count() > 1) {
-    const int button = QMessageBox::question(this, tr("Remove playlists"), tr("You are about to remove %1 playlists from your favorites, are you sure?").arg(ids.count()), QMessageBox::Yes, QMessageBox::Cancel);
+    const int button = SilentMessageBox::question(this, tr("Remove playlists"), tr("You are about to remove %1 playlists from your favorites, are you sure?").arg(ids.count()), SilentMessageBox::Yes, SilentMessageBox::Cancel);
 
-    if (button != QMessageBox::Yes) {
+    if (button != SilentMessageBox::Yes) {
       return;
     }
   }

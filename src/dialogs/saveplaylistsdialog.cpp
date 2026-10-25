@@ -24,7 +24,7 @@
 #include <QFileDialog>
 #include <QDialogButtonBox>
 #include <QPushButton>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 
 #include "saveplaylistsdialog.h"
 #include "ui_saveplaylistsdialog.h"
@@ -76,7 +76,7 @@ void SavePlaylistsDialog::accept() {
   }
 
   if (!QDir().exists(path)) {
-    QMessageBox(QMessageBox::Warning, tr("Directory does not exist."), tr("Directory does not exist."), QMessageBox::Ok).exec();
+    SilentMessageBox(SilentMessageBox::Warning, tr("Directory does not exist."), tr("Directory does not exist."), SilentMessageBox::Ok).exec();
     return;
   }
 

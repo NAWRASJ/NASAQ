@@ -1,0 +1,269 @@
+{
+  "version": 1,
+  "stations": [
+    {
+      "id": "teletext",
+      "name": "Teletext · تليتكست",
+      "genre": "arabic",
+      "venues": [
+        "shops",
+        "cafes",
+        "restaurants",
+        "hotels"
+      ],
+      "description": "The Teletext platform live station.",
+      "description_ar": "البث المباشر الخاص بمنصة تليتكست",
+      "url": "https://radio.teletext-ar.tech/listen/teletext/radio.mp3",
+      "homepage": "https://radio.teletext-ar.tech/public/teletext",
+      "source": "https://radio.teletext-ar.tech/api/nowplaying/teletext"
+    },
+    {
+      "id": "swiss-classic",
+      "name": "Radio Swiss Classic",
+      "genre": "classical",
+      "venues": [
+        "hotels",
+        "restaurants",
+        "offices"
+      ],
+      "description": "Classical orchestral, chamber and keyboard music.",
+      "description_ar": "موسيقى كلاسيكية مع تقديم ألماني بين المقطوعات",
+      "url": "https://stream.srg-ssr.ch/srgssr/rsc_de/mp3/128",
+      "homepage": "https://www.radioswissclassic.ch/en/reception/internet",
+      "source": "https://www.radioswissclassic.ch/en/reception/internet"
+    },
+    {
+      "id": "swiss-jazz",
+      "name": "Radio Swiss Jazz",
+      "genre": "jazz",
+      "venues": [
+        "hotels",
+        "restaurants",
+        "offices"
+      ],
+      "description": "A varied jazz programme.",
+      "description_ar": "جاز متنوع لأجواء المطاعم والمقاهي",
+      "url": "https://stream.srg-ssr.ch/srgssr/rsj/mp3/128",
+      "homepage": "https://www.radioswissjazz.ch/en/reception/internet",
+      "source": "https://www.radioswissjazz.ch/en/reception/internet"
+    },
+    {
+      "id": "venice-auditorium",
+      "name": "Venice Classic · Auditorium",
+      "genre": "classical",
+      "venues": [
+        "hotels",
+        "restaurants",
+        "offices"
+      ],
+      "description": "Classical orchestral, chamber and keyboard music.",
+      "description_ar": "أعمال أوركسترالية وموسيقى حجرة وبيانو",
+      "url": "https://de2.streamingpulse.com/stream/vcr",
+      "homepage": "https://veniceclassicradio.eu/",
+      "source": "https://veniceclassicradio.eu/"
+    },
+    {
+      "id": "venice-classica",
+      "name": "Venice Classic · Classica+",
+      "genre": "classical",
+      "venues": [
+        "hotels",
+        "restaurants",
+        "offices"
+      ],
+      "description": "Classical orchestral, chamber and keyboard music.",
+      "description_ar": "مختارات كلاسيكية وباروك وموسيقى آلات",
+      "url": "https://de2.streamingpulse.com/stream/vcr2",
+      "homepage": "https://veniceclassicradio.eu/",
+      "source": "https://veniceclassicradio.eu/"
+    },
+    {
+      "id": "soma-bossa",
+      "name": "SomaFM Bossa Beyond",
+      "genre": "bossa",
+      "venues": [
+        "restaurants",
+        "cafes",
+        "hotels"
+      ],
+      "description": "Silky-smooth, laid-back Brazilian-style rhythms of Bossa Nova, Samba and beyond",
+      "description_ar": "بوسا نوفا وسامبا بإيقاع برازيلي هادئ",
+      "url": "https://ice6.somafm.com/bossa-256-mp3",
+      "homepage": "https://somafm.com/bossa/",
+      "source": "https://api.somafm.com/bossa256.pls"
+    },
+    {
+      "id": "soma-groovesalad",
+      "name": "SomaFM Groove Salad",
+      "genre": "chill",
+      "venues": [
+        "offices",
+        "shops",
+        "cafes"
+      ],
+      "description": "A nicely chilled plate of ambient/downtempo beats and grooves.",
+      "description_ar": "إيقاعات إلكترونية هادئة وأجواء مريحة",
+      "url": "https://ice2.somafm.com/groovesalad-128-mp3",
+      "homepage": "https://somafm.com/groovesalad/",
+      "source": "https://api.somafm.com/groovesalad.pls"
+    },
+    {
+      "id": "soma-gsclassic",
+      "name": "SomaFM Groove Salad Classic",
+      "genre": "chill",
+      "venues": [
+        "offices",
+        "shops"
+      ],
+      "description": "The classic (early 2000s) version of a nicely chilled plate of ambient/downtempo beats and grooves.",
+      "description_ar": "مختارات Groove Salad الكلاسيكية من أوائل الألفية",
+      "url": "https://ice6.somafm.com/gsclassic-128-mp3",
+      "homepage": "https://somafm.com/gsclassic/",
+      "source": "https://api.somafm.com/gsclassic.pls"
+    },
+    {
+      "id": "soma-illstreet",
+      "name": "SomaFM Illinois Street Lounge",
+      "genre": "lounge",
+      "venues": [
+        "hotels",
+        "restaurants",
+        "cafes"
+      ],
+      "description": "Classic bachelor pad, playful exotica and vintage music of tomorrow.",
+      "description_ar": "لاونج كلاسيكي وألحان قديمة مرحة",
+      "url": "https://ice6.somafm.com/illstreet-128-mp3",
+      "homepage": "https://somafm.com/illstreet/",
+      "source": "https://api.somafm.com/illstreet.pls"
+    },
+    {
+      "id": "soma-lush",
+      "name": "SomaFM Lush",
+      "genre": "vocals",
+      "venues": [
+        "shops",
+        "cafes",
+        "hotels"
+      ],
+      "description": "Sensuous and mellow female vocals, many with an electronic influence.",
+      "description_ar": "أصوات نسائية هادئة بطابع إلكتروني",
+      "url": "https://ice6.somafm.com/lush-128-mp3",
+      "homepage": "https://somafm.com/lush/",
+      "source": "https://api.somafm.com/lush.pls"
+    },
+    {
+      "id": "soma-sonicuniverse",
+      "name": "SomaFM Sonic Universe",
+      "genre": "jazz",
+      "venues": [
+        "restaurants",
+        "cafes"
+      ],
+      "description": "Transcending the world of jazz with eclectic, avant-garde takes on tradition.",
+      "description_ar": "جاز معاصر وتجريبي متنوع",
+      "url": "https://ice6.somafm.com/sonicuniverse-256-mp3",
+      "homepage": "https://somafm.com/sonicuniverse/",
+      "source": "https://api.somafm.com/sonicuniverse256.pls"
+    },
+    {
+      "id": "soma-secretagent",
+      "name": "SomaFM Secret Agent",
+      "genre": "lounge",
+      "venues": [
+        "shops",
+        "hotels",
+        "cafes"
+      ],
+      "description": "The soundtrack for your stylish, mysterious, dangerous life. For Spies and PIs too!",
+      "description_ar": "لاونج سينمائي وأجواء أفلام التجسس",
+      "url": "https://ice6.somafm.com/secretagent-128-mp3",
+      "homepage": "https://somafm.com/secretagent/",
+      "source": "https://api.somafm.com/secretagent.pls"
+    },
+    {
+      "id": "soma-dronezone",
+      "name": "SomaFM Drone Zone",
+      "genre": "ambient",
+      "venues": [
+        "offices",
+        "hotels",
+        "wellness"
+      ],
+      "description": "Served best chilled, safe with most medications. Atmospheric textures with minimal beats.",
+      "description_ar": "مساحات صوتية هادئة بإيقاعات قليلة",
+      "url": "https://ice6.somafm.com/dronezone-256-mp3",
+      "homepage": "https://somafm.com/dronezone/",
+      "source": "https://api.somafm.com/dronezone256.pls"
+    },
+    {
+      "id": "soma-suburbsofgoa",
+      "name": "SomaFM Suburbs of Goa",
+      "genre": "world",
+      "venues": [
+        "restaurants",
+        "shops"
+      ],
+      "description": "Desi-influenced Asian world beats and beyond.",
+      "description_ar": "إيقاعات عالمية بتأثيرات هندية وآسيوية",
+      "url": "https://ice2.somafm.com/suburbsofgoa-128-mp3",
+      "homepage": "https://somafm.com/suburbsofgoa/",
+      "source": "https://api.somafm.com/suburbsofgoa.pls"
+    },
+    {
+      "id": "soma-beatblender",
+      "name": "SomaFM Beat Blender",
+      "genre": "chill",
+      "venues": [
+        "shops",
+        "cafes"
+      ],
+      "description": "A late night blend of deep-house and downtempo chill.",
+      "description_ar": "ديب هاوس وداون تمبو لأجواء مسائية",
+      "url": "https://ice2.somafm.com/beatblender-128-mp3",
+      "homepage": "https://somafm.com/beatblender/",
+      "source": "https://api.somafm.com/beatblender.pls"
+    },
+    {
+      "id": "soma-folkfwd",
+      "name": "SomaFM Folk Forward",
+      "genre": "acoustic",
+      "venues": [
+        "cafes",
+        "shops"
+      ],
+      "description": "Indie Folk, Alt-folk and the occasional folk classics. ",
+      "description_ar": "فولك معاصر وأغانٍ أكوستيك",
+      "url": "https://ice6.somafm.com/folkfwd-128-mp3",
+      "homepage": "https://somafm.com/folkfwd/",
+      "source": "https://api.somafm.com/folkfwd.pls"
+    },
+    {
+      "id": "soma-thistle",
+      "name": "SomaFM ThistleRadio",
+      "genre": "world",
+      "venues": [
+        "cafes",
+        "restaurants"
+      ],
+      "description": "Exploring music from Celtic roots and branches",
+      "description_ar": "موسيقى ذات جذور سلتية",
+      "url": "https://ice6.somafm.com/thistle-128-mp3",
+      "homepage": "https://somafm.com/thistle/",
+      "source": "https://api.somafm.com/thistle.pls"
+    },
+    {
+      "id": "soma-tikitime",
+      "name": "SomaFM Tiki Time",
+      "genre": "bossa",
+      "venues": [
+        "restaurants",
+        "hotels"
+      ],
+      "description": "Classic Tiki music and Vintage island rhythms to sip cocktails by.",
+      "description_ar": "إيقاعات الجزر وموسيقى تيكي الكلاسيكية",
+      "url": "https://ice6.somafm.com/tikitime-256-mp3",
+      "homepage": "https://somafm.com/tikitime/",
+      "source": "https://api.somafm.com/tikitime256.pls"
+    }
+  ]
+}

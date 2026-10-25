@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
+        <file>radios/curated.json</file>
         <file>schema/schema.sql</file>
         <file>schema/schema-10.sql</file>
         <file>schema/schema-11.sql</file>

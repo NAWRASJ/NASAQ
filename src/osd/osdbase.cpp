@@ -83,6 +83,10 @@ void OSDBase::ReloadSettings() {
   custom_text2_ = s.value(OSDSettings::kCustomText2).toString();
   s.endGroup();
 
+#ifdef Q_OS_WIN32
+  if (type_ == OSDSettings::Type::Native || type_ == OSDSettings::Type::TrayPopup)
+    type_ = OSDSettings::Type::Pretty;
+#endif
   if (!IsTypeSupported(type_)) {
     type_ = GetSupportedType();
   }
@@ -346,6 +350,16 @@ void OSDBase::MuteChanged(const bool mute) {
 
 void OSDBase::ShowMessage(const QString &summary, const QString &message, const QString &icon, const QImage &image) {
 
+#ifdef Q_OS_WIN32
+  // Windows tray balloons can play system notification sounds. Use our visual
+  // popup for every enabled type, including previews and older saved settings.
+  if (type_ != OSDSettings::Type::Disabled || force_show_next_ || pretty_popup_->toggle_mode()) {
+    force_show_next_ = false;
+    Q_UNUSED(icon)
+    pretty_popup_->ShowMessage(summary, message, image);
+  }
+  return;
+#endif
   if (pretty_popup_->toggle_mode()) {
     pretty_popup_->ShowMessage(summary, message, image);
   }
@@ -475,6 +489,10 @@ QString OSDBase::ReplaceMessage(const MessageType type, const QString &message, 
 void OSDBase::ShowPreview(const OSDSettings::Type type, const QString &line1, const QString &line2, const Song &song) {
 
   type_ = type;
+#ifdef Q_OS_WIN32
+  if (type_ == OSDSettings::Type::Native || type_ == OSDSettings::Type::TrayPopup)
+    type_ = OSDSettings::Type::Pretty;
+#endif
   custom_text1_ = line1;
   custom_text2_ = line2;
   if (!use_custom_text_) use_custom_text_ = true;

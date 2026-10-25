@@ -25,7 +25,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QPushButton>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QEvent>
 #include <QShowEvent>
 
@@ -232,7 +232,7 @@ void PlexSettingsPage::LoginFailure(const QString &failure_reason) {
   login_pending_ = false;
   ui_->button_login->setEnabled(true);
   if (!isVisible()) return;
-  QMessageBox::warning(this, tr("Authentication failed"), failure_reason);
+  SilentMessageBox::warning(this, tr("Authentication failed"), failure_reason);
 
 }
 
@@ -276,7 +276,7 @@ void PlexSettingsPage::ServersFound(const PlexService::ServerList &servers) {
 void PlexSettingsPage::RefreshServersClicked() {
 
   if (!service_->authenticated()) {
-    QMessageBox::critical(this, tr("Not authenticated"), tr("Log in with Plex first."));
+    SilentMessageBox::critical(this, tr("Not authenticated"), tr("Log in with Plex first."));
     return;
   }
 
@@ -287,14 +287,14 @@ void PlexSettingsPage::RefreshServersClicked() {
 void PlexSettingsPage::TestClicked() {
 
   if (!service_->authenticated()) {
-    QMessageBox::critical(this, tr("Not authenticated"), tr("Log in with Plex first."));
+    SilentMessageBox::critical(this, tr("Not authenticated"), tr("Log in with Plex first."));
     return;
   }
 
   QUrl server_url = ServerUrlFromUi();
 
   if (!server_url.isValid() || server_url.scheme().isEmpty() || server_url.host().isEmpty()) {
-    QMessageBox::critical(this, tr("Configuration incorrect"), tr("Server URL is invalid."));
+    SilentMessageBox::critical(this, tr("Configuration incorrect"), tr("Server URL is invalid."));
     return;
   }
 
@@ -324,7 +324,7 @@ void PlexSettingsPage::TestSuccess() {
   ui_->button_test->setEnabled(true);
   if (!isVisible()) return;
 
-  QMessageBox::information(this, tr("Test successful!"), tr("Test successful!"));
+  SilentMessageBox::information(this, tr("Test successful!"), tr("Test successful!"));
 
 }
 
@@ -334,6 +334,6 @@ void PlexSettingsPage::TestFailure(const QString &failure_reason) {
   ui_->button_test->setEnabled(true);
   if (!isVisible()) return;
 
-  QMessageBox::warning(this, tr("Test failed!"), failure_reason);
+  SilentMessageBox::warning(this, tr("Test failed!"), failure_reason);
 
 }

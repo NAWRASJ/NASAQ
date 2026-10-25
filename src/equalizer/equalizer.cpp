@@ -36,7 +36,7 @@
 #include <QLineEdit>
 #include <QShortcut>
 #include <QSlider>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QInputDialog>
 #include <QToolButton>
 #include <QCheckBox>
@@ -240,8 +240,8 @@ void Equalizer::DelPreset() {
   QString name_displayed = ui_->preset->currentText();
   if (!presets_.contains(name) || name.isEmpty()) return;
 
-  const int ret = QMessageBox::question( this, tr("Delete preset"), tr("Are you sure you want to delete the \"%1\" preset?").arg(name_displayed), QMessageBox::Yes, QMessageBox::No);
-  if (ret == QMessageBox::No) return;
+  const int ret = SilentMessageBox::question( this, tr("Delete preset"), tr("Are you sure you want to delete the \"%1\" preset?").arg(name_displayed), SilentMessageBox::Yes, SilentMessageBox::No);
+  if (ret == SilentMessageBox::No) return;
 
   presets_.remove(name);
   ui_->preset->removeItem(ui_->preset->currentIndex());

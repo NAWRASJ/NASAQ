@@ -784,6 +784,7 @@ void GstEngine::PlayDone(const GstStateChangeReturn state_change_return, const b
 
 void GstEngine::BufferingStarted() {
 
+  setProperty("nasaqBuffering", true);
   if (buffering_task_id_ != -1) {
     task_manager_->SetTaskFinished(buffering_task_id_);
   }
@@ -799,6 +800,7 @@ void GstEngine::BufferingProgress(const int percent) {
 
 void GstEngine::BufferingFinished() {
 
+  setProperty("nasaqBuffering", false);
   if (buffering_task_id_ != -1) {
     task_manager_->SetTaskFinished(buffering_task_id_);
     buffering_task_id_ = -1;

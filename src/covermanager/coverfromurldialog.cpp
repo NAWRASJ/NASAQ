@@ -26,7 +26,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QLineEdit>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QUrl>
@@ -90,7 +90,7 @@ void CoverFromURLDialog::LoadCoverFromURLFinished() {
   reply->deleteLater();
 
   if (reply->error() != QNetworkReply::NoError) {
-    QMessageBox::information(this, tr("Fetching cover error"), tr("The site you requested does not exist!"));
+    SilentMessageBox::information(this, tr("Fetching cover error"), tr("The site you requested does not exist!"));
     return;
   }
 
@@ -100,7 +100,7 @@ void CoverFromURLDialog::LoadCoverFromURLFinished() {
   result.mime_type = Utilities::MimeTypeFromData(result.image_data);
 
   if (result.image.isNull()) {
-    QMessageBox::information(this, tr("Fetching cover error"), tr("The site you requested is not an image!"));
+    SilentMessageBox::information(this, tr("Fetching cover error"), tr("The site you requested is not an image!"));
   }
   else {
     last_album_cover_ = result;

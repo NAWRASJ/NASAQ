@@ -38,7 +38,7 @@
 #include <QJsonArray>
 #include <QJsonValue>
 #include <QJsonParseError>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 
 #include "includes/shared_ptr.h"
 #include "utilities/cryptutils.h"

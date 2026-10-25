@@ -61,7 +61,7 @@
 #include <QAction>
 #include <QActionGroup>
 #include <QShortcut>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QErrorMessage>
 #include <QColor>
 #include <QFrame>
@@ -894,6 +894,7 @@ MainWindow::MainWindow(Application *app,
 #endif
 
   QObject::connect(radio_view_, &RadioViewContainer::Refresh, &*app_->radio_services(), &RadioServices::RefreshChannels);
+  QObject::connect(radio_view_, &RadioViewContainer::AddToPlaylist, this, &MainWindow::AddToPlaylist);
   QObject::connect(radio_view_->view(), &RadioView::GetChannels, &*app_->radio_services(), &RadioServices::GetChannels);
   QObject::connect(radio_view_->view(), &RadioView::AddToPlaylistSignal, this, &MainWindow::AddToPlaylist);
   QObject::connect(radio_view_->search_view(), &RadioBrowserSearchView::AddToPlaylist, this, &MainWindow::AddToPlaylist);
@@ -2041,6 +2042,30 @@ void MainWindow::AddToPlaylist(QMimeData *q_mimedata) {
 
   if (!q_mimedata) return;
 
+  // Explicit curated-radio actions reuse an existing station, without changing
+  // the song that CAM must resume after a prayer or announcement interruption.
+  if (q_mimedata->property("nasaqCuratedRadio").toBool()) {
+    auto *data = qobject_cast<MimeData *>(q_mimedata);
+    auto *playlist = app_->playlist_manager()->current();
+    const bool held = app_->player()->property("camSuspended").toBool() ||
+        app_->player()->property("camStartupPrayerHoldUntil").toDateTime() > QDateTime::currentDateTimeUtc();
+    if (data && held) data->play_now_ = false;
+    if (playlist && data && !data->urls().isEmpty()) {
+      for (int row = 0; row < playlist->rowCount(); ++row) {
+        const auto item = playlist->item_at(row);
+        if (!item || item->EffectiveMetadata().url() != data->urls().first()) continue;
+        const bool already_playing = app_->playlist_manager()->active() == playlist &&
+            playlist->current_row() == row && app_->player()->GetState() == EngineBase::State::Playing;
+        if (data->play_now_ && !already_playing) {
+          app_->playlist_manager()->SetActivePlaylist(playlist->id());
+          app_->player()->PlayAt(row, false, 0, EngineBase::TrackChangeType::Manual, Playlist::AutoScroll::Always, true);
+        }
+        delete q_mimedata;
+        return;
+      }
+    }
+  }
+
   if (MimeData *mimedata = qobject_cast<MimeData*>(q_mimedata)) {
     // Should we replace the flags with the user's preference?
     if (mimedata->override_user_settings_) {
@@ -2651,13 +2676,13 @@ void MainWindow::PlaylistRemoveCurrent() {
 void MainWindow::PlaylistClearCurrent() {
 
   if (app_->playlist_manager()->current()->rowCount() > Playlist::kUndoItemLimit) {
-    QMessageBox messagebox(QMessageBox::Warning, tr("Clear playlist"), tr("Playlist has %1 songs, too large to undo, are you sure you want to clear the playlist?").arg(app_->playlist_manager()->current()->rowCount()), QMessageBox::Ok | QMessageBox::Cancel);
+    SilentMessageBox messagebox(SilentMessageBox::Warning, tr("Clear playlist"), tr("Playlist has %1 songs, too large to undo, are you sure you want to clear the playlist?").arg(app_->playlist_manager()->current()->rowCount()), SilentMessageBox::Ok | SilentMessageBox::Cancel);
     messagebox.setTextFormat(Qt::RichText);
     int result = messagebox.exec();
     switch (result) {
-      case QMessageBox::Ok:
+      case SilentMessageBox::Ok:
         break;
-      case QMessageBox::Cancel:
+      case SilentMessageBox::Cancel:
       default:
         return;
     }
@@ -3013,7 +3038,7 @@ void MainWindow::CopyFilesToDevice(const QList<QUrl> &urls) {
     organize_dialog_->raise();
   }
   else {
-    QMessageBox::warning(this, tr("Error"), tr("None of the selected songs were suitable for copying to a device"));
+    SilentMessageBox::warning(this, tr("Error"), tr("None of the selected songs were suitable for copying to a device"));
   }
 
 }
@@ -3165,7 +3190,7 @@ void MainWindow::PlaylistCopyToDevice() {
     organize_dialog_->raise();
   }
   else {
-    QMessageBox::warning(this, tr("Error"), tr("None of the selected songs were suitable for copying to a device"));
+    SilentMessageBox::warning(this, tr("Error"), tr("None of the selected songs were suitable for copying to a device"));
   }
 
 }
@@ -3296,7 +3321,7 @@ void MainWindow::CheckFullRescanRevisions() {
       message += "<li>"_L1 + reason + "</li>"_L1;
     }
     message += "</ul>"_L1 + tr("Would you like to run a full rescan right now?");
-    if (QMessageBox::question(this, tr("Collection rescan notice"), message, QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes) {
+    if (SilentMessageBox::question(this, tr("Collection rescan notice"), message, SilentMessageBox::Yes, SilentMessageBox::No) == SilentMessageBox::Yes) {
       app_->collection()->FullScan();
     }
   }

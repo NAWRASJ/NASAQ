@@ -23,7 +23,7 @@
 #include <QMenu>
 #include <QSettings>
 #include <QShowEvent>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 
 #include "core/iconloader.h"
 #include "core/mimedata.h"
@@ -316,8 +316,8 @@ void SmartPlaylistsViewContainer::RestoreDefaultsFromContext() {
 
 void SmartPlaylistsViewContainer::RestoreDefaults() {
 
-  const QMessageBox::StandardButton messagebox_answer = QMessageBox::question(this, tr("Restore defaults"), tr("Are you sure you want to restore the default smart playlists? This will remove all custom smart playlists"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-  if (messagebox_answer == QMessageBox::Yes) {
+  const SilentMessageBox::StandardButton messagebox_answer = SilentMessageBox::question(this, tr("Restore defaults"), tr("Are you sure you want to restore the default smart playlists? This will remove all custom smart playlists"), SilentMessageBox::Yes | SilentMessageBox::No, SilentMessageBox::No);
+  if (messagebox_answer == SilentMessageBox::Yes) {
     model_->RestoreDefaults();
   }
 

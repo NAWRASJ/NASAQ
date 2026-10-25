@@ -605,6 +605,14 @@ void Player::UnPause() {
   if (property("camLicenseDenied").toBool()) return;
   if (property("camSuspended").toBool() || property("camStartupPrayerHoldUntil").toDateTime() > QDateTime::currentDateTimeUtc()) return;
 
+  // A live radio has no saved position to resume. Reconnect at the live edge
+  // after an interruption, rather than replaying buffered audio or a stale HTTP connection.
+  if (current_item_ && current_item_->EffectiveMetadata().is_radio()) {
+    PlayAt(playlist_manager_->active()->current_row(), false, 0,
+           EngineBase::TrackChangeType::First, Playlist::AutoScroll::Maybe, false);
+    return;
+  }
+
   if (current_item_ && pause_time_.isValid()) {
     const Song &song = current_item_->EffectiveMetadata();
     if (url_handlers_->CanHandle(song.url()) && song.stream_url_can_expire()) {
@@ -844,7 +852,8 @@ void Player::PlayAt(const int index, const bool pause, const quint64 offset_nano
   // play_offset_nanosec_ was already set to offset_nanosec above, and is only raised here if it's too low for the scan requirements.
   play_end_sec_ = 0;
 
-  if (active_playlist->RepeatMode() == PlaylistSequence::RepeatMode::Scan && active_playlist->HalfPlayingTimeS() > 0) {
+  if (current_item_->EffectiveMetadata().is_radio()) play_offset_nanosec_ = 0;
+  if (!current_item_->EffectiveMetadata().is_radio() && active_playlist->RepeatMode() == PlaylistSequence::RepeatMode::Scan && active_playlist->HalfPlayingTimeS() > 0) {
     const Song &current_song = current_item_->EffectiveMetadata();
     const qint64 middle_time_ns = (current_song.length_nanosec() * active_playlist->PercentInterestSong()) / 100;
     const qint64 start_time_ns = middle_time_ns - (static_cast<qint64>(active_playlist->HalfPlayingTimeS()) * 1'000'000'000L);
@@ -905,6 +914,9 @@ void Player::SeekTo(const quint64 seconds) {
 }
 
 void Player::SeekToNanosec(const quint64 nanosec) {
+
+  // Radio metadata can report a duration even though the live server rejects Range requests.
+  if (current_item_ && current_item_->EffectiveMetadata().is_radio()) return;
 
   const qint64 length_nanosec = engine_->length_nanosec();
 

@@ -21,11 +21,19 @@
 #define RADIOVIEWCONTAINER_H
 
 #include <QWidget>
+#include <QJsonArray>
 
 #include "ui_radioviewcontainer.h"
 
 class RadioView;
 class RadioBrowserSearchView;
+class QLineEdit;
+class QComboBox;
+class QListWidget;
+class QLabel;
+class QPushButton;
+class QCheckBox;
+class QMimeData;
 
 class RadioViewContainer : public QWidget {
   Q_OBJECT
@@ -41,8 +49,32 @@ class RadioViewContainer : public QWidget {
 
  Q_SIGNALS:
   void Refresh();
+  void AddToPlaylist(QMimeData *data);
+
+ protected:
+  void changeEvent(QEvent *event) override;
 
  private:
+  void SetupDiscovery();
+  void TranslateDiscovery();
+  void FilterStations();
+  void SelectStation();
+  void OpenStation(bool play);
+  QJsonObject SelectedStation() const;
+  QWidget *discovery_ = nullptr;
+  QLineEdit *search_ = nullptr;
+  QComboBox *genre_ = nullptr;
+  QComboBox *venue_ = nullptr;
+  QCheckBox *favorites_only_ = nullptr;
+  QListWidget *stations_ = nullptr;
+  QLabel *description_ = nullptr;
+  QLabel *note_ = nullptr;
+  QPushButton *play_ = nullptr;
+  QPushButton *add_ = nullptr;
+  QPushButton *favorite_ = nullptr;
+  QPushButton *homepage_ = nullptr;
+  QJsonArray catalog_;
+  QStringList favorites_;
   Ui_RadioViewContainer *ui_;
 };
 

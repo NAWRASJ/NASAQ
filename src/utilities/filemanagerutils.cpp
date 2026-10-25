@@ -31,7 +31,7 @@
 #include <QStandardPaths>
 #include <QProcess>
 #include <QDesktopServices>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 
 #include "filemanagerutils.h"
 
@@ -129,19 +129,19 @@ void OpenInFileBrowser(const QList<QUrl> &urls) {
   }
 
   if (dirs.count() > 50) {
-    QMessageBox messagebox(QMessageBox::Critical, QObject::tr("Show in file browser"), QObject::tr("Too many songs selected."));
+    SilentMessageBox messagebox(SilentMessageBox::Critical, QObject::tr("Show in file browser"), QObject::tr("Too many songs selected."));
     messagebox.exec();
     return;
   }
 
   if (dirs.count() > 5) {
-    QMessageBox messagebox(QMessageBox::Information, QObject::tr("Show in file browser"), QObject::tr("%1 songs in %2 different directories selected, are you sure you want to open them all?").arg(urls.count()).arg(dirs.count()), QMessageBox::Open|QMessageBox::Cancel);
+    SilentMessageBox messagebox(SilentMessageBox::Information, QObject::tr("Show in file browser"), QObject::tr("%1 songs in %2 different directories selected, are you sure you want to open them all?").arg(urls.count()).arg(dirs.count()), SilentMessageBox::Open|SilentMessageBox::Cancel);
     messagebox.setTextFormat(Qt::RichText);
     int result = messagebox.exec();
     switch (result) {
-      case QMessageBox::Open:
+      case SilentMessageBox::Open:
         break;
-      case QMessageBox::Cancel:
+      case SilentMessageBox::Cancel:
       default:
         return;
     }

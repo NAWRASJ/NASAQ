@@ -36,7 +36,7 @@
 #include <QDateTime>
 #include <QTimer>
 #include <QCryptographicHash>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QSettings>
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -213,24 +213,24 @@ void LastFMScrobbler::Authenticate() {
   QUrl url(QString::fromLatin1(kAuthUrl));
   url.setQuery(url_query);
 
-  QMessageBox messagebox(QMessageBox::Information, tr("%1 Scrobbler Authentication").arg(name_), tr("Open URL in web browser?") + QStringLiteral("<br /><a href=\"%1\">%1</a><br />").arg(url.toString()) + tr("Press \"Save\" to copy the URL to clipboard and manually open it in a web browser."), QMessageBox::Open|QMessageBox::Save|QMessageBox::Cancel);
+  SilentMessageBox messagebox(SilentMessageBox::Information, tr("%1 Scrobbler Authentication").arg(name_), tr("Open URL in web browser?") + QStringLiteral("<br /><a href=\"%1\">%1</a><br />").arg(url.toString()) + tr("Press \"Save\" to copy the URL to clipboard and manually open it in a web browser."), SilentMessageBox::Open|SilentMessageBox::Save|SilentMessageBox::Cancel);
   messagebox.setTextFormat(Qt::RichText);
   int result = messagebox.exec();
   switch (result) {
-    case QMessageBox::Open:{
+    case SilentMessageBox::Open:{
       bool openurl_result = QDesktopServices::openUrl(url);
       if (openurl_result) {
         break;
       }
-      QMessageBox messagebox_error(QMessageBox::Warning, tr("%1 Scrobbler Authentication").arg(name_), tr("Could not open URL. Please open this URL in your browser") + QStringLiteral(":<br /><a href=\"%1\">%1</a>").arg(url.toString()), QMessageBox::Ok);
+      SilentMessageBox messagebox_error(SilentMessageBox::Warning, tr("%1 Scrobbler Authentication").arg(name_), tr("Could not open URL. Please open this URL in your browser") + QStringLiteral(":<br /><a href=\"%1\">%1</a>").arg(url.toString()), SilentMessageBox::Ok);
       messagebox_error.setTextFormat(Qt::RichText);
       messagebox_error.exec();
     }
       [[fallthrough]];
-    case QMessageBox::Save:
+    case SilentMessageBox::Save:
       QApplication::clipboard()->setText(url.toString());
       break;
-    case QMessageBox::Cancel:
+    case SilentMessageBox::Cancel:
       if (local_redirect_server_) {
         local_redirect_server_->close();
         local_redirect_server_->deleteLater();

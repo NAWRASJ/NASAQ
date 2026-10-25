@@ -45,7 +45,7 @@
 #include <QMenu>
 #include <QFlags>
 #include <QPushButton>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QtEvents>
 
 #include "includes/shared_ptr.h"
@@ -346,11 +346,11 @@ void DeviceView::Forget() {
   QModelIndex device_idx = MapToDevice(menu_index_);
   QString unique_id = device_manager_->data(device_idx, DeviceManager::Role_UniqueId).toString();
   if (device_manager_->GetLister(device_idx) && device_manager_->GetLister(device_idx)->AskForScan(unique_id)) {
-    ScopedPtr<QMessageBox> dialog(new QMessageBox(
-        QMessageBox::Question, tr("Forget device"),
+    ScopedPtr<SilentMessageBox> dialog(new SilentMessageBox(
+        SilentMessageBox::Question, tr("Forget device"),
         tr("Forgetting a device will remove it from this list and NASAQ will have to rescan all the songs again next time you connect it."),
-        QMessageBox::Cancel, this));
-    QPushButton *forget = dialog->addButton(tr("Forget device"), QMessageBox::DestructiveRole);
+        SilentMessageBox::Cancel, this));
+    QPushButton *forget = dialog->addButton(tr("Forget device"), SilentMessageBox::DestructiveRole);
     dialog->exec();
 
     if (dialog->clickedButton() != forget) return;
@@ -435,7 +435,7 @@ void DeviceView::Delete() {
   QModelIndex device_index = FindParentDevice(selected_indexes[0]);
   if (!device_index.isValid()) return;
 
-  if (QMessageBox::question(this, tr("Delete files"), tr("These files will be deleted from the device, are you sure you want to continue?"), QMessageBox::Yes, QMessageBox::Cancel) != QMessageBox::Yes) {
+  if (SilentMessageBox::question(this, tr("Delete files"), tr("These files will be deleted from the device, are you sure you want to continue?"), SilentMessageBox::Yes, SilentMessageBox::Cancel) != SilentMessageBox::Yes) {
     return;
   }
 

@@ -36,7 +36,7 @@
 #include <QToolTip>
 #include <QLayoutItem>
 #include <QMenu>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QTabBar>
 #include <QCheckBox>
 #include <QDialogButtonBox>
@@ -244,15 +244,15 @@ void PlaylistTabBar::CloseSlot() {
   const bool ask_for_delete = s.value(PlaylistSettings::kWarnClosePlaylist, PlaylistSettings::kDefaultWarnClosePlaylist).toBool();
 
   if (ask_for_delete && !manager_->IsPlaylistFavorite(playlist_id) && !manager_->playlist(playlist_id)->GetAllSongs().empty()) {
-    QMessageBox confirmation_box;
+    SilentMessageBox confirmation_box;
     confirmation_box.setWindowIcon(QIcon(u":/icons/64x64/strawberry.png"_s));
     confirmation_box.setWindowTitle(tr("Remove playlist"));
-    confirmation_box.setIcon(QMessageBox::Question);
+    confirmation_box.setIcon(SilentMessageBox::Question);
     confirmation_box.setText(tr("You are about to remove a playlist which is not part of your "
                                 "favorite playlists: "
                                 "the playlist will be deleted (this action cannot be undone). \n"
                                 "Are you sure you want to continue?"));
-    confirmation_box.setStandardButtons(QMessageBox::Yes | QMessageBox::Cancel);
+    confirmation_box.setStandardButtons(SilentMessageBox::Yes | SilentMessageBox::Cancel);
 
     QCheckBox dont_prompt_again(tr("Warn me when closing a playlist tab"), &confirmation_box);
     dont_prompt_again.setChecked(ask_for_delete);
@@ -270,10 +270,10 @@ void PlaylistTabBar::CloseSlot() {
       grid->addItem(buttonsItem, ++row, column, row_span, column_span);
     }
     else {
-      confirmation_box.addButton(&dont_prompt_again, QMessageBox::ActionRole);
+      confirmation_box.addButton(&dont_prompt_again, SilentMessageBox::ActionRole);
     }
 
-    if (confirmation_box.exec() != QMessageBox::Yes) {
+    if (confirmation_box.exec() != SilentMessageBox::Yes) {
       return;
     }
 

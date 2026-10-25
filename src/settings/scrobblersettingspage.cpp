@@ -21,7 +21,7 @@
 #include "ui_scrobblersettingspage.h"
 
 #include <QObject>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QSettings>
 #include <QCheckBox>
 #include <QLabel>
@@ -258,7 +258,7 @@ void ScrobblerSettingsPage::LastFM_AuthenticationComplete(const bool success, co
     Save();
   }
   else {
-    if (!error.isEmpty()) QMessageBox::warning(this, u"Authentication failed"_s, error);
+    if (!error.isEmpty()) SilentMessageBox::warning(this, u"Authentication failed"_s, error);
   }
 
   LastFM_RefreshControls(success);
@@ -302,7 +302,7 @@ void ScrobblerSettingsPage::ListenBrainz_AuthenticationComplete(const bool succe
     Save();
   }
   else {
-    QMessageBox::warning(this, u"Authentication failed"_s, error);
+    SilentMessageBox::warning(this, u"Authentication failed"_s, error);
   }
 
   ListenBrainz_RefreshControls(success);

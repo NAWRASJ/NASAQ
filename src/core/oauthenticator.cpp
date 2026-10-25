@@ -36,7 +36,7 @@
 #include <QJsonObject>
 #include <QJsonParseError>
 #include <QDesktopServices>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 
 #include "constants/timeconstants.h"
 #include "utilities/randutils.h"
@@ -417,7 +417,7 @@ void OAuthenticator::Authenticate() {
 
   const bool success = QDesktopServices::openUrl(url);
   if (!success) {
-    QMessageBox messagebox(QMessageBox::Information, tr("Authentication"), tr("Please open this URL in your browser") + QStringLiteral(":<br /><a href=\"%1\">%1</a>").arg(url.toString()), QMessageBox::Ok);
+    SilentMessageBox messagebox(SilentMessageBox::Information, tr("Authentication"), tr("Please open this URL in your browser") + QStringLiteral(":<br /><a href=\"%1\">%1</a>").arg(url.toString()), SilentMessageBox::Ok);
     messagebox.setTextFormat(Qt::RichText);
     messagebox.exec();
   }

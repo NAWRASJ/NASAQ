@@ -25,7 +25,7 @@
 #include <QUrl>
 #include <QCheckBox>
 #include <QPushButton>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QEvent>
 #include <QSignalBlocker>
 
@@ -148,7 +148,7 @@ void JellyfinSettingsPage::SavePasswordFinished() {
     // Try to write the password again on the next save, also when it was removed and the password field is empty.
     password_save_failed_ = true;
     unsaved_password_ = saving_password_;
-    QMessageBox::warning(this, tr("Failed to save password"), tr("Failed to save the Jellyfin password: %1").arg(save_password_reply_->error()));
+    SilentMessageBox::warning(this, tr("Failed to save password"), tr("Failed to save the Jellyfin password: %1").arg(save_password_reply_->error()));
   }
 
   save_password_reply_.reset();
@@ -167,8 +167,8 @@ bool JellyfinSettingsPage::ConfirmServerUrl(const QUrl &server_url) {
   // Jellyfin serves plain HTTP by default, so it's allowed, but the user has to accept sending the credentials unencrypted, once for each server URL.
   if (server_url.scheme() != "http"_L1 || server_url == confirmed_server_url_) return true;
 
-  const QMessageBox::StandardButton button = QMessageBox::warning(this, tr("Unencrypted connection"), tr("The server URL uses HTTP, so the username, password and access token are sent unencrypted and can be read by others on the network. Use HTTPS if the server supports it.\n\nDo you want to continue?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-  if (button != QMessageBox::Yes) return false;
+  const SilentMessageBox::StandardButton button = SilentMessageBox::warning(this, tr("Unencrypted connection"), tr("The server URL uses HTTP, so the username, password and access token are sent unencrypted and can be read by others on the network. Use HTTPS if the server supports it.\n\nDo you want to continue?"), SilentMessageBox::Yes | SilentMessageBox::No, SilentMessageBox::No);
+  if (button != SilentMessageBox::Yes) return false;
 
   confirmed_server_url_ = server_url;
   return true;
@@ -186,7 +186,7 @@ void JellyfinSettingsPage::Save() {
   if (enabled && !IsValidServerUrl(server_url)) {
     enabled = false;
     ui_->enable->setChecked(false);
-    QMessageBox::warning(this, tr("Configuration incorrect"), tr("Server URL is invalid, Jellyfin was not enabled."));
+    SilentMessageBox::warning(this, tr("Configuration incorrect"), tr("Server URL is invalid, Jellyfin was not enabled."));
   }
   else if (enabled && !ConfirmServerUrl(server_url)) {
     enabled = false;
@@ -237,13 +237,13 @@ void JellyfinSettingsPage::Save() {
 void JellyfinSettingsPage::TestClicked() {
 
   if (ui_->server_url->text().isEmpty() || ui_->username->text().isEmpty() || ui_->password->text().isEmpty()) {
-    QMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing server url, username or password."));
+    SilentMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing server url, username or password."));
     return;
   }
 
   const QUrl server_url(ui_->server_url->text());
   if (!IsValidServerUrl(server_url)) {
-    QMessageBox::critical(this, tr("Configuration incorrect"), tr("Server URL is invalid."));
+    SilentMessageBox::critical(this, tr("Configuration incorrect"), tr("Server URL is invalid."));
     return;
   }
 
@@ -271,7 +271,7 @@ void JellyfinSettingsPage::TestSuccess() {
   ui_->button_test->setEnabled(true);
 
   if (!isVisible()) return;
-  QMessageBox::information(this, tr("Test successful!"), tr("Test successful!"));
+  SilentMessageBox::information(this, tr("Test successful!"), tr("Test successful!"));
 
 }
 
@@ -281,6 +281,6 @@ void JellyfinSettingsPage::TestFailure(const QString &failure_reason) {
   ui_->button_test->setEnabled(true);
 
   if (!isVisible()) return;
-  QMessageBox::warning(this, tr("Test failed!"), failure_reason);
+  SilentMessageBox::warning(this, tr("Test failed!"), failure_reason);
 
 }

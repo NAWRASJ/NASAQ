@@ -26,7 +26,7 @@
 #include <QStringList>
 #include <QAction>
 #include <QHeaderView>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QProcess>
 #include <QTreeWidget>
 #include <QKeySequence>

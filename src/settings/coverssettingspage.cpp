@@ -36,7 +36,7 @@
 #include <QPushButton>
 #include <QListWidget>
 #include <QListWidgetItem>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 
 #include "settingsdialog.h"
 #include "coverssettingspage.h"
@@ -490,7 +490,7 @@ void CoversSettingsPage::AuthenticationFailure(const QString &error) {
 
   if (!isVisible() || !ui_->providers->currentItem() || ui_->providers->currentItem()->text() != provider->name()) return;
 
-  QMessageBox::warning(this, tr("Authentication failed"), error);
+  SilentMessageBox::warning(this, tr("Authentication failed"), error);
 
   ui_->login_state->SetLoggedIn(LoginStateWidget::State::LoggedOut);
   ui_->button_authenticate->setEnabled(true);

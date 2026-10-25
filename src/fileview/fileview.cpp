@@ -30,7 +30,7 @@
 #include <QStringList>
 #include <QUrl>
 #include <QStandardPaths>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QScrollBar>
 #include <QLineEdit>
 #include <QToolButton>

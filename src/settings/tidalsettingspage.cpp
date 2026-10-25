@@ -29,7 +29,7 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QSpinBox>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QEvent>
 
 #include "includes/shared_ptr.h"
@@ -179,7 +179,7 @@ void TidalSettingsPage::LoginClicked() {
   const QString client_id = use_custom_client_id ? ui_->client_id->text() : TidalService::CompiledClientId();
 
   if (client_id.isEmpty()) {
-    QMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing Tidal client ID."));
+    SilentMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing Tidal client ID."));
     return;
   }
   Q_EMIT Authorize(client_id);
@@ -216,7 +216,7 @@ void TidalSettingsPage::LoginSuccess() {
 void TidalSettingsPage::LoginFailure(const QString &failure_reason) {
 
   if (!isVisible()) return;
-  QMessageBox::warning(this, tr("Authentication failed"), failure_reason);
+  SilentMessageBox::warning(this, tr("Authentication failed"), failure_reason);
   ui_->button_login->setEnabled(true);
 
 }

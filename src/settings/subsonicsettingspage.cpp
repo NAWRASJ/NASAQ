@@ -28,7 +28,7 @@
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QEvent>
 
 #include "includes/shared_ptr.h"
@@ -188,7 +188,7 @@ void SubsonicSettingsPage::SavePasswordFinished() {
   else {
     // Try to save the password again next time.
     loaded_password_.clear();
-    QMessageBox::warning(this, tr("Failed to save password"), tr("Failed to save the Subsonic password: %1").arg(save_password_reply_->error()));
+    SilentMessageBox::warning(this, tr("Failed to save password"), tr("Failed to save the Subsonic password: %1").arg(save_password_reply_->error()));
   }
 
   save_password_reply_.reset();
@@ -204,13 +204,13 @@ void SubsonicSettingsPage::CheckboxDownloadAlbumCoversToggled(bool enabled) {
 void SubsonicSettingsPage::TestClicked() {
 
   if (ui_->server_url->text().isEmpty() || ui_->username->text().isEmpty() || ui_->password->text().isEmpty()) {
-    QMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing server url, username or password."));
+    SilentMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing server url, username or password."));
     return;
   }
 
   QUrl server_url(ui_->server_url->text());
   if (!server_url.isValid() || server_url.scheme().isEmpty() || server_url.host().isEmpty()) {
-    QMessageBox::critical(this, tr("Configuration incorrect"), tr("Server URL is invalid."));
+    SilentMessageBox::critical(this, tr("Configuration incorrect"), tr("Server URL is invalid."));
     return;
   }
 
@@ -234,7 +234,7 @@ void SubsonicSettingsPage::TestSuccess() {
   if (!isVisible()) return;
   ui_->button_test->setEnabled(true);
 
-  QMessageBox::information(this, tr("Test successful!"), tr("Test successful!"));
+  SilentMessageBox::information(this, tr("Test successful!"), tr("Test successful!"));
 
 }
 
@@ -243,6 +243,6 @@ void SubsonicSettingsPage::TestFailure(const QString &failure_reason) {
   if (!isVisible()) return;
   ui_->button_test->setEnabled(true);
 
-  QMessageBox::warning(this, tr("Test failed!"), failure_reason);
+  SilentMessageBox::warning(this, tr("Test failed!"), failure_reason);
 
 }

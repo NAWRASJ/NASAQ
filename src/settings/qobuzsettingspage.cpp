@@ -23,7 +23,7 @@
 #include <QByteArray>
 #include <QString>
 #include <QSettings>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QCheckBox>
 #include <QComboBox>
 #include <QLineEdit>
@@ -134,15 +134,15 @@ void QobuzSettingsPage::Save() {
 void QobuzSettingsPage::LoginClicked() {
 
   if (ui_->app_id->text().isEmpty()) {
-    QMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing app id. Please fetch API credentials first."));
+    SilentMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing app id. Please fetch API credentials first."));
     return;
   }
   if (ui_->app_secret->text().isEmpty()) {
-    QMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing app secret. Please fetch API credentials first."));
+    SilentMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing app secret. Please fetch API credentials first."));
     return;
   }
   if (ui_->private_key->text().isEmpty()) {
-    QMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing private key. Please fetch API credentials first."));
+    SilentMessageBox::critical(this, tr("Configuration incomplete"), tr("Missing private key. Please fetch API credentials first."));
     return;
   }
 
@@ -180,7 +180,7 @@ void QobuzSettingsPage::LoginSuccess() {
 void QobuzSettingsPage::LoginFailure(const QString &failure_reason) {
 
   if (!isVisible()) return;
-  QMessageBox::warning(this, tr("Authentication failed"), failure_reason);
+  SilentMessageBox::warning(this, tr("Authentication failed"), failure_reason);
   ui_->button_login->setEnabled(true);
 
 }
@@ -211,7 +211,7 @@ void QobuzSettingsPage::ApiCredentialsFetched(const QString &app_id, const QStri
   ui_->button_fetch_api_credentials->setEnabled(true);
   ui_->button_fetch_api_credentials->setText(tr("Fetch API Credentials"));
 
-  QMessageBox::information(this, tr("API credentials fetched"), tr("API credentials have been successfully fetched. Click Login to authenticate via your browser."));
+  SilentMessageBox::information(this, tr("API credentials fetched"), tr("API credentials have been successfully fetched. Click Login to authenticate via your browser."));
 
 }
 
@@ -220,6 +220,6 @@ void QobuzSettingsPage::ApiCredentialsFetchError(const QString &error) {
   ui_->button_fetch_api_credentials->setEnabled(true);
   ui_->button_fetch_api_credentials->setText(tr("Fetch API Credentials"));
 
-  QMessageBox::warning(this, tr("Credential fetch failed"), error);
+  SilentMessageBox::warning(this, tr("Credential fetch failed"), error);
 
 }

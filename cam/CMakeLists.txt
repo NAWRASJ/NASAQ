@@ -76,3 +76,8 @@ add_test(NAME cam_business COMMAND cam_business_tests)
 
 add_executable(nasaq_msix_runtime_probe tests/msix_runtime_probe.cpp)
 target_link_libraries(nasaq_msix_runtime_probe PRIVATE cam_core Qt6::Widgets Qt6::Gui Qt6::Sql)
+
+add_executable(nasaq_silent_notifications_tests tests/silent_notifications_test.cpp)
+target_include_directories(nasaq_silent_notifications_tests PRIVATE src)
+target_link_libraries(nasaq_silent_notifications_tests PRIVATE Qt6::Widgets Qt6::Test)
+add_test(NAME nasaq_silent_notifications COMMAND nasaq_silent_notifications_tests)

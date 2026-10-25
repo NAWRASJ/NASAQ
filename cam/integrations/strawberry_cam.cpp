@@ -11,7 +11,7 @@
 #include <QStandardPaths>
 #include <QMenuBar>
 #include <QMenu>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QFileInfo>
 #include <QTimer>
 #include <QPushButton>
@@ -38,7 +38,8 @@ class StrawberryMusic final:public MusicTransport {
   app->player()->setProperty("camStartupPrayerHoldUntil",heldUntil);
   connect(&*app->player(),&Player::Playing,this,[this]{
    if(app->player()->property("camLicenseDenied").toBool()){app->player()->Stop();return;}
-   if(suspended){app->player()->Pause();return;}
+   if(suspended){suspend(true);return;}
+   interruptedRadio.reset();interruptedPlaylist=-1;
    const auto item=app->player()->GetCurrentItem();
    Q_EMIT event(QStringLiteral("play_started"),item?item->OriginalUrl().toString():QStringLiteral("strawberry"));
   });
@@ -52,6 +53,7 @@ class StrawberryMusic final:public MusicTransport {
   for(int candidate:manager->playlist_ids())if(manager->playlist_name(candidate)==name){id=candidate;break;}
   if(id<0){manager->New(name);id=manager->current_id();}
   auto playlist=manager->playlist(id);if(!playlist)return false;
+  interruptedRadio.reset();interruptedPlaylist=-1;
   app->player()->Stop();manager->SetCurrentPlaylist(id);manager->SetActivePlaylist(id);
   playlist->Clear();manager->sequence()->SetRepeatMode(PlaylistSequence::RepeatMode::Playlist);
   pending=true;const auto generation=++loadGeneration;
@@ -64,14 +66,42 @@ class StrawberryMusic final:public MusicTransport {
   QTimer::singleShot(30000,this,[this,generation]{if(pending&&generation==loadGeneration){pending=false;disconnect(rowsConnection);Q_EMIT event(QStringLiteral("audio_error"),QStringLiteral("Strawberry playlist import timed out"));}});
   return true;
  }
- void setGain(double gain)override{app->player()->engine()->SetBusinessGain(gain);}
- bool playing()const override{return app->player()->GetState()==EngineBase::State::Playing;}
- void suspend(bool active)override{app->player()->setProperty("camStartupPrayerHoldUntil",QDateTime());suspended=active;app->player()->setProperty("camSuspended",active);if(active)app->player()->Pause();}
- void resume()override{if(!suspended&&!pending)authorizedPlay(false);}
- void stop()override{pending=false;++loadGeneration;disconnect(rowsConnection);app->player()->Stop();}
+ void setGain(double gain)override{requestedGain=gain;app->player()->engine()->SetBusinessGain(suspended?0.0:requestedGain);}
+ bool playing()const override{return !suspended&&(app->player()->GetState()==EngineBase::State::Playing||app->player()->engine()->property("nasaqBuffering").toBool());}
+ void suspend(bool active)override{
+  app->player()->setProperty("camStartupPrayerHoldUntil",QDateTime());suspended=active;app->player()->setProperty("camSuspended",active);
+  // Silence is enforced independently of Pause: GStreamer may ignore Pause while buffering.
+  app->player()->engine()->SetBusinessGain(active?0.0:requestedGain);
+  if(active){
+   const auto item=app->player()->GetCurrentItem();
+   if(item&&item->EffectiveMetadata().is_radio()){
+    if(!interruptedRadio){interruptedRadio=item;interruptedPlaylist=app->playlist_manager()->active_id();}
+    // Destroy the live connection without clearing the playlist selection. No fade-out during adhan.
+    app->player()->engine()->Stop(true);
+   }else app->player()->Pause();
+  }
+ }
+ void resume()override{
+  if(suspended||pending)return;
+  if(interruptedRadio){
+   const auto item=interruptedRadio;interruptedRadio.reset();
+   auto playlist=app->playlist_manager()->playlist(interruptedPlaylist);interruptedPlaylist=-1;
+   if(!playlist)return;
+   for(int row=0;row<playlist->rowCount();++row)if(playlist->item_at(row)==item){
+    app->playlist_manager()->SetActivePlaylist(playlist->id());
+    app->player()->setProperty("camAuthorized",true);
+    app->player()->PlayAt(row,false,0,EngineBase::TrackChangeType::First,Playlist::AutoScroll::Maybe,false);
+    app->player()->setProperty("camAuthorized",false);return;
+   }
+   return;
+  }
+  authorizedPlay(false);
+ }
+ void stop()override{pending=false;++loadGeneration;disconnect(rowsConnection);interruptedRadio.reset();interruptedPlaylist=-1;app->player()->Stop();}
  private:
  void authorizedPlay(bool playlist){app->player()->setProperty("camAuthorized",true);if(playlist)app->player()->PlayPlaylist(name);else app->player()->Play();app->player()->setProperty("camAuthorized",false);}
  Application*app;bool suspended=false,pending=false;quint64 loadGeneration=0;QMetaObject::Connection rowsConnection;
+ double requestedGain=1.0;PlaylistItemPtr interruptedRadio;int interruptedPlaylist=-1;
  const QString name=QStringLiteral("NASAQ — Business playlist");
 };
 
@@ -202,5 +232,5 @@ class CamHost final:public QObject {
 };
 void AttachCam(Application*app,QMainWindow*main){
  app->player()->setProperty("camLicenseDenied",true);
- try{new CamHost(app,main);}catch(const std::exception&e){main->setEnabled(true);app->player()->setProperty("camOperatorLocked",false);app->player()->setProperty("camSuspended",false);QMessageBox::critical(main,QStringLiteral("NASAQ startup failed"),QString::fromUtf8(e.what()));}
+ try{new CamHost(app,main);}catch(const std::exception&e){main->setEnabled(true);app->player()->setProperty("camOperatorLocked",false);app->player()->setProperty("camSuspended",false);SilentMessageBox::critical(main,QStringLiteral("NASAQ startup failed"),QString::fromUtf8(e.what()));}
 }

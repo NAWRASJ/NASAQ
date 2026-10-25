@@ -40,7 +40,7 @@
 #include <QAbstractItemModel>
 #include <QScrollBar>
 #include <QSettings>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 
 #include "includes/shared_ptr.h"
 #include "core/logging.h"
@@ -283,7 +283,7 @@ void PlaylistManager::SaveWithUI(const int id, const QString &playlist_name) {
       filename += QLatin1Char('.') + filter_extension;
       fileinfo.setFile(filename);
       // The file dialog only asked about replacing the file it returned.
-      if (fileinfo.exists() && QMessageBox::question(nullptr, tr("Save playlist", "Title of the playlist save dialog."), tr("%1 already exists. Do you want to replace it?").arg(fileinfo.fileName()), QMessageBox::Yes | QMessageBox::No, QMessageBox::No) != QMessageBox::Yes) {
+      if (fileinfo.exists() && SilentMessageBox::question(nullptr, tr("Save playlist", "Title of the playlist save dialog."), tr("%1 already exists. Do you want to replace it?").arg(fileinfo.fileName()), SilentMessageBox::Yes | SilentMessageBox::No, SilentMessageBox::No) != SilentMessageBox::Yes) {
         continue;
       }
     }
@@ -295,7 +295,7 @@ void PlaylistManager::SaveWithUI(const int id, const QString &playlist_name) {
       if (!saved_filter.isEmpty()) last_save_filter = saved_filter;
       break;
     }
-    QMessageBox::warning(nullptr, tr("Unknown playlist extension"), tr("Unknown file extension for playlist."));
+    SilentMessageBox::warning(nullptr, tr("Unknown playlist extension"), tr("Unknown file extension for playlist."));
   }
 
   s.beginGroup(PlaylistSettings::kSettingsGroup);

@@ -1,3 +1,4 @@
+#include "silentmessagebox.h"
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "formdesign.h"
 #include "studiodialog.h"
@@ -42,7 +43,7 @@ StudioDialog::StudioDialog(Studio &studio,Audio &audio,QWidget *parent):QDialog(
  connect(search,&QLineEdit::textChanged,this,[refresh]{refresh();});
  connect(list,&QListWidget::itemClicked,this,[state,name,category,texts,paths,approvals,codes,chime,&studio](QListWidgetItem *item){auto ad=studio.load(item->data(Qt::UserRole).toString());chime->setCurrentIndex(qMax(0,chime->findData(ad["chime"].toString("default"))));state->id=ad["id"].toString();state->variants=ad["variants"].toObject();name->setText(ad["name"].toString());category->setText(ad["category"].toString());for(int i=0;i<codes.size();++i){auto v=state->variants[codes[i]].toObject();QSignalBlocker b(texts[i]),c(approvals[i]);texts[i]->setPlainText(v["draft"].toString());paths[i]->setText(QFileInfo(v["file"].toString()).fileName());approvals[i]->setChecked(v["approved"].toBool());}});
  connect(fresh,&QPushButton::clicked,this,[state,name,category,texts,paths,approvals,chime]{chime->setCurrentIndex(0);state->id.clear();state->variants={};name->clear();category->clear();for(int i=0;i<texts.size();++i){texts[i]->clear();paths[i]->clear();approvals[i]->setChecked(false);}});
- connect(remove,&QPushButton::clicked,this,[this,safe,state,&studio,refresh]{if(state->id.isEmpty())return;if(QMessageBox::question(this,L("Delete","حذف"),L("Delete this announcement? Linked active schedules must be cancelled first. Audio files are retained.","حذف الإعلان؟ يجب إلغاء جداوله الفعالة أولًا. تُحتفظ الملفات الصوتية."))==QMessageBox::Yes)safe([&]{studio.remove(state->id);state->id.clear();refresh();});});
+ connect(remove,&QPushButton::clicked,this,[this,safe,state,&studio,refresh]{if(state->id.isEmpty())return;if(SilentMessageBox::question(this,L("Delete","حذف"),L("Delete this announcement? Linked active schedules must be cancelled first. Audio files are retained.","حذف الإعلان؟ يجب إلغاء جداوله الفعالة أولًا. تُحتفظ الملفات الصوتية."))==SilentMessageBox::Yes)safe([&]{studio.remove(state->id);state->id.clear();refresh();});});
  tabs->addTab(editor,L("Library and editor","المكتبة والمحرر"));
  auto schedulePage=new QScrollArea;schedulePage->setWidgetResizable(true);auto scheduleBody=new QWidget;schedulePage->setWidget(scheduleBody);auto scheduleLayout=new QVBoxLayout(scheduleBody);scheduleLayout->setSpacing(16);
  auto sf=new QFormLayout;scheduleLayout->addLayout(sf);

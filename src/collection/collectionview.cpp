@@ -36,7 +36,7 @@
 #include <QUrl>
 #include <QMenu>
 #include <QAction>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 #include <QSettings>
 
 #include "core/iconloader.h"
@@ -240,7 +240,7 @@ void CollectionView::SetShowInVarious(const bool on) {
       }
     }
     if (other_artists.count() > 0) {
-      if (QMessageBox::question(this, tr("There are other songs in this album"), tr("Would you like to move the other songs on this album to Various Artists as well?"), QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes) {
+      if (SilentMessageBox::question(this, tr("There are other songs in this album"), tr("Would you like to move the other songs on this album to Various Artists as well?"), SilentMessageBox::Yes | SilentMessageBox::No, SilentMessageBox::Yes) == SilentMessageBox::Yes) {
         for (const QString &s : other_artists) {
           albums.insert(album, s);
         }
@@ -268,7 +268,7 @@ void CollectionView::Organize() {
     organize_dialog_->show();
   }
   else {
-    QMessageBox::warning(this, tr("Error"), tr("None of the selected songs were suitable for copying to a device"));
+    SilentMessageBox::warning(this, tr("Error"), tr("None of the selected songs were suitable for copying to a device"));
   }
 
 }

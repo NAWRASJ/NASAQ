@@ -1,3 +1,4 @@
+#include "silentmessagebox.h"
 // SPDX-License-Identifier: GPL-3.0-or-later
 #pragma once
 #include <QtWidgets>
@@ -15,11 +16,11 @@ class ActivationDialog:public QDialog {
   submit=new QPushButton(text("Activate","تفعيل"));submit->setObjectName("activateLicense");layout->addWidget(submit);
   remove=new QPushButton(text("Deactivate on this device","إلغاء التفعيل على هذا الجهاز"));remove->setObjectName("deactivateLicense");layout->addWidget(remove);
   connect(remove,&QPushButton::clicked,this,[this]{
-   if(QMessageBox::question(this,text("Deactivate license","إلغاء التفعيل"),text("Remove the saved license from this device and enter another key? Playback will stop. Your playlists and schedules will be kept. This does not cancel the license or free a device slot on the licensing server.","هل تريد إزالة الترخيص المحفوظ من هذا الجهاز وإدخال مفتاح آخر؟ سيتوقف التشغيل مع الاحتفاظ بقوائم التشغيل والجداول. لا يلغي ذلك الترخيص نفسه ولا يحرر حصة الجهاز لدى خادم التراخيص."),QMessageBox::Yes|QMessageBox::No,QMessageBox::No)!=QMessageBox::Yes)return;
+   if(SilentMessageBox::question(this,text("Deactivate license","إلغاء التفعيل"),text("Remove the saved license from this device and enter another key? Playback will stop. Your playlists and schedules will be kept. This does not cancel the license or free a device slot on the licensing server.","هل تريد إزالة الترخيص المحفوظ من هذا الجهاز وإدخال مفتاح آخر؟ سيتوقف التشغيل مع الاحتفاظ بقوائم التشغيل والجداول. لا يلغي ذلك الترخيص نفسه ولا يحرر حصة الجهاز لدى خادم التراخيص."),SilentMessageBox::Yes|SilentMessageBox::No,SilentMessageBox::No)!=SilentMessageBox::Yes)return;
    try{
-    if(!this->activation.deactivateLocally()){QMessageBox::information(this,text("Please wait","يرجى الانتظار"),text("License verification is in progress. Try again when it finishes.","يجري التحقق من الترخيص. حاول مجددًا بعد اكتماله."));return;}
+    if(!this->activation.deactivateLocally()){SilentMessageBox::information(this,text("Please wait","يرجى الانتظار"),text("License verification is in progress. Try again when it finishes.","يجري التحقق من الترخيص. حاول مجددًا بعد اكتماله."));return;}
     key->clear();render(false);key->setFocus();
-   }catch(const std::exception&){QMessageBox::warning(this,text("Could not deactivate","تعذر إلغاء التفعيل"),text("Could not update the saved license. The current license was kept.","تعذر تحديث الترخيص المحفوظ. تم الاحتفاظ بالترخيص الحالي."));}
+   }catch(const std::exception&){SilentMessageBox::warning(this,text("Could not deactivate","تعذر إلغاء التفعيل"),text("Could not update the saved license. The current license was kept.","تعذر تحديث الترخيص المحفوظ. تم الاحتفاظ بالترخيص الحالي."));}
   });
   auto close=new QPushButton(text("Close","إغلاق"));layout->addWidget(close);connect(close,&QPushButton::clicked,this,&QDialog::reject);
   connect(submit,&QPushButton::clicked,this,[this]{pending=true;submit->setEnabled(false);message->setText(text("Checking license…","جارٍ التحقق من الترخيص…"));this->activation.activate(key->text());});

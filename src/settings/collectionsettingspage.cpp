@@ -42,7 +42,7 @@
 #include <QRadioButton>
 #include <QSpinBox>
 #include <QSettings>
-#include <QMessageBox>
+#include "silentmessagebox.h"
 
 #include "constants/filesystemconstants.h"
 #include "core/iconloader.h"
@@ -256,7 +256,7 @@ void CollectionSettingsPage::AddDirectory() {
   if (!path.isEmpty()) {
     const QByteArray filesystemtype = QStorageInfo(QFileInfo(path).canonicalFilePath()).fileSystemType();
     if (kRejectedFileSystems.contains(filesystemtype)) {
-      QMessageBox messagebox(QMessageBox::Critical, QObject::tr("Invalid collection directory"), QObject::tr("Can't add directory %1 with special filesystem %2 to collection").arg(path, QString::fromUtf8(filesystemtype)));
+      SilentMessageBox messagebox(SilentMessageBox::Critical, QObject::tr("Invalid collection directory"), QObject::tr("Can't add directory %1 with special filesystem %2 to collection").arg(path, QString::fromUtf8(filesystemtype)));
       (void)messagebox.exec();
       return;
     }
@@ -352,8 +352,8 @@ void CollectionSettingsPage::UpdateIconDiskCacheSize() {
 
 void CollectionSettingsPage::WriteAllSongsStatisticsToFiles() {
 
-  QMessageBox confirmation_dialog(QMessageBox::Question, tr("Write all playcounts and ratings to files"), tr("Are you sure you want to write song playcounts and ratings to file for all songs in your collection?"), QMessageBox::Yes | QMessageBox::Cancel);
-  if (confirmation_dialog.exec() != QMessageBox::Yes) {
+  SilentMessageBox confirmation_dialog(SilentMessageBox::Question, tr("Write all playcounts and ratings to files"), tr("Are you sure you want to write song playcounts and ratings to file for all songs in your collection?"), SilentMessageBox::Yes | SilentMessageBox::Cancel);
+  if (confirmation_dialog.exec() != SilentMessageBox::Yes) {
     return;
   }
 
