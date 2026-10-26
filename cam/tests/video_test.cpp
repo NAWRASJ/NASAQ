@@ -21,6 +21,7 @@
 #include "engine/gstenginepipeline.h"
 #include "nasaqtheme.h"
 #include "audience.h"
+#include "turntable.h"
 #include "audio.h"
 #include "scheduler.h"
 #include "engine/gstengine.h"
@@ -216,6 +217,14 @@ private Q_SLOTS:
   if(!dir.isEmpty())QVERIFY(surface.grab().save(dir+"/song-controls.png"));
   surface.present({},true,true,false,{},{});QVERIFY(!controls->isVisible());
  }
+ void renderTonearmPositions(){
+  const auto dir=qEnvironmentVariable("NASAQ_VIDEO_EVIDENCE");if(dir.isEmpty())return;
+  for(int side:{1254,384})for(int angle:{-22,-12,-2}){
+   QImage image(side,side,QImage::Format_ARGB32_Premultiplied);image.fill(Qt::transparent);
+   {QPainter p(&image);PaintNasaqTurntable(p,QRectF(0,0,side,side),0,angle);}
+   QVERIFY(image.save(dir+QString("/turntable-%1-%2.png").arg(side).arg(angle)));
+  }
+ }
  void tonearmTracksSongProgressAndStaysCenteredForRadio(){
   AudienceSurface surface;surface.present({},false,false,false,{},{});surface.setPlayback(true,false,false,"Song","",{});
   surface.setTimeline(0,300);QCOMPARE(surface.tonearmAngle(),-22.);surface.setTimeline(150,300);QCOMPARE(surface.tonearmAngle(),-12.);surface.setTimeline(300,300);QCOMPARE(surface.tonearmAngle(),-2.);
@@ -224,6 +233,28 @@ private Q_SLOTS:
   surface.setPlayback(true,true,false,"Radio","",{});surface.setTimeline(0,0);QCOMPARE(surface.tonearmAngle(),-12.);surface.setTimeline(5000,1);QCOMPARE(surface.tonearmAngle(),-12.);
   surface.setPlayback(true,true,true,"Radio","",{});QCOMPARE(surface.tonearmAngle(),-12.);
   surface.present({},true,true,false,{},{});QCOMPARE(surface.tonearmAngle(),-48.);
+ }
+ void videoStartsWithoutIntervention_data(){
+  QTest::addColumn<int>("bufferMs");
+  QTest::newRow("default-buffer")<<4000;
+  QTest::newRow("default-buffer-repeat")<<4000;
+  QTest::newRow("large-buffer")<<30000;
+ }
+ void videoStartsWithoutIntervention(){
+  QFETCH(int,bufferMs);
+  Settings settings;settings.beginGroup("Backend");settings.setValue("output","fakesink");settings.setValue("bufferduration",bufferMs);settings.endGroup();
+  GstEngine engine(std::make_shared<TaskManager>());QVERIFY(engine.Init());QSignalSpy errors(&engine,&EngineBase::Error);
+  const auto url=QUrl::fromLocalFile(qEnvironmentVariable("NASAQ_VIDEO_FIXTURE"));
+  QVERIFY(engine.Load(url,url,EngineBase::TrackChangeType::First,false,0,0,std::nullopt));QVERIFY(engine.Play(false,0));
+  QElapsedTimer elapsed;elapsed.start();int frames=0;
+  while(elapsed.elapsed()<9000 && engine.position_nanosec()<5000000000LL){
+   if(!engine.TakeVideoFrame().isNull())++frames;
+   QTest::qWait(30);
+  }
+  qInfo()<<"Startup evidence"<<bufferMs<<"position"<<engine.position_nanosec()<<"frames"<<frames<<"buffering"<<engine.current_pipeline_->is_buffering();
+  QVERIFY2(engine.position_nanosec()>=5000000000LL,"Video must advance five seconds without pause, seek, or another play command");
+  QVERIFY(frames>10);QCOMPARE(errors.count(),0);engine.Stop(true);
+  settings.beginGroup("Backend");settings.remove("bufferduration");settings.endGroup();
  }
  void actualVideoPlaybackPauseSeekAndEarlyPrayer(){
   const QString file=qEnvironmentVariable("NASAQ_VIDEO_FIXTURE");QVERIFY2(QFileInfo::exists(file),"MP4 fixture required");

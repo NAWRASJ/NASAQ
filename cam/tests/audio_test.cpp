@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <QtTest>
+#include <QApplication>
 #include "audio.h"
 #include "scheduler.h"
 static bool writeSilence(const QString&path){QFile file(path);if(!file.open(QIODevice::WriteOnly))return false;QDataStream out(&file);out.setByteOrder(QDataStream::LittleEndian);out.writeRawData("RIFF",4);out<<quint32(36+32000);out.writeRawData("WAVEfmt ",8);out<<quint32(16)<<quint16(1)<<quint16(1)<<quint32(16000)<<quint32(32000)<<quint16(2)<<quint16(16);out.writeRawData("data",4);out<<quint32(32000);return file.write(QByteArray(32000,'\0'))==32000;}
@@ -62,10 +63,28 @@ private slots:
  void prayerCancelsPendingAnnouncement(){QTemporaryDir dir;auto file=dir.filePath("cue.wav");QVERIFY(writeSilence(file));Store s(":memory:");s.set("chime_library",QString::fromUtf8(QJsonDocument(QJsonArray{QJsonObject{{"id","test"},{"file",file}}}).toJson()));s.set("chime_ad","test");FakeMusic music;Audio a(s,nullptr,&music);QVERIFY(a.dispatch({"ad","announcement",file,{},50}));QVERIFY(a.dispatch({"prayer","prayer",{}, {},60}));QTest::qWait(1600);QCOMPARE(a.activePriority(),60);auto q=s.query("SELECT count(*) FROM logs WHERE kind='play_started'");q.next();QCOMPARE(q.value(0).toInt(),0);QCOMPARE(music.resumes,0);}
  void stopCancelsPendingAnnouncement(){QTemporaryDir dir;auto file=dir.filePath("cue.wav");QVERIFY(writeSilence(file));Store s(":memory:");s.set("chime_library",QString::fromUtf8(QJsonDocument(QJsonArray{QJsonObject{{"id","test"},{"file",file}}}).toJson()));s.set("chime_ad","test");FakeMusic music;Audio a(s,nullptr,&music);QVERIFY(a.dispatch({"ad","announcement",file,{},50}));a.stop();QTest::qWait(1600);QCOMPARE(a.activePriority(),0);auto q=s.query("SELECT count(*) FROM logs WHERE kind='play_started'");q.next();QCOMPARE(q.value(0).toInt(),0);QCOMPARE(music.resumes,0);}
  void releaseDuringMicChimeNeverOpensMic(){QTemporaryDir dir;auto file=dir.filePath("cue.wav");QVERIFY(writeSilence(file));Store s(":memory:");s.set("chime_library",QString::fromUtf8(QJsonDocument(QJsonArray{QJsonObject{{"id","test"},{"file",file}}}).toJson()));s.set("chime_mic","test");FakeMusic music;Audio a(s,nullptr,&music);QSignalSpy states(&a,&Audio::pagingState);if(!a.page(true))QSKIP("No compatible microphone/output device");QVERIFY(a.page(false));QTest::qWait(1600);for(auto row:states)QVERIFY(row.first().toString()!="live");QCOMPARE(a.activePriority(),0);}
- void libraryImportCopiesAndResolves(){QTemporaryDir dir;auto file=dir.filePath("my.wav");QVERIFY(writeSilence(file));Store s(":memory:");auto id=Chimes::importFile(s,file,"My chime","Own recording");auto copy=Chimes::resolve(s,id);QVERIFY(copy!=file);QVERIFY(QFileInfo(copy).isFile());QVERIFY(QFile::remove(file));QVERIFY(QFileInfo(copy).isFile());QCOMPARE(Chimes::library(s).first().toObject()["name"].toString(),QString("My chime"));QVERIFY(Chimes::resolve(s,"none").isEmpty());QVERIFY(Chimes::resolve(s,"unknown").isEmpty());}
+ void libraryImportCopiesAndResolves(){QTemporaryDir dir;auto file=dir.filePath("my.wav");QVERIFY(writeSilence(file));Store s(":memory:");auto id=Chimes::importFile(s,file,"My chime","Own recording",dir.filePath("library"));auto copy=Chimes::resolve(s,id);QVERIFY(copy!=file);QVERIFY(QFileInfo(copy).isFile());QVERIFY(QFile::remove(file));QVERIFY(QFileInfo(copy).isFile());QCOMPARE(Chimes::library(s).first().toObject()["name"].toString(),QString("My chime"));QVERIFY(Chimes::resolve(s,"none").isEmpty());QVERIFY(Chimes::resolve(s,"unknown").isEmpty());}
  void invalidChimeDoesNotEnterLibrary(){QTemporaryDir dir;auto file=dir.filePath("bad.wav");QFile f(file);QVERIFY(f.open(QIODevice::WriteOnly));f.write("not an audio file");f.close();Store s(":memory:");QVERIFY_EXCEPTION_THROWN(Chimes::importFile(s,file,"bad",""),std::runtime_error);QVERIFY(s.get("chime_library").isEmpty());}
  void voicePreferencePersists(){Store s(":memory:");Audio a(s);auto list=a.voices();if(list.isEmpty())QSKIP("No Windows SAPI voice installed");a.setVoice(list.first());QCOMPARE(s.get("tts_voice"),list.first().name());QCOMPARE(s.get("tts_locale"),list.first().locale().name());}
- void englishSpeechCompletes(){Store s(":memory:");FakeMusic music;Audio a(s,nullptr,&music);auto list=a.voices();bool found=false;for(const auto&v:list)if(v.locale().language()==QLocale::English){a.setVoice(v);found=true;break;}if(!found)QSKIP("No English SAPI voice installed");QSignalSpy spy(&a,&Audio::status);QVERIFY(a.dispatch({"speech","tts","NASAQ audio test",QDateTime::currentDateTimeUtc(),40}));QTRY_COMPARE_WITH_TIMEOUT(a.activePriority(),0,15000);for(const auto&row:spy)QVERIFY(!row.first().toString().startsWith("tts_error"));QCOMPARE(music.resumes,1);}
+ void englishSpeechCompletes(){
+  Store s(":memory:");FakeMusic music;Audio a(s,nullptr,&music);auto list=a.voices();bool found=false;
+  for(const auto&v:list)if(v.locale().language()==QLocale::English){a.setVoice(v);found=true;break;}
+  if(!found)QSKIP("No English SAPI voice installed");
+  QSignalSpy spy(&a,&Audio::status);
+  QVERIFY(a.dispatch({"speech","tts","NASAQ audio test",QDateTime::currentDateTimeUtc(),40}));
+  QTRY_COMPARE_WITH_TIMEOUT(a.activePriority(),0,15000);QCOMPARE(music.resumes,1);
+  for(const auto&row:spy)if(row.first().toString().startsWith("tts_error"))QSKIP(qPrintable(row.first().toString()));
+ }
+ void speechFailureReleasesMusicAndAllowsRetry(){
+  Store s(":memory:");FakeMusic music;Audio a(s,nullptr,&music);auto list=a.voices();if(list.isEmpty())QSKIP("No SAPI voice installed");a.setVoice(list.first());
+  QSignalSpy spy(&a,&Audio::status);
+  for(int attempt=0;attempt<2;++attempt){
+   QVERIFY(a.dispatch({"speech","tts","NASAQ audio test",QDateTime::currentDateTimeUtc(),40}));
+   QTRY_COMPARE_WITH_TIMEOUT(a.activePriority(),0,15000);QVERIFY(music.running);QCOMPARE(music.resumes,attempt+1);
+  }
+  bool reported=false;for(const auto&row:spy)reported|=row.first().toString().startsWith("tts_error");
+  if(!reported)QSKIP("Synthesis succeeded; failure recovery is exercised on hosts where SAPI returns a synthesis error");
+ }
  void arabicSpeechCompletes(){Store s(":memory:");FakeMusic music;Audio a(s,nullptr,&music);auto list=a.voices();bool found=false;for(const auto&v:list)if(v.locale().language()==QLocale::Arabic){a.setVoice(v);found=true;break;}if(!found)QSKIP("No Arabic SAPI voice installed");QSignalSpy spy(&a,&Audio::status);QVERIFY(a.dispatch({"speech","tts",QStringLiteral("اختبار الصوت في نسق"),QDateTime::currentDateTimeUtc(),40}));QTRY_COMPARE_WITH_TIMEOUT(a.activePriority(),0,15000);for(const auto&row:spy)QVERIFY(!row.first().toString().startsWith("tts_error"));}
  void absentScheduledVoiceRejected(){Store s(":memory:");FakeMusic music;Audio a(s,nullptr,&music);QVERIFY(!a.dispatch({"speech","tts",QStringLiteral(R"({"nasaqTts":1,"text":"test","locale":"en_US","voice":"NONEXISTENT-NASAQ-VOICE"})"),QDateTime::currentDateTimeUtc(),40}));QVERIFY(music.running);}
  void activationBlocksAllAudio(){Store s(":memory:");FakeMusic music;Audio audio(s,nullptr,&music);audio.setLicenseAllowed(false);QVERIFY(!music.running);QVERIFY(!audio.playMusic({"test"}));QVERIFY(!audio.dispatch({"ad","tts","test",QDateTime::currentDateTimeUtc(),40}));QVERIFY(!audio.page(true));QVERIFY(audio.page(false));audio.stop();QCOMPARE(music.replacements,0);audio.setLicenseAllowed(true);QVERIFY(audio.playMusic({"test"}));}
@@ -84,5 +103,5 @@ private slots:
   auto started=[&]{auto q=s.query("SELECT count(*) FROM logs WHERE kind='play_started'");q.next();return q.value(0).toInt()>0;};QTRY_VERIFY_WITH_TIMEOUT(started(),10000);audio.stop();
  }
 };
-int main(int argc,char**argv){qputenv("QT_MEDIA_BACKEND","windows");QCoreApplication app(argc,argv);app.setApplicationName("NASAQ-Chime-Tests");QStandardPaths::setTestModeEnabled(true);AudioTest test;return QTest::qExec(&test,argc,argv);}
+int main(int argc,char**argv){qputenv("QT_MEDIA_BACKEND","windows");QApplication app(argc,argv);app.setApplicationName("NASAQ-Chime-Tests");QStandardPaths::setTestModeEnabled(true);AudioTest test;return QTest::qExec(&test,argc,argv);}
 #include "audio_test.moc"

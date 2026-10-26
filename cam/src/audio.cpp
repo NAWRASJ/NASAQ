@@ -37,6 +37,14 @@ bool Audio::dispatch(const Event&e){
  if(priority>=requested)return false;
  QString speechText=e.payload;
  if(e.kind=="tts"){
+  if(speech.errorReason()!=QTextToSpeech::ErrorReason::NoError){
+   // Recreate the provider before retrying, so a stale error cannot be
+   // mistaken for a failure of a later successful request. Restore the voice.
+   const auto locale=speech.locale();const auto voice=speech.voice();
+   speech.setEngine(QString());
+   if(speech.engine()!=QStringLiteral("sapi"))speech.setEngine(QStringLiteral("sapi"));
+   speech.setLocale(locale);speech.setVoice(voice);
+  }
   const auto obj=QJsonDocument::fromJson(e.payload.toUtf8()).object();
   if(obj.contains("nasaqTts")){
    speechText=obj["text"].toString();speech.setLocale(QLocale(obj["locale"].toString()));bool found=false;
@@ -52,7 +60,15 @@ bool Audio::dispatch(const Event&e){
  resume=resume||music->playing();music->suspend(true);
  cue.cancel();transition=true;finishSequence("interrupted");overlay.stop();speech.stop();transition=false;priority=requested;
  if(e.kind=="sequence"){auto obj=QJsonDocument::fromJson(e.payload.toUtf8()).object();sequenceId=e.id;sequenceIndex=0;sequenceGap=obj["gap"].toInt();for(auto f:obj["files"].toArray())sequenceFiles<<f.toString();for(auto l:obj["languages"].toArray())sequenceLanguages<<l.toString();beforeChime(obj["chime"].toString("default"),[this]{nextSequence();});}
- else if(e.kind=="tts")beforeChime("default",[this,speechText]{speech.say(speechText);});else{auto play=[this,path=e.payload]{overlay.setSource(QUrl::fromLocalFile(path));overlay.play();};if(e.kind=="adhan"||e.id=="studio-preview")play();else beforeChime("default",play);}
+ else if(e.kind=="tts")beforeChime("default",[this,speechText]{
+  speech.say(speechText);
+  // SAPI can report a synchronous synthesis failure via errorReason() while
+  // remaining Ready and emitting neither stateChanged nor errorOccurred.
+  // Do not leave the announcement priority holding music indefinitely.
+  if(priority==40 && speech.errorReason()!=QTextToSpeech::ErrorReason::NoError){
+   log("tts_error",speech.errorString());release();
+  }
+ });else{auto play=[this,path=e.payload]{overlay.setSource(QUrl::fromLocalFile(path));overlay.play();};if(e.kind=="adhan"||e.id=="studio-preview")play();else beforeChime("default",play);}
  return true;
 }
 void Audio::beforeChime(const QString &selection,std::function<void()> done){

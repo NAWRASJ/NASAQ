@@ -12,7 +12,7 @@ class Chimes {
  public:
  static QJsonArray library(Store &s);
  static QString resolve(Store &s,const QString &id);
- static QString importFile(Store &s,const QString &file,const QString &name,const QString &source);
+ static QString importFile(Store &s,const QString &file,const QString &name,const QString &source,const QString &libraryDirectory = {});
  static int gap(Store &s);
 };
 void showChimes(QWidget *parent,Store &s);

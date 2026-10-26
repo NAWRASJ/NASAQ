@@ -23,13 +23,27 @@ inline void PaintNasaqTurntable(QPainter &p,const QRectF &area,double angle,doub
  f.setPixelSize(27);f.setLetterSpacing(QFont::AbsoluteSpacing,0);p.setFont(f);p.drawText(QRectF(-100,70,200,38),Qt::AlignCenter,QString::fromUtf8("نسق"));p.restore();
  // Stationary machined spindle above the revolving label.
  QRadialGradient spindle(center-QPointF(4,5),15);spindle.setColorAt(0,QColor("#fffbed"));spindle.setColorAt(.5,QColor("#bfb6a4"));spindle.setColorAt(1,QColor("#655f51"));p.setBrush(spindle);p.setPen(Qt::NoPen);p.drawEllipse(center,13,13);
- // The deck mount remains fixed. Only the bearing, counterweight and arm rotate.
- const QPointF pivot(1056,247),assetPivot(1095,270);
- p.save();p.translate(pivot);p.scale(.60,.60);p.translate(-assetPivot);
- QPainterPath mount;mount.addEllipse(QRectF(965,180,270,240));mount.addRect(QRectF(1200,290,100,180));p.setClipPath(mount);p.drawImage(QPointF(0,0),arm);p.restore();
+ // The base image already contains the fixed mounting plate. Drawing the
+ // arm asset's second plate here duplicates its rim and screws. Rotate only
+ // the counterweight, bearing and tube around the same center as that plate.
+ const QPointF pivot(1056,247),assetPivot(1095,250);
  p.save();p.translate(pivot);p.rotate(armAngle);p.scale(.60,.60);p.translate(-assetPivot);
- QPainterPath moving;moving.addRect(QRectF(1030,0,140,260));moving.addEllipse(QRectF(1025,200,140,140));
- QPolygonF tube;tube<<QPointF(1050,260)<<QPointF(1130,280)<<QPointF(1035,500)<<QPointF(810,770)<<QPointF(550,940)<<QPointF(500,1060)<<QPointF(275,1060)<<QPointF(275,830)<<QPointF(780,570)<<QPointF(1000,350);moving.addPolygon(tube);moving.setFillRule(Qt::WindingFill);
- p.setClipPath(moving);p.drawImage(QPointF(0,0),arm);p.restore();
+ QPainterPath moving;
+ // Draw a clean bearing cap rather than clipping the asset's plate into it.
+ QConicalGradient metal(assetPivot,35);
+ metal.setColorAt(0,QColor("#eee9da"));metal.setColorAt(.18,QColor("#8e887a"));
+ metal.setColorAt(.42,QColor("#faf7eb"));metal.setColorAt(.66,QColor("#9d9687"));metal.setColorAt(1,QColor("#eee9da"));
+ p.setPen(QPen(QColor("#625e53"),2));p.setBrush(QColor("#817c70"));p.drawEllipse(QRectF(1028,190,136,144));
+ p.setBrush(metal);p.setPen(QPen(QColor("#d3cebf"),2));p.drawEllipse(QRectF(1030,186,132,132));
+ moving.addRect(QRectF(1030,0,140,177));
+ moving.addRect(QRectF(1075,165,45,30));
+ QPainterPath tube;
+ tube.moveTo(1080,256);tube.lineTo(1118,270);
+ tube.cubicTo(1075,455,920,705,555,860);
+ tube.lineTo(520,935);tube.lineTo(500,1060);tube.lineTo(275,1060);tube.lineTo(275,830);
+ tube.lineTo(500,790);tube.lineTo(535,805);
+ tube.cubicTo(855,645,1010,455,1080,256);tube.closeSubpath();
+ moving.addPath(tube);moving.setFillRule(Qt::WindingFill);
+ p.setClipPath(moving,Qt::IntersectClip);p.drawImage(QPointF(0,0),arm);p.restore();
  p.restore();
 }

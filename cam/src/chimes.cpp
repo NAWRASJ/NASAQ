@@ -20,10 +20,10 @@ QJsonArray Chimes::library(Store &s){
 }
 QString Chimes::resolve(Store &s,const QString &id){if(id.isEmpty()||id=="none")return {};for(auto v:library(s)){auto o=v.toObject();if(o["id"]==id)return o["file"].toString();}return {};}
 int Chimes::gap(Store &s){return s.get("chime_gap").isEmpty()?300:qBound(0,s.get("chime_gap").toInt(),2000);}
-QString Chimes::importFile(Store &s,const QString &file,const QString &name,const QString &source){
+QString Chimes::importFile(Store &s,const QString &file,const QString &name,const QString &source,const QString &libraryDirectory){
  if(QFileInfo(file).size()>20*1024*1024)throw std::runtime_error("Chime too large");
  auto duration=Studio::duration(file);if(duration>10000)throw std::runtime_error("Chime exceeds 10 seconds");
- Studio importer(s,root());auto copy=importer.importAudio(file);auto id=QUuid::createUuid().toString(QUuid::WithoutBraces);
+ Studio importer(s,libraryDirectory.isEmpty()?root():libraryDirectory);auto copy=importer.importAudio(file);auto id=QUuid::createUuid().toString(QUuid::WithoutBraces);
  auto items=QJsonDocument::fromJson(s.get("chime_library").toUtf8()).array();items.append(QJsonObject{{"id",id},{"file",copy},{"name",name.isEmpty()?QFileInfo(file).completeBaseName():name},{"source",source},{"duration",double(duration)}});
  s.set("chime_library",QString::fromUtf8(QJsonDocument(items).toJson(QJsonDocument::Compact)));return id;
 }

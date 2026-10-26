@@ -952,7 +952,13 @@ bool GstEnginePipeline::InitAudioBin(QString &error) {
   // We set this on this queue instead of the playbin because setting it on the playbin only affects network sources.
   // Disable the default buffer and byte limits, so we only buffer based on time.
 
-  g_object_set(G_OBJECT(audioqueue_), "use-buffering", true, nullptr);
+  // Local video shares a demuxer with audio. Pausing the whole pipeline to
+  // refill this audio-only queue also stalls the synchronized video branch,
+  // which can prevent the audio queue from ever reaching its high watermark.
+  // Keep the queue and A/V clock synchronization, but do not pause local video
+  // for audio prebuffering. Network/audio-only playback retains its buffering.
+  const bool local_video = IsVideoUrl(media_url_) || IsVideoUrl(stream_url_);
+  g_object_set(G_OBJECT(audioqueue_), "use-buffering", !local_video, nullptr);
 
   if (buffer_duration_nanosec_ > 0) {
     qLog(Debug) << "Setting buffer duration:" << buffer_duration_nanosec_ << "low watermark:" << buffer_low_watermark_ << "high watermark:" << buffer_high_watermark_;
