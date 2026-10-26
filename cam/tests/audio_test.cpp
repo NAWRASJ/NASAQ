@@ -15,6 +15,11 @@ class FakeMusic:public MusicTransport {
 class AudioTest:public QObject {
  Q_OBJECT
 private slots:
+ void earlyPauseDoesNotPlayAdhanUntilTimetable(){
+  QTemporaryDir dir;auto file=dir.filePath("adhan.wav");QVERIFY(writeSilence(file));Store s(":memory:");FakeMusic music;Audio audio(s,nullptr,&music);Scheduler scheduler(s);auto now=QDateTime::currentDateTimeUtc();auto at=now.addSecs(120);s.set("prayer_lead_minutes","2");s.add({"fajr","adhan",file,at,60});
+  scheduler.tick(now,[&](const Event&e){return audio.dispatch(e);});QVERIFY(music.held);QTest::qWait(100);auto q=s.query("SELECT count(*) FROM logs WHERE kind='play_started'");QVERIFY(q.next());QCOMPARE(q.value(0).toInt(),0);
+  scheduler.tick(at,[&](const Event&e){return audio.dispatch(e);});q=s.query("SELECT status FROM events WHERE id='fajr'");QVERIFY(q.next());QCOMPARE(q.value(0).toString(),QString("dispatched"));QVERIFY(music.held);audio.stop();
+ }
  void openingAudioDuringPrayerDoesNotPlay(){
   QTemporaryDir dir;auto file=dir.filePath(QStringLiteral("أغنية جديدة.wav"));QVERIFY(writeSilence(file));Store s(":memory:");QtMusicTransport music;Audio audio(s,nullptr,&music);QSignalSpy events(&music,&MusicTransport::event);
   const auto now=QDateTime::currentDateTimeUtc();QVERIFY(audio.dispatch({"pause","prayer","",now,60}));QVERIFY(music.replace({file}));music.resume();QTest::qWait(400);QVERIFY(!music.playing());QVERIFY(audio.prayerActive());

@@ -38,6 +38,7 @@
 #include <QMap>
 #include <QString>
 #include <QUrl>
+#include <QElapsedTimer>
 
 #include "includes/shared_ptr.h"
 #include "enginebase.h"
@@ -51,6 +52,8 @@ class TaskManager;
 
 class GstEngine : public EngineBase, public GstBufferConsumer {
   Q_OBJECT
+  friend class VideoTest;
+  friend class RadioRecoveryTest;
 
  public:
   explicit GstEngine(SharedPtr<TaskManager> task_manager, QObject *parent = nullptr);
@@ -60,6 +63,8 @@ class GstEngine : public EngineBase, public GstBufferConsumer {
   static const char *kALSASink;
   static const char *kASIOSink;
 
+  QImage TakeVideoFrame();
+  int VideoGeneration() const;
   bool Init() override;
   State state() const override;
   void StartPreloading(const QUrl &media_url, const QUrl &stream_url, const bool force_stop_at_end, const qint64 beginning_offset_nanosec, const qint64 end_offset_nanosec) override;
@@ -78,6 +83,8 @@ class GstEngine : public EngineBase, public GstBufferConsumer {
   qint64 position_nanosec() const override;
   qint64 length_nanosec() const override;
   const EngineBase::Scope &scope(const int chunk_length) override;
+  // Independent read-only snapshot: additional displays must not consume the main analyzer's scope cursor.
+  Scope display_scope() const { return display_scope_clock_.isValid() && display_scope_clock_.elapsed()<300 ? display_scope_ : Scope(); }
 
   OutputDetailsList GetOutputsList() const override;
   bool ValidOutput(const QString &output) override;
@@ -169,6 +176,10 @@ class GstEngine : public EngineBase, public GstBufferConsumer {
   QList<GstBufferConsumer*> buffer_consumers_;
 
   GstBuffer *latest_buffer_;
+  Scope display_scope_;
+  QElapsedTimer display_scope_clock_;
+  QElapsedTimer buffering_flow_clock_;
+  qint64 buffering_flow_position_ = 0;
 
   bool stereo_balancer_enabled_;
   float stereo_balance_;

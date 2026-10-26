@@ -19,6 +19,9 @@ QLineEdit, QComboBox, QSpinBox, QDateTimeEdit, QPlainTextEdit, QTextEdit { backg
 QAbstractItemView { background: #fffefa; alternate-background-color: #f3f4ed; border: 1px solid #e0e3d8; border-radius: 7px; selection-background-color: #dce5cd; selection-color: #153e34; outline: none; }
 QAbstractItemView::item { padding: 5px; min-height: 24px; }
 QAbstractItemView::item:hover { background: #edf0e5; }
+/* Playing rows paint their own background; hover must not wash out their text. */
+PlaylistView::item:hover { background: transparent; }
+PlaylistView::item:selected { background: #dce5cd; color: #495536; }
 QHeaderView::section { background: #e9eddf; color: #52675a; border: none; border-bottom: 1px solid #d8ddcf; padding: 10px; font-weight: 600; }
 QTableCornerButton::section { background: #e9eddf; border: none; }
 QGroupBox { background: #fffefa; border: 1px solid #e0e3d8; border-radius: 10px; margin-top: 16px; padding: 14px; }

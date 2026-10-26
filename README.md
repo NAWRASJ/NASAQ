@@ -16,7 +16,7 @@ NASAQ is available on Microsoft Store, published by **Nawras Jarbouh**. The Stor
 
 ## Source version
 
-This source release is **NASAQ 0.3.17** (**0.3.17.0 x64 MSIX**). It introduces the ivory theme and updated identity, comprehensive Arabic settings and dialogs, 27 curated radio stations, a branded vinyl fallback and modern spectrum, and clearer live-radio and adhan indicators. File deduplication, prayer interruption protection, silent notifications and existing activation/settings are preserved. See the [0.3.17 release notes](docs/RELEASE-0.3.17.md). Microsoft Store certification and availability are separate from this source release. The package identity is `NawrasJarbouh.NASAQ`; the Store product ID is `9PH1T4418KTF`.
+This source release is **NASAQ 0.3.18** (**0.3.18.0 x64 MSIX**). It adds local video playback, a floating media display with transport controls, optional external audience output, detailed vinyl and album artwork, configurable early prayer pauses, a bilingual prayer card, and quiet radio recovery. See the [0.3.18 release notes](docs/RELEASE-0.3.18.md) for validation and limitations. Microsoft Store certification and availability are separate from this source release. The package identity is `NawrasJarbouh.NASAQ`; the Store product ID is `9PH1T4418KTF`.
 
 See [Store source provenance](docs/STORE-RELEASE.md) for the archived package hashes, source reconstruction, and verification limits. The 0.3.10 baseline excludes the later license-deactivation button; 0.3.11 includes it. GitHub source updates do not automatically update Microsoft Store; Store updates require a separate package submission.
 

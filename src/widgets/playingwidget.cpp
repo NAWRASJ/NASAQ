@@ -20,6 +20,7 @@
  */
 
 #include <memory>
+#include "utilities/nasaqmedia.h"
 
 #include <QtGlobal>
 #include <QWidget>
@@ -454,7 +455,8 @@ void PlayingWidget::UpdateDetailsText() {
       break;
   }
 
-  html += QStringLiteral("%1<br/>%2<br/>%3").arg(song_.PrettyTitle().toHtmlEscaped(), song_.artist().toHtmlEscaped(), song_.album().toHtmlEscaped());
+  if (NasaqLocalVideo(song_.url())) html += song_.PrettyTitle().toHtmlEscaped();
+  else html += QStringLiteral("%1<br/>%2<br/>%3").arg(song_.PrettyTitle().toHtmlEscaped(), song_.artist().toHtmlEscaped(), song_.album().toHtmlEscaped());
   html += "</p>"_L1;
 
   details_->setHtml(html);

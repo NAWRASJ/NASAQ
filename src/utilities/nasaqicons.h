@@ -23,6 +23,8 @@ class NasaqLineIconEngine final : public QIconEngine {
     else if(n=="media-playback-pause"){p->setBrush(color);p->setPen(Qt::NoPen);p->drawRoundedRect(QRectF(6,5,4,14),1,1);p->drawRoundedRect(QRectF(14,5,4,14),1,1);}
     else if(n=="media-playback-stop")p->drawRoundedRect(QRectF(5,5,14,14),2,2);
     else if(n=="media-skip-forward"||n=="media-skip-backward") {if(n=="media-skip-backward"){p->translate(24,0);p->scale(-1,1);}poly({{5,5},{16,12},{5,19},{5,5}});line(19,5,19,19);}
+    else if(n=="nasaq-open-media"){p->drawRoundedRect(QRectF(3,4,18,16),3,3);poly({{10,8},{16,12},{10,16},{10,8}});}
+    else if(n=="nasaq-display"){p->drawRoundedRect(QRectF(2,3,20,14),2,2);line(12,17,12,21);line(7,21,17,21);}
     else if(n=="document-open"||n=="folder"||n=="document-open-folder")poly({{3,19},{3,5},{9,5},{11,8},{21,8},{19,19},{3,19}});
     else if(n=="document-new"){poly({{6,21},{6,3},{15,3},{19,7},{19,21},{6,21}});line(15,3,15,7);line(15,7,19,7);line(9,13,16,13);line(12.5,9.5,12.5,16.5);}
     else if(n=="document-save"){poly({{4,20},{4,4},{17,4},{20,7},{20,20},{4,20}});p->drawRect(QRectF(8,4,8,6));p->drawRoundedRect(QRectF(8,14,8,6),1,1);}
@@ -49,5 +51,5 @@ class NasaqLineIconEngine final : public QIconEngine {
 };
 inline QIcon NasaqLineIcon(const QString &name) {
   static const QSet<QByteArray> names={"media-playback-start","media-playback-pause","media-playback-stop","media-skip-forward","media-skip-backward","document-open","folder","document-open-folder","document-new","document-save","library-music","view-media-playlist","footsteps","nasaq-smart-playlist","radio","device","edit-find","document-search","view-refresh","edit-undo","edit-redo","list-add","list-remove","edit-clear","window-close","application-exit","edit-clear-list","go-home","go-next","go-previous","go-up","go-down","applications-internet","document-open-remote","love","configure","star","star-grey"};
-  const auto key=name.toLatin1();return names.contains(key)?QIcon(new NasaqLineIconEngine(key)):QIcon();
+  const auto key=name.toLatin1();return (names.contains(key)||key=="nasaq-open-media"||key=="nasaq-display")?QIcon(new NasaqLineIconEngine(key)):QIcon();
 }

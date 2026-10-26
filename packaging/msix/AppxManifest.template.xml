@@ -54,6 +54,19 @@
             </uap:SupportedFileTypes>
           </uap3:FileTypeAssociation>
         </uap:Extension>
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap3:FileTypeAssociation Name="nasaq.video" Parameters="--open-files &quot;%1&quot;">
+            <uap:DisplayName>NASAQ Video</uap:DisplayName>
+            <uap:SupportedFileTypes>
+              <uap:FileType>.mp4</uap:FileType>
+              <uap:FileType>.m4v</uap:FileType>
+              <uap:FileType>.mov</uap:FileType>
+              <uap:FileType>.mkv</uap:FileType>
+              <uap:FileType>.webm</uap:FileType>
+              <uap:FileType>.avi</uap:FileType>
+            </uap:SupportedFileTypes>
+          </uap3:FileTypeAssociation>
+        </uap:Extension>
         <!-- Optional auto-start at sign-in. Disabled by default; the user can enable it in
              Settings > Apps > Startup (replaces the HKCU\...\Run key, which MSIX ignores). -->
         <desktop:Extension Category="windows.startupTask" Executable="NASAQ.exe" EntryPoint="Windows.FullTrustApplication">

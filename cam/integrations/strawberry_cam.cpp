@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "strawberry_cam.h"
+#include "audience.h"
+#include "covermanager/currentalbumcoverloader.h"
+#include "engine/gstengine.h"
+#include <QMediaDevices>
+#include <QStatusBar>
 #include "musictransport.h"
 #include "window.h"
 #include "nasaqtheme.h"
@@ -28,6 +33,7 @@
 #include "rundown.h"
 #include "queue/queue.h"
 #include <stdexcept>
+#include <cmath>
 
 // Owns music through Strawberry's Player and PlaylistManager. No second music player.
 // Qt provides only foreground announcement, SAPI and live microphone services.
@@ -121,14 +127,20 @@ class CamHost final:public QObject {
    const auto now=QDateTime::currentDateTimeUtc();
    // A timetable remains useful even when automatic music pauses are disabled.
    auto query=store->query(QStringLiteral("SELECT due FROM events WHERE kind IN ('prayer','adhan') AND status='pending' AND due>=? ORDER BY due LIMIT 1"),{now.toMSecsSinceEpoch()});
-   const QDateTime next=query.next()?QDateTime::fromMSecsSinceEpoch(query.value(0).toLongLong(),QTimeZone::UTC):QDateTime();
+   const QDateTime next=enabled?PrayerService::nextPause(*store,now):(query.next()?QDateTime::fromMSecsSinceEpoch(query.value(0).toLongLong(),QTimeZone::UTC):QDateTime());
    const auto hold=QDateTime::fromString(store->get(QStringLiteral("prayer_hold_until")),Qt::ISODate);
    const QString prefix=enabled?(ar?QStringLiteral("التوقف للأذان القادم: "):QStringLiteral("Next adhan pause: ")):(ar?QStringLiteral("موعد الأذان القادم: "):QStringLiteral("Next adhan time: "));
    QString message;
    if(enabled&&hold>now)message=(ar?QStringLiteral("التوقف للأذان جارٍ حتى "):QStringLiteral("Adhan pause until "))+hold.toLocalTime().toString(QStringLiteral("HH:mm"));
    else if(next.isValid())message=prefix+next.toLocalTime().toString(QStringLiteral("ddd HH:mm t"));
    else message=prefix+(ar?QStringLiteral("لا تتوفر مواقيت — افتح أوقات الأذان"):QStringLiteral("No timetable — open Adhan times"));
+   if(enabled&&hold<=now&&next.isValid()&&next>now){
+    const qint64 seconds=now.secsTo(next);
+    const QString remaining=QStringLiteral("%1:%2:%3").arg(seconds/3600,2,10,QLatin1Char('0')).arg((seconds/60)%60,2,10,QLatin1Char('0')).arg(seconds%60,2,10,QLatin1Char('0'));
+    message+=(ar?QStringLiteral("\nمتبقي للتوقف: "):QStringLiteral("\nPause in: "))+remaining;
+   }
    prayerState->setText(message);
+   prayerState->setProperty("audienceCaption",AudienceDisplay::prayerCaption(*store,now));
    prayerState->setStyleSheet(enabled?QStringLiteral("color:#b93037;padding:8px;font-weight:600"):QStringLiteral("color:#365d49;padding:8px"));
   };connect(prayerTimer,&QTimer::timeout,this,updatePrayer);prayerTimer->start(1000);updatePrayer();
   auto panel=new QWidget(strip);auto row=new QHBoxLayout(panel);row->setContentsMargins(8,8,8,8);row->setSpacing(16);auto total=new QLabel(panel);total->setObjectName(QStringLiteral("playlistTotalDuration"));total->setStyleSheet(QStringLiteral("font-size:24px;font-weight:600;color:#153e34;padding:8px"));auto coverage=new QLabel(panel);coverage->setObjectName(QStringLiteral("coverageSummary"));coverage->setWordWrap(true);auto target=new QSpinBox(panel);target->setRange(1,1440);target->setValue(store->get(QStringLiteral("coverage_minutes")).isEmpty()?480:store->get(QStringLiteral("coverage_minutes")).toInt());bool ar=NasaqLanguage()==QStringLiteral("ar");target->setSuffix(ar?QStringLiteral(" دقيقة عمل"):QStringLiteral(" business minutes"));row->addWidget(coverage,1);row->addWidget(target);row->addWidget(total);strip->addWidget(panel);panel->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);
@@ -153,6 +165,64 @@ class CamHost final:public QObject {
   });clock->start(1000);
   music=std::make_unique<StrawberryMusic>(app,nullptr,store->get(QStringLiteral("prayer_pause_enabled"))!=QStringLiteral("0") ? QDateTime::fromString(store->get(QStringLiteral("prayer_hold_until")),Qt::ISODate) : QDateTime());
   window=std::make_unique<Window>(*store,music.get(),main);
+  audience=std::make_unique<AudienceDisplay>(*store,main);
+  connect(&*app->player(),&Player::ManualMediaRequested,audience.get(),&AudienceDisplay::manualMediaRequested);
+  connect(audience.get(),&AudienceDisplay::playPauseRequested,&*app->player(),&Player::PlayPauseHelper);
+  connect(audience.get(),&AudienceDisplay::stopRequested,this,[app]{app->player()->Stop();});
+  auto adjacentStation=[app](int direction){
+   auto list=app->playlist_manager()->active();if(!list)return -1;
+   for(int row=list->current_row()+direction;row>=0&&row<list->rowCount();row+=direction)
+    if(list->item_at(row)->EffectiveMetadata().is_radio())return row;
+   return -1;
+  };
+  auto navigate=[app,adjacentStation](int direction){
+   const auto item=app->player()->GetCurrentItem();
+   if(item&&item->EffectiveMetadata().is_radio()){
+    const int row=adjacentStation(direction);if(row>=0)app->player()->PlayAt(row,false,0,EngineBase::TrackChangeType::Manual,Playlist::AutoScroll::Always,false);
+   }else if(direction<0)app->player()->Previous();else app->player()->Next();
+  };
+  connect(audience.get(),&AudienceDisplay::previousRequested,this,[navigate]{navigate(-1);});
+  connect(audience.get(),&AudienceDisplay::volumeRequested,this,[app](int volume){app->player()->SetVolume(volume);});
+  connect(audience.get(),&AudienceDisplay::nextRequested,this,[navigate]{navigate(1);});
+  connect(audience.get(),&AudienceDisplay::seekRequested,&*app->player(),&Player::SeekTo);
+  connect(&*app->playlist_manager(),&PlaylistManager::CurrentSongChanged,audience.get(),[this](const Song &song){audience->beginTrack(song.url().toString());});
+  connect(&*app->player(),&Player::Stopped,audience.get(),[this]{audience->beginTrack({});});
+  connect(&*app->current_albumcover_loader(),&CurrentAlbumCoverLoader::AlbumCoverLoaded,audience.get(),[this,app](const Song &song,const AlbumCoverLoaderResult &result){
+   const auto item=app->player()->GetCurrentItem();if(!item||item->EffectiveMetadata().url()!=song.url())return;
+   const bool genuine=result.success&&result.type!=AlbumCoverLoaderResult::Type::None&&result.type!=AlbumCoverLoaderResult::Type::Unset&&!song.is_radio();
+   audience->setAlbumCover(song.url().toString(),result.album_cover.image,genuine);
+  });
+  connect(window.get(),&Window::interfaceLanguageChanged,audience.get(),&AudienceDisplay::updateLanguage);
+  connect(audience.get(),&AudienceDisplay::audioSettingsRequested,this,[main]{if(auto action=main->findChild<QAction*>(QStringLiteral("action_settings")))action->trigger();});
+  auto displayStop=[this,app,main]{
+   app->player()->Stop();
+   main->statusBar()->showMessage(NasaqLanguage()==QStringLiteral("ar")?QStringLiteral("توقف التشغيل بسبب تغيير شاشة الجمهور أو جهاز الصوت. تحقق من التوصيلات ثم استأنف يدوياً."):QStringLiteral("Playback stopped after a display or audio-device change. Check connections and resume manually."),15000);
+  };
+  connect(audience.get(),&AudienceDisplay::safetyStopRequested,this,displayStop);
+  auto devices=new QMediaDevices(this);connect(devices,&QMediaDevices::audioOutputsChanged,this,[this,displayStop]{if(audience->externalEnabled())displayStop();});
+  auto videoTimer=new QTimer(this);connect(videoTimer,&QTimer::timeout,this,[this,app,prayerState,adjacentStation]{
+   auto engine=qobject_cast<GstEngine*>(&*app->player()->engine());if(!engine)return;
+   const bool prayer=window->prayerActive();
+   const bool blocked=prayer||!window->licenseAllowed()||app->player()->property("camSuspended").toBool()||app->player()->GetState()==EngineBase::State::Empty||app->player()->GetState()==EngineBase::State::Idle||app->player()->GetState()==EngineBase::State::Error;
+   audience->updateFrame(blocked?QImage():engine->TakeVideoFrame(),engine->VideoGeneration(),prayer,blocked);
+   const bool playing=!blocked&&app->player()->GetState()==EngineBase::State::Playing;
+   const bool reconnecting=app->player()->property("nasaqRadioReconnecting").toBool()||engine->property("nasaqBuffering").toBool();
+   const auto item=app->player()->GetCurrentItem();QVector<float> bands;
+   if(playing&&!reconnecting){
+    const auto pcm=engine->display_scope();const int frames=qMin(512,int(pcm.size()/2));
+    if(frames>0){bands.resize(24);for(int b=0;b<24;++b){double re=0,im=0;const double bin=1+std::pow(1.24,b);
+     for(int i=0;i<frames;++i){const double sample=(double(pcm[i*2])+pcm[i*2+1])/65536.*(.5-.5*std::cos(6.283185307*i/qMax(1,frames-1)));const double a=6.283185307*bin*i/frames;re+=sample*std::cos(a);im+=sample*std::sin(a);}
+     bands[b]=float(qBound(0.,std::log1p(std::sqrt(re*re+im*im)/frames*60)/std::log(16.),1.));
+    }}
+   }
+   audience->setPlayback(playing,item&&item->EffectiveMetadata().is_radio(),reconnecting,item?item->EffectiveMetadata().PrettyTitle():QString(),prayerState->property("audienceCaption").toString(),bands);
+   audience->preview()->setVolume(app->player()->GetVolume());
+   const bool radio=item&&item->EffectiveMetadata().is_radio();
+   audience->preview()->setNavigation(!radio||adjacentStation(-1)>=0,!radio||adjacentStation(1)>=0);
+   audience->setTimeline(engine->position_nanosec()/1000000000,engine->length_nanosec()/1000000000);
+
+  });videoTimer->start(40);
+
   const auto sectionNames=Window::sectionNames();
   for(int i=0;i<sectionNames.size();++i){
    auto action=main->menuBar()->addAction(sectionNames[i]);action->setObjectName(QStringLiteral("nasaqSection%1").arg(i));
@@ -243,6 +313,7 @@ class CamHost final:public QObject {
  std::unique_ptr<Store> store;
  std::unique_ptr<StrawberryMusic> music;
  std::unique_ptr<Window> window;
+ std::unique_ptr<AudienceDisplay> audience;
  QJsonObject testResults;
 };
 void AttachCam(Application*app,QMainWindow*main){

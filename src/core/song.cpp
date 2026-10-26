@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include "utilities/nasaqmedia.h"
 
 #include <algorithm>
 
@@ -238,7 +239,7 @@ const QStringList Song::kAcceptedExtensions = QStringList() << u"wav"_s
                                                             << u"mp2"_s
                                                             << u"mp3"_s
                                                             << u"m4a"_s
-                                                            << u"mp4"_s
+                                                            << u"mp4"_s << u"m4v"_s << u"mov"_s << u"mkv"_s << u"avi"_s
                                                             << u"aac"_s
                                                             << u"asf"_s
                                                             << u"asx"_s
@@ -948,6 +949,8 @@ QString Song::JoinSpec(const QString &table) {
 
 QString Song::PrettyTitle() const {
 
+  if (NasaqLocalVideo(d->url_)) return QFileInfo(d->url_.toLocalFile()).fileName();
+
   QString title(d->title_);
 
   if (title.isEmpty()) title = d->basefilename_;
@@ -958,6 +961,8 @@ QString Song::PrettyTitle() const {
 }
 
 QString Song::PrettyTitleWithArtist() const {
+
+  if (NasaqLocalVideo(d->url_)) return PrettyTitle();
 
   QString title(PrettyTitle());
 
@@ -992,6 +997,8 @@ QString Song::PrettyOriginalYear() const {
 }
 
 QString Song::TitleWithCompilationArtist() const {
+
+  if (NasaqLocalVideo(d->url_)) return PrettyTitle();
 
   QString title(d->title_);
 

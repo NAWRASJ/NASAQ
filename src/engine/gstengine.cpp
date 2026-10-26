@@ -164,6 +164,11 @@ EngineBase::State GstEngine::state() const {
 
   if (!current_pipeline_) return stream_url_.isEmpty() ? State::Empty : State::Idle;
 
+  // Buffering temporarily pauses the pipeline, but it is not an operator pause.
+  // Toggle commands must follow the user's intent, not that transient GST state.
+  if (current_pipeline_->has_video_sink() && current_pipeline_->is_buffering())
+    return current_pipeline_->video_paused() ? State::Paused : State::Playing;
+
   switch (current_pipeline_->state()) {
     case GST_STATE_NULL:
       return State::Empty;
@@ -181,6 +186,7 @@ EngineBase::State GstEngine::state() const {
 
 void GstEngine::StartPreloading(const QUrl &media_url, const QUrl &stream_url, const bool force_stop_at_end, const qint64 beginning_offset_nanosec, const qint64 end_offset_nanosec) {
 
+  if (GstEnginePipeline::IsVideoUrl(media_url) || (current_pipeline_ && current_pipeline_->has_video_sink())) return;
   const GstUrl gst_url = FixupUrl(stream_url);
 
   // No crossfading, so we can just queue the new URL in the existing pipeline and get gapless playback (hopefully)
@@ -207,6 +213,8 @@ bool GstEngine::Load(const QUrl &media_url, const QUrl &stream_url, const Engine
 
   bool crossfade = current_pipeline_ && ((crossfade_enabled_ && change & EngineBase::TrackChangeType::Manual) || (autocrossfade_enabled_ && change & EngineBase::TrackChangeType::Auto) || ((crossfade_enabled_ || autocrossfade_enabled_) && change & EngineBase::TrackChangeType::Scan));
 
+  if (GstEnginePipeline::IsVideoUrl(media_url) || (current_pipeline_ && current_pipeline_->has_video_sink())) crossfade = false;
+
   if (change & EngineBase::TrackChangeType::Auto && change & EngineBase::TrackChangeType::SameAlbum && !crossfade_same_album_) {
     crossfade = false;
   }
@@ -230,6 +238,7 @@ bool GstEngine::Load(const QUrl &media_url, const QUrl &stream_url, const Engine
 
   GstEnginePipelinePtr old_pipeline = current_pipeline_;
   current_pipeline_ = pipeline;
+  buffering_flow_clock_.invalidate();
 
   if (old_pipeline) {
     if (crossfade && !old_pipeline->exclusive_mode() && !AnyExclusivePipelineActive() && !fadeout_pipelines_.contains(old_pipeline->id())) {
@@ -356,7 +365,15 @@ void GstEngine::Stop(const bool stop_after) {
 
 void GstEngine::Pause() {
 
-  if (!current_pipeline_ || current_pipeline_->is_buffering()) return;
+  if (!current_pipeline_) return;
+  // Video holds must also win over an in-flight seek/preroll. The normal audio
+  // pause path only acts once PLAYING, which can miss an adhan at that boundary.
+  if (current_pipeline_->has_video_sink()) {
+    delayed_state_ = State::Empty;delayed_state_pause_ = false;delayed_state_offset_nanosec_ = 0;
+    StopFadeoutPause();current_pipeline_->set_video_paused(true);current_pipeline_->SetState(GST_STATE_PAUSED);
+    Q_EMIT StateChanged(State::Paused);StopTimers();return;
+  }
+  if (current_pipeline_->is_buffering()) return;
 
   delayed_state_ = State::Empty;
   delayed_state_pause_ = false;
@@ -381,9 +398,18 @@ void GstEngine::Pause() {
 
 void GstEngine::Unpause() {
 
+  if (current_pipeline_ && current_pipeline_->has_video_sink()) {
+    current_pipeline_->set_video_paused(false);
+    current_pipeline_->SetState(GST_STATE_PLAYING);
+    Q_EMIT StateChanged(State::Playing);
+    StartTimers();
+    return;
+  }
+
   if (!current_pipeline_ || current_pipeline_->is_buffering()) return;
 
   if (current_pipeline_->state() == GST_STATE_PAUSED) {
+    current_pipeline_->set_video_paused(false);
 
     // Check if we faded out last time. If yes, fade in no matter what the settings say.
     // If we pause with fadeout, deactivate fadeout and resume playback, the player would be muted if not faded in.
@@ -719,6 +745,25 @@ void GstEngine::AddBufferToScope(GstBuffer *buf, const int pipeline_id, const QS
   }
 
   buffer_format_ = format;
+  display_scope_.clear();
+  if (format.startsWith("S16LE"_L1)) {
+    GstMapInfo display_map;
+    if (gst_buffer_map(buf, &display_map, GST_MAP_READ)) {
+      const size_t count = qMin(size_t(1024), size_t(display_map.size / sizeof(Scope::value_type)));
+      display_scope_.resize(count);
+      if (count) memcpy(display_scope_.data(), display_map.data, count * sizeof(Scope::value_type));
+      gst_buffer_unmap(buf, &display_map);
+    }
+  }
+  display_scope_clock_.start();
+  if (current_pipeline_->is_buffering() && current_pipeline_->state()==GST_STATE_PLAYING) {
+    const auto position=position_nanosec();
+    if (!buffering_flow_clock_.isValid()) { buffering_flow_clock_.start();buffering_flow_position_=position; }
+    else if (buffering_flow_clock_.elapsed()>=1000 && position-buffering_flow_position_>=800000000) {
+      current_pipeline_->ConfirmPlaybackFlow();buffering_flow_clock_.invalidate();
+    }
+  }
+  else buffering_flow_clock_.invalidate();
   latest_buffer_ = buf;
   have_new_buffer_ = true;
 
@@ -788,6 +833,7 @@ void GstEngine::PlayDone(const GstStateChangeReturn state_change_return, const b
 void GstEngine::BufferingStarted() {
 
   setProperty("nasaqBuffering", true);
+  buffering_flow_clock_.invalidate();
   if (buffering_task_id_ != -1) {
     task_manager_->SetTaskFinished(buffering_task_id_);
   }
@@ -804,6 +850,7 @@ void GstEngine::BufferingProgress(const int percent) {
 void GstEngine::BufferingFinished() {
 
   setProperty("nasaqBuffering", false);
+  buffering_flow_clock_.invalidate();
   if (buffering_task_id_ != -1) {
     task_manager_->SetTaskFinished(buffering_task_id_);
     buffering_task_id_ = -1;
@@ -1245,3 +1292,6 @@ void GstEngine::SetSpotifyAccessToken() {
 
 }
 #endif  // HAVE_SPOTIFY
+
+QImage GstEngine::TakeVideoFrame(){return current_pipeline_ ? current_pipeline_->TakeVideoFrame() : QImage();}
+int GstEngine::VideoGeneration() const {return current_pipeline_ && current_pipeline_->has_video_sink() ? current_pipeline_->id() : -1;}

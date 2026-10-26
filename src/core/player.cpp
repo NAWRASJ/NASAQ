@@ -929,6 +929,9 @@ void Player::PlayAt(const int index, const bool pause, const quint64 offset_nano
 
   Playlist *active_playlist = playlist_manager_->active();
   current_item_ = active_playlist->current_item();
+  if (!pause && !radio_retry_call_ && !(change & EngineBase::TrackChangeType::Auto)) {
+    Q_EMIT ManualMediaRequested(current_item_->OriginalUrl());
+  }
   radio_wanted_ = !pause && current_item_->EffectiveMetadata().is_radio();
 
   // play_offset_nanosec_ was already set to offset_nanosec above, and is only raised here if it's too low for the scan requirements.

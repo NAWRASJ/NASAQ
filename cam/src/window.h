@@ -21,6 +21,7 @@ class Window:public QMainWindow {
  void activateLicense(const QString&key){activation.activate(key);}
  bool licenseAllowed()const{return activation.allowed();}
  bool operatorLocked()const{return locked;}
+ bool prayerActive()const{return audio.prayerActive();}
  Q_SIGNALS: void operatorLockChanged(bool locked);
  void licenseAllowedChanged(bool allowed);
  void interfaceLanguageChanged();

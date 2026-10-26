@@ -9,6 +9,7 @@
 #include "core/urlhandlers.h"
 #include "core/settings.h"
 #include "engine/gstengine.h"
+#include "engine/gstenginepipeline.h"
 #include "playlist/playlistmanager.h"
 #include "playlist/songplaylistitem.h"
 using std::make_shared;
@@ -126,6 +127,15 @@ class RadioRecoveryTest : public QObject {
    QTRY_VERIFY_WITH_TIMEOUT(player->property("nasaqRadioReconnecting").toBool(),15000);
    offline=false;
    QTRY_VERIFY_WITH_TIMEOUT(player->engine()->position_nanosec()>1000000000,15000);
+   auto gst=qobject_cast<GstEngine*>(&*player->engine());QVERIFY(gst);auto pipeline=gst->current_pipeline_;
+   QTRY_COMPARE_WITH_TIMEOUT(pipeline->state(),GST_STATE_PLAYING,10000);
+   // Reproduce a stale sub-100% queue flag after playback has resumed.
+   pipeline->buffering_=true;gst->BufferingStarted();QVERIFY(gst->property("nasaqBuffering").toBool());
+   QTRY_VERIFY_WITH_TIMEOUT(!gst->property("nasaqBuffering").toBool(),7000);QVERIFY(!pipeline->is_buffering());
+   // A real paused pipeline must never be declared recovered just by a flag.
+   pipeline->SetState(GST_STATE_PAUSED);QTRY_COMPARE(pipeline->state(),GST_STATE_PAUSED);
+   pipeline->buffering_=true;gst->BufferingStarted();pipeline->ConfirmPlaybackFlow();QVERIFY(pipeline->is_buffering());
+   pipeline->buffering_=false;gst->BufferingFinished();pipeline->SetState(GST_STATE_PLAYING);QTRY_COMPARE(pipeline->state(),GST_STATE_PLAYING);
    QCOMPARE(errors.count(),0);const int row=manager->list.current_row();
    offline=true;for(const auto &socket:sockets)if(socket)socket->abort();
    QTRY_VERIFY_WITH_TIMEOUT(player->radio_retry_timer_->isActive(),15000);

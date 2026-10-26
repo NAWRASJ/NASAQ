@@ -118,7 +118,7 @@
 {QStringLiteral("Moodbar"), {QStringLiteral("Moodbar"), QStringLiteral("شريط الألوان الصوتية")}},
 {QStringLiteral("Never"), {QStringLiteral("Never"), QStringLiteral("أبدًا")}},
 {QStringLiteral("No matches found.  Clear the search box to show the whole playlist again."), {QStringLiteral("No matches found.  Clear the search box to show the whole playlist again."), QStringLiteral("لا توجد نتائج مطابقة. امسح البحث لعرض قائمة التشغيل كاملة.")}},
-{QStringLiteral("Open audio files"), {QStringLiteral("Open audio files"), QStringLiteral("فتح ملفات صوتية")}},
+{QStringLiteral("Open audio files"), {QStringLiteral("Open audio or video files"), QStringLiteral("فتح ملفات صوت أو فيديو")}},
 {QStringLiteral("Original Year"), {QStringLiteral("Original Year"), QStringLiteral("سنة الإصدار الأصلية")}},
 {QStringLiteral("Performer Sort"), {QStringLiteral("Performer Sort"), QStringLiteral("ترتيب المؤدّي")}},
 {QStringLiteral("Play Count"), {QStringLiteral("Play Count"), QStringLiteral("عدد مرات التشغيل")}},

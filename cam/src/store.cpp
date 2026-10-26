@@ -19,11 +19,15 @@ void Store::exec(const QString&s,const QVariantList&a){query(s,a);}
 void Store::log(const QString&k,const QString&d){exec("INSERT INTO logs(utc,kind,detail) VALUES(?,?,?)",{QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs),k,d});}
 void Store::add(const Event&e){if(!e.due.isValid()||e.id.isEmpty())throw std::runtime_error("Invalid event");exec("INSERT INTO events(id,kind,payload,due,priority) VALUES(?,?,?,?,?)",{e.id,e.kind,e.payload.isNull()?QStringLiteral(""):e.payload,e.due.toMSecsSinceEpoch(),e.priority});}
 QList<Event> Store::due(const QDateTime&now){
+ // Keep the original timetable intact. A separately claimed silent hold starts
+ // early, while any adhan audio remains scheduled at its original time.
+ const int lead=get("prayer_pause_enabled")=="0"?0:qBound(0,get("prayer_lead_minutes").toInt(),5);
+ if(lead>0)exec("INSERT OR IGNORE INTO events(id,kind,payload,due,priority) SELECT 'prayer-early:'||id,'prayer','',due,60 FROM events WHERE kind IN ('prayer','adhan') AND id NOT LIKE 'prayer-early:%' AND status='pending' AND due>? AND due<=?",{now.toMSecsSinceEpoch(),now.addSecs(lead*60).toMSecsSinceEpoch()});
  // After sleep/restart, retain prayer events while their pause window is still
  // active. Announcements remain at-most-once and are not replayed late.
  int minutes=get("prayer_pause_minutes").isEmpty()?10:qBound(1,get("prayer_pause_minutes").toInt(),60);
  exec("UPDATE events SET status='missed' WHERE status='pending' AND ((kind NOT IN ('prayer','adhan') AND due < ?) OR (kind IN ('prayer','adhan') AND due <= ?))",{now.addSecs(-60).toMSecsSinceEpoch(),now.addSecs(-minutes*60).toMSecsSinceEpoch()});
- auto q=query("SELECT id,kind,payload,due,priority FROM events WHERE status='pending' AND due<=? ORDER BY priority DESC,due,id",{now.toMSecsSinceEpoch()}); QList<Event> out;
+ auto q=query("SELECT id,kind,payload,due,priority FROM events WHERE status='pending' AND (due<=? OR (id LIKE 'prayer-early:%' AND due<=?)) ORDER BY priority DESC,due,id",{now.toMSecsSinceEpoch(),now.addSecs(lead*60).toMSecsSinceEpoch()}); QList<Event> out;
  while(q.next()){
   auto time=QDateTime::fromMSecsSinceEpoch(q.value(3).toLongLong(),QTimeZone::UTC);auto kind=q.value(1).toString();
   if(kind=="adhan"&&time.secsTo(now)>60)kind="prayer"; // silent catch-up, never a late adhan
@@ -32,7 +36,7 @@ QList<Event> Store::due(const QDateTime&now){
 }
 bool Store::claim(const QString&id){auto q=query("UPDATE events SET status='claimed' WHERE id=? AND status='pending'",{id});return q.numRowsAffected()==1;}
 void Store::finish(const QString&id,const QString&s){exec("UPDATE events SET status=? WHERE id=?",{s,id});}
-void Store::set(const QString&k,const QString&v){exec("INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",{k,v});}
+void Store::set(const QString&k,const QString&v){exec("INSERT INTO settings VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",{k,v.isNull()?QStringLiteral(""):v});}
 QString Store::get(const QString&k){auto q=query("SELECT value FROM settings WHERE key=?",{k});return q.next()?q.value(0).toString():QString();}
 QString Store::csvCell(QString v){if(!v.isEmpty() && QString("=+-@\t\r\n").contains(v.at(0)))v.prepend('\'');v.replace('"',"\"\"");return '"'+v+'"';}
 void Store::exportCsv(const QString&path){QSaveFile f(path);if(!f.open(QIODevice::WriteOnly))throw std::runtime_error("Cannot write CSV");f.write("\xEF\xBB\xBFutc,kind,detail\r\n");auto q=query("SELECT utc,kind,detail FROM logs ORDER BY id");while(q.next()){QStringList row;for(int i=0;i<3;i++)row<<csvCell(q.value(i).toString());f.write((row.join(',')+"\r\n").toUtf8());}if(!f.commit())throw std::runtime_error("Cannot commit CSV");}

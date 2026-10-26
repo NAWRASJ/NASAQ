@@ -159,8 +159,8 @@ QString AboutDialog::MainHtml() const {
 
   const bool ar = NasaqLanguage() == u"ar"_s;
   QString ret = ar
-    ? u"<p><b>نسق — إدارة الموسيقى والإعلانات للأنشطة التجارية</b></p><p><b>تطوير نسق: <span dir='ltr'>Nawras Jarbouh</span></b><br/>تطوير وتخصيص نسق وواجهته وميزاته للأنشطة التجارية.</p>"_s
-    : u"<p><b>NASAQ — Commercial Audio Manager</b></p><p><b>NASAQ developed by Nawras Jarbouh</b><br/>Development and customization of NASAQ, its interface and business features.</p>"_s;
+    ? u"<p><b>نسق — إدارة الصوت والفيديو والإعلانات للأنشطة التجارية</b></p><p><b>تطوير نسق: <span dir='ltr'>Nawras Jarbouh</span></b><br/>تطوير وتخصيص نسق وواجهته وميزاته للأنشطة التجارية.</p>"_s
+    : u"<p><b>NASAQ — Audio, Video and Announcements for Business</b></p><p><b>NASAQ developed by Nawras Jarbouh</b><br/>Development and customization of NASAQ, its interface and business features.</p>"_s;
   ret += ar
     ? u"<p>نسق مبني على مشروع Strawberry، المشتق من Clementine. تُحفظ حقوق واعتمادات مطوّري المشروعين الأصليين أدناه.</p>"_s
     : u"<p>NASAQ is based on Strawberry, a fork of Clementine. Original project authors and contributors are credited below.</p>"_s;

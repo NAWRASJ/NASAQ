@@ -49,7 +49,7 @@ class DesignReview : public QObject {
   QCheckBox enabled(ar?QStringLiteral("إيقاف الموسيقى تلقائيًا عند الأذان"):QStringLiteral("Automatically pause music at adhan"));enabled.setChecked(true);layout.addWidget(&enabled);
   QPushButton saveButton(ar?QStringLiteral("حفظ الإعدادات"):QStringLiteral("Save settings"));saveButton.setObjectName(QStringLiteral("primary"));layout.addWidget(&saveButton);ApplyNasaqFormDesign(&dialog);dialog.resize(620,360);dialog.show();QTest::qWait(80);
   const auto before=city.geometry();city.setFocus();QTest::qWait(40);QCOMPARE(city.geometry(),before);QVERIFY(dialog.rect().contains(saveButton.geometry()));save(dialog,QStringLiteral("form-%1").arg(language));
-  QMenu menu;menu.addAction(IconLoader::Load(QStringLiteral("document-open")),ar?QStringLiteral("فتح ملف صوتي"):QStringLiteral("Open audio"));menu.addAction(IconLoader::Load(QStringLiteral("document-new")),ar?QStringLiteral("قائمة تشغيل جديدة"):QStringLiteral("New playlist"));menu.addSeparator();menu.addAction(IconLoader::Load(QStringLiteral("configure")),ar?QStringLiteral("الإعدادات"):QStringLiteral("Settings"));menu.show();QTest::qWait(60);save(menu,QStringLiteral("menu-%1").arg(language));
+  QMenu menu;menu.addAction(IconLoader::Load(QStringLiteral("document-open")),ar?QStringLiteral("فتح وسائط"):QStringLiteral("Open media"));menu.addAction(IconLoader::Load(QStringLiteral("document-new")),ar?QStringLiteral("قائمة تشغيل جديدة"):QStringLiteral("New playlist"));menu.addSeparator();menu.addAction(IconLoader::Load(QStringLiteral("configure")),ar?QStringLiteral("الإعدادات"):QStringLiteral("Settings"));menu.show();QTest::qWait(60);save(menu,QStringLiteral("menu-%1").arg(language));
  }
  void compactControls_data(){formsAndMenus_data();}
  void compactControls(){
@@ -112,6 +112,16 @@ class DesignReview : public QObject {
   const auto selected=view.visualRect(model.index(1,0));const auto playing=view.visualRect(model.index(2,0));
   auto pixel=[&](QRect rect){return image.pixelColor(qRound((rect.right()-25)*dpr),qRound(rect.center().y()*dpr));};
   QVERIFY(pixel(selected)!=pixel(playing));QCOMPARE(pixel(playing),QColor("#153e34"));
+  view.selectionModel()->select(model.index(2,0),QItemSelectionModel::ClearAndSelect|QItemSelectionModel::Rows);
+  QTest::mouseMove(view.viewport(),playing.center());QTest::qWait(80);
+  image=view.viewport()->grab().toImage();
+  QCOMPARE(pixel(playing),QColor("#dce5cd"));
+  int olivePixels=0;
+  for(int y=qRound(playing.top()*dpr);y<qRound(playing.bottom()*dpr);++y)
+    for(int x=qRound((playing.left()+30)*dpr);x<qRound((playing.left()+180)*dpr);++x)
+      if(image.pixelColor(x,y)==QColor("#495536"))++olivePixels;
+  QVERIFY(olivePixels>10);
+  save(view,QStringLiteral("playing-selected-olive"));
  }
  void radioColumnRendering(){
   QTreeView view;QStandardItemModel model(2,Playlist::ColumnCount);view.setModel(&model);LengthItemDelegate length(&view);PlaylistDelegateBase end(&view);

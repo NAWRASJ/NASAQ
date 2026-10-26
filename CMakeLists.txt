@@ -197,6 +197,7 @@ pkg_check_modules(GSTREAMER REQUIRED IMPORTED_TARGET gstreamer-1.0)
 pkg_check_modules(GSTREAMER_BASE REQUIRED IMPORTED_TARGET gstreamer-base-1.0)
 pkg_check_modules(GSTREAMER_AUDIO REQUIRED IMPORTED_TARGET gstreamer-audio-1.0)
 pkg_check_modules(GSTREAMER_APP REQUIRED IMPORTED_TARGET gstreamer-app-1.0)
+pkg_check_modules(GSTREAMER_VIDEO REQUIRED IMPORTED_TARGET gstreamer-video-1.0)
 pkg_check_modules(GSTREAMER_TAG REQUIRED IMPORTED_TARGET gstreamer-tag-1.0)
 pkg_check_modules(GSTREAMER_PBUTILS REQUIRED IMPORTED_TARGET gstreamer-pbutils-1.0)
 pkg_check_modules(SQLITE REQUIRED IMPORTED_TARGET sqlite3>=3.9)
@@ -1755,6 +1756,7 @@ target_link_libraries(strawberry_lib PUBLIC
   PkgConfig::GSTREAMER_BASE
   PkgConfig::GSTREAMER_AUDIO
   PkgConfig::GSTREAMER_APP
+  PkgConfig::GSTREAMER_VIDEO
   PkgConfig::GSTREAMER_TAG
   PkgConfig::GSTREAMER_PBUTILS
   ${TAGLIB_LIBRARIES}
@@ -1892,4 +1894,12 @@ if(WIN32)
   if(MSVC)
     target_compile_options(nasaq_settings_forms_tests PRIVATE /utf-8)
   endif()
+endif()
+
+add_executable(nasaq_video_tests cam/tests/video_test.cpp)
+set_target_properties(nasaq_video_tests PROPERTIES AUTOMOC ON)
+target_include_directories(nasaq_video_tests PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR}/src)
+target_link_libraries(nasaq_video_tests PRIVATE strawberry_lib Qt6::Test)
+if(MSVC)
+ target_compile_options(nasaq_video_tests PRIVATE /utf-8)
 endif()

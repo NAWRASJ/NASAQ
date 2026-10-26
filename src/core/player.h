@@ -111,6 +111,9 @@ class Player : public PlayerInterface {
 
   void HandleAuthentication();
 
+ Q_SIGNALS:
+  void ManualMediaRequested(const QUrl &url);
+
  private Q_SLOTS:
   void UrlHandlerRegistered(UrlHandler *url_handler) const;
 

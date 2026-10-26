@@ -73,6 +73,9 @@
 #include "utilities/strutils.h"
 #include "gstengine.h"
 #include "gstenginepipeline.h"
+#include <gst/app/gstappsink.h>
+#include <gst/video/video.h>
+#include <QFileInfo>
 #include "gstbusmessageevent.h"
 #include "gstbufferconsumer.h"
 
@@ -612,7 +615,17 @@ bool GstEnginePipeline::InitFromUrl(const QUrl &media_url, const QUrl &stream_ur
   gint flags = 0;
   g_object_get(G_OBJECT(pipeline_), "flags", &flags, nullptr);
   flags |= GST_PLAY_FLAG_AUDIO;
-  flags &= ~GST_PLAY_FLAG_VIDEO;
+  if (IsVideoUrl(media_url) || IsVideoUrl(stream_url)) {
+    video_sink_ = CreateElement(u"appsink"_s, u"nasaq-video"_s, nullptr, error);
+    if (!video_sink_) return false;
+    GstCaps *caps = gst_caps_from_string("video/x-raw");
+    g_object_set(video_sink_, "caps", caps, "max-buffers", 1u, "drop", TRUE,
+                 "sync", TRUE, "async", FALSE, "enable-last-sample", FALSE, "wait-on-eos", FALSE, nullptr);
+    gst_caps_unref(caps);
+    g_object_set(pipeline_, "video-sink", video_sink_, nullptr);
+    flags |= GST_PLAY_FLAG_VIDEO | 0x00000040; // Native raw video: conversion below uses libgstvideo.
+  }
+  else flags &= ~GST_PLAY_FLAG_VIDEO;
   flags &= ~GST_PLAY_FLAG_TEXT;
   flags &= ~GST_PLAY_FLAG_SOFT_VOLUME;
   g_object_set(G_OBJECT(pipeline_), "flags", flags, nullptr);
@@ -641,6 +654,9 @@ bool GstEnginePipeline::InitAudioBin(QString &error) {
   if (!audiosink_) {
     return false;
   }
+
+  // Keep the silent diagnostic sink on the same clock as real audio devices.
+  if (output_ == u"fakesink"_s) g_object_set(audiosink_, "sync", TRUE, nullptr);
 
   if (device_.isValid()) {
     if (g_object_class_find_property(G_OBJECT_GET_CLASS(audiosink_), "device")) {
@@ -2203,6 +2219,16 @@ void GstEnginePipeline::BufferingMessageReceived(GstMessage *msg) {
 
 }
 
+void GstEnginePipeline::ConfirmPlaybackFlow() {
+  // A queued buffering pause can be superseded by a later explicit PLAYING.
+  // Live queues may never reach 100%, despite sustained output. Clear only the
+  // stale buffering bookkeeping; never initiate playback or override a pause.
+  if (finish_requested_.load() || state()!=GST_STATE_PLAYING || !buffering_.exchange(false)) return;
+  GstState expected=GST_STATE_PLAYING;
+  pending_state_.compare_exchange_strong(expected,GST_STATE_NULL);
+  Q_EMIT BufferingFinished();
+}
+
 GstState GstEnginePipeline::state() const {
 
   // Return the cached state observed from GST_MESSAGE_STATE_CHANGED instead of calling the blocking gst_element_get_state(),
@@ -2210,6 +2236,9 @@ GstState GstEnginePipeline::state() const {
   // Callers already tolerate a momentarily stale value (see EngineBase).
   if (!pipeline_) return GST_STATE_NULL;
 
+  // A flushing video seek can complete in PAUSED without a fresh bus transition.
+  // Read its actual state without waiting, rather than retaining a stale PLAYING cache.
+  if (video_sink_) { GstState actual = GST_STATE_NULL; gst_element_get_state(pipeline_, &actual, nullptr, 0); return actual; }
   return current_state_.load();
 
 }
@@ -2326,7 +2355,9 @@ QFuture<GstStateChangeReturn> GstEnginePipeline::SetState(const GstState state) 
 
 }
 
-QFuture<GstStateChangeReturn> GstEnginePipeline::ApplyState(const GstState state) {
+QFuture<GstStateChangeReturn> GstEnginePipeline::ApplyState(const GstState requested_state) {
+
+  const GstState state = video_pause_requested_.load() && requested_state == GST_STATE_PLAYING ? GST_STATE_PAUSED : requested_state;
 
   qLog(Debug) << "Setting pipeline" << id() << "state to" << GstStateText(state);
 
@@ -2397,6 +2428,7 @@ void GstEnginePipeline::EmitFinishedIfQuiescent() {
 }
 
 QFuture<GstStateChangeReturn> GstEnginePipeline::Play(const bool pause, const quint64 offset_nanosec) {
+  video_pause_requested_.store(pause);
 
   if (offset_nanosec != 0) {
     // Preroll paused so we can seek to the offset while the pipeline is prerolling, then transition to the requested state once the seek completes (pending_state_ carries it).
@@ -3032,4 +3064,42 @@ void GstEnginePipeline::RemoveBufferConsumer(GstBufferConsumer *consumer) {
 void GstEnginePipeline::RemoveAllBufferConsumers() {
   QMutexLocker l(&mutex_buffer_consumers_);
   buffer_consumers_.clear();
+}
+
+// A bounded appsink queue prevents video from blocking audio when no display is visible.
+bool GstEnginePipeline::IsVideoUrl(const QUrl &url) {
+  static const QStringList extensions{u"mp4"_s,u"m4v"_s,u"mov"_s,u"mkv"_s,u"webm"_s,u"avi"_s};
+  return url.isLocalFile() && extensions.contains(QFileInfo(url.toLocalFile()).suffix().toLower());
+}
+QImage GstEnginePipeline::TakeVideoFrame() {
+  if (!video_sink_ || finish_requested_) return {};
+  GstSample *sample = gst_app_sink_try_pull_sample(GST_APP_SINK(video_sink_), 0);
+  if (!sample) sample = gst_app_sink_try_pull_preroll(GST_APP_SINK(video_sink_), 0);
+  if (!sample) return {};
+  QImage result;
+  GstVideoInfo input, output;gst_video_info_init(&input);gst_video_info_init(&output);
+  if (gst_video_info_from_caps(&input, gst_sample_get_caps(sample)) && input.width>0 && input.height>0 && input.width<=4096 && input.height<=4096) {
+    // Limit the presentation copy to 1080p. Source decoding remains in GStreamer.
+    QSize size(input.width,input.height);if(size.width()>1920||size.height()>1080)size.scale(1920,1080,Qt::KeepAspectRatio);
+    gst_video_info_set_format(&output,GST_VIDEO_FORMAT_BGRA,size.width(),size.height());
+    output.fps_n=input.fps_n;output.fps_d=input.fps_d;
+    output.par_n=input.par_n;output.par_d=input.par_d;output.interlace_mode=input.interlace_mode;
+    GstVideoConverter *converter=gst_video_converter_new(&input,&output,nullptr);
+    if(converter){
+      GstBuffer *destination=gst_buffer_new_allocate(nullptr,output.size,nullptr);
+      GstVideoFrame inFrame{},outFrame{};
+      if(destination && gst_video_frame_map(&inFrame,&input,gst_sample_get_buffer(sample),GST_MAP_READ)){
+        if(gst_video_frame_map(&outFrame,&output,destination,GST_MAP_WRITE)){
+          gst_video_converter_frame(converter,&inFrame,&outFrame);
+          result=QImage(static_cast<const uchar*>(GST_VIDEO_FRAME_PLANE_DATA(&outFrame,0)),size.width(),size.height(),GST_VIDEO_FRAME_PLANE_STRIDE(&outFrame,0),QImage::Format_ARGB32).copy();
+          gst_video_frame_unmap(&outFrame);
+        }
+        gst_video_frame_unmap(&inFrame);
+      }
+      if(destination)gst_buffer_unref(destination);
+      gst_video_converter_free(converter);
+    }
+  }
+  gst_sample_unref(sample);
+  return result;
 }

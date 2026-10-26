@@ -7,6 +7,13 @@
 class FileActivationTest : public QObject {
   Q_OBJECT
  private Q_SLOTS:
+  void videoReusesCurrentPlaylistWithoutAutoplay() {
+    Playlist playlist(nullptr,nullptr,nullptr,nullptr,nullptr,1);Song song;
+    song.set_url(QUrl::fromLocalFile(QStringLiteral("C:/Video/clip.mp4")));
+    playlist.InsertItems({PlaylistItemPtr(new SongPlaylistItem(song))});QSignalSpy play(&playlist,&Playlist::PlayRequested);
+    for(int i=0;i<5;++i)QCOMPARE(playlist.OpenUrlsUnique({song.url()},true),0);
+    QCOMPARE(playlist.rowCount(),1);QCOMPARE(play.count(),0);
+  }
   void reuseExistingPathWithoutChangingPlaybackOrRemovingIntentionalCopies() {
     Playlist playlist(nullptr, nullptr, nullptr, nullptr, nullptr, 1);
     Song song;

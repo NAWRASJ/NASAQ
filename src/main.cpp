@@ -154,6 +154,10 @@ int main(int argc, char *argv[]) {
 
   QCoreApplication::setApplicationName(qEnvironmentVariableIsEmpty("CAM_SMOKE_OUTPUT") ? u"CAM-Strawberry"_s : u"CAM-Strawberry-Test"_s);
   QCoreApplication::setOrganizationName(u"CAMProject"_s);
+  // Interactive previews have their own settings, database and single-instance socket.
+  // Licensing remains unchanged and is validated normally on this device.
+  if (qEnvironmentVariable("NASAQ_VIDEO_PREVIEW") == QStringLiteral("1"))
+    QCoreApplication::setApplicationName(QStringLiteral("CAM-Strawberry-VideoPreview"));
   if(!qEnvironmentVariableIsEmpty("NASAQ_BUSINESS_TEST_OUTPUT")&&!qEnvironmentVariableIsEmpty("CAM_SMOKE_OUTPUT")) QCoreApplication::setApplicationName(QStringLiteral("NASAQ-BusinessTest-%1").arg(QDateTime::currentMSecsSinceEpoch()));
   // Persistence verification can reuse only a dedicated, UUID-named test profile.
   const QString persistenceToken=qEnvironmentVariable("NASAQ_PERSIST_TEST_TOKEN");

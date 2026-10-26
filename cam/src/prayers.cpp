@@ -16,8 +16,9 @@ PrayerService::PrayerService(Store &s,QObject *parent):QObject(parent),store(s){
 }
 QDateTime PrayerService::nextPause(Store &s,const QDateTime &now){
  if(s.get("prayer_pause_enabled")=="0")return {};
- auto q=s.query("SELECT due FROM events WHERE kind IN ('prayer','adhan') AND status='pending' AND due>=? ORDER BY due LIMIT 1",{now.toMSecsSinceEpoch()});
- return q.next()?QDateTime::fromMSecsSinceEpoch(q.value(0).toLongLong(),QTimeZone::UTC):QDateTime();
+ const int lead=qBound(0,s.get("prayer_lead_minutes").toInt(),5);
+ auto q=s.query("SELECT due FROM events WHERE kind IN ('prayer','adhan') AND id NOT LIKE 'prayer-early:%' AND status='pending' AND due>=? ORDER BY due LIMIT 1",{now.toMSecsSinceEpoch()});
+ return q.next()?QDateTime::fromMSecsSinceEpoch(q.value(0).toLongLong(),QTimeZone::UTC).addSecs(-lead*60):QDateTime();
 }
 void PrayerService::refreshSaved(){
  try{if(!store.get("prayer_city").trimmed().isEmpty()&&!store.get("prayer_country").trimmed().isEmpty()&&store.get("prayer_sync_date")!=QDate::currentDate().toString(Qt::ISODate))sync(store.get("prayer_city"),store.get("prayer_country"),store.get("prayer_method").toInt(),store.get("prayer_audio"));}catch(const std::exception&e){Q_EMIT completed(false,QString::fromUtf8(e.what()));}

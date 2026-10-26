@@ -45,6 +45,7 @@
 #include <QString>
 #include <QUrl>
 #include <QSharedPointer>
+#include <QImage>
 
 #include "includes/shared_ptr.h"
 #include "core/enginemetadata.h"
@@ -57,6 +58,8 @@ struct GstPlayBin;
 
 class GstEnginePipeline : public QObject {
   Q_OBJECT
+  friend class VideoTest;
+  friend class RadioRecoveryTest;
 
  public:
   explicit GstEnginePipeline(QObject *parent = nullptr);
@@ -91,6 +94,11 @@ class GstEnginePipeline : public QObject {
   void set_spotify_bitrate(const SpotifySettings::Bitrate spotify_bitrate);
 #endif
 
+  static bool IsVideoUrl(const QUrl &url);
+  QImage TakeVideoFrame();
+  bool has_video_sink() const { return video_sink_ != nullptr; }
+  void set_video_paused(bool paused) { video_pause_requested_.store(paused); }
+  bool video_paused() const { return video_pause_requested_.load(); }
   bool Finish();
 
   // Creates the pipeline, returns false on error
@@ -144,6 +152,7 @@ class GstEnginePipeline : public QObject {
 
   // Don't allow the user to change the playback state (playing/paused) while the pipeline is buffering.
   bool is_buffering() const { return buffering_.load(); }
+  void ConfirmPlaybackFlow();
 
   bool exclusive_mode() const { return exclusive_mode_; }
 
@@ -237,6 +246,9 @@ class GstEnginePipeline : public QObject {
   // Using == to compare two pipelines is a bad idea, because new ones often get created in the same address as old ones.  This ID will be unique for each pipeline.
   static std::atomic<int> sId;
   std::atomic<int> id_;
+  GstElement *video_sink_ = nullptr; // Borrowed from playbin; polled on the GUI thread.
+  std::atomic<bool> video_pause_requested_{false};
+
 
   // Separate shared thread pool for manufactured-EOS pad sends (see ErrorMessageReceived()).
   // These can block for as long as the current track takes to finish draining, so they must not share the per-pipeline state-change thread pool with gst_element_set_state() calls, which are expected to complete quickly and whose timely completion drives playback control (pause/stop/seek); sharing would let a long-blocked pad send starve state changes.

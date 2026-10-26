@@ -143,10 +143,12 @@ PlaylistView *PlaylistContainer::view() const { return ui_->playlist; }
 void PlaylistContainer::SetActions(const Actions &actions) {
 
   auto *open_audio = new QToolButton(this);
-  actions.add_audio->setText(tr("فتح صوت / Open audio"));
+  actions.add_audio->setText(tr("Open media"));
   open_audio->setDefaultAction(actions.add_audio);
   open_audio->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-  open_audio->setAccessibleName(tr("Open audio files"));
+  open_audio->setObjectName(QStringLiteral("openMediaButton"));
+  open_audio->setAccessibleName(tr("Open audio or video files"));
+  actions.add_audio->setToolTip(tr("Add audio or video files to the current playlist"));
   ui_->horizontalLayout->insertWidget(0, open_audio);
   actions.load_playlist->setText(tr("فتح قائمة / Open playlist"));
   ui_->load->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);

@@ -568,17 +568,19 @@ void PlaylistView::drawRow(QPainter *painter, const QStyleOptionViewItem &option
   if (is_current) {
 
     if (qApp->property("nasaqIvoryTheme").toBool()) {
+      const bool selected = selectionModel()->isSelected(idx);
+      const QColor foreground = selected ? QColor("#495536") : QColor(255,254,250);
       painter->save();
-      painter->fillRect(opt.rect, QColor(21,62,52));
+      painter->fillRect(opt.rect, selected ? QColor("#dce5cd") : QColor(21,62,52));
       opt.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver);
-      painter->fillRect(QRect(opt.rect.left(), opt.rect.top()+3, 3, opt.rect.height()-6), QColor(165,178,153));
+      painter->fillRect(QRect(opt.rect.left(), opt.rect.top()+3, 3, opt.rect.height()-6), selected ? QColor(21,62,52) : QColor(165,178,153));
       opt.palette.setColor(QPalette::Base, Qt::transparent);
       opt.palette.setColor(QPalette::AlternateBase, Qt::transparent);
       opt.palette.setColor(QPalette::Highlight, Qt::transparent);
-      opt.palette.setColor(QPalette::Text, QColor(255,254,250));
-      opt.palette.setColor(QPalette::HighlightedText, QColor(255,254,250));
+      opt.palette.setColor(QPalette::Text, foreground);
+      opt.palette.setColor(QPalette::HighlightedText, foreground);
       QTreeView::drawRow(painter, opt, idx);
-      IconLoader::Load(is_paused ? u"media-playback-pause"_s : u"media-playback-start"_s).paint(painter, QRect(opt.rect.left()+7, opt.rect.center().y()-8, 16, 16), Qt::AlignCenter, QIcon::Selected);
+      IconLoader::Load(is_paused ? u"media-playback-pause"_s : u"media-playback-start"_s).paint(painter, QRect(opt.rect.left()+7, opt.rect.center().y()-8, 16, 16), Qt::AlignCenter, selected ? QIcon::Normal : QIcon::Selected);
       painter->restore();
       return;
     }

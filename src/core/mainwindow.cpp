@@ -563,7 +563,7 @@ MainWindow::MainWindow(Application *app,
 
   // Music menu
 
-  ui_->action_open_file->setIcon(IconLoader::Load(u"document-open"_s));
+  ui_->action_open_file->setIcon(IconLoader::Load(u"nasaq-open-media"_s));
   ui_->action_open_cd->setIcon(IconLoader::Load(u"media-optical"_s));
   ui_->action_previous_track->setIcon(IconLoader::Load(u"media-skip-backward"_s));
   ui_->action_play_pause->setIcon(IconLoader::Load(u"media-playback-start"_s));
@@ -574,7 +574,7 @@ MainWindow::MainWindow(Application *app,
 
   // Playlist
 
-  ui_->action_add_file->setIcon(IconLoader::Load(u"document-open"_s));
+  ui_->action_add_file->setIcon(IconLoader::Load(u"nasaq-open-media"_s));
   ui_->action_add_folder->setIcon(IconLoader::Load(u"document-open-folder"_s));
   ui_->action_add_stream->setIcon(IconLoader::Load(u"document-open-remote"_s));
   ui_->action_shuffle_mode->setIcon(IconLoader::Load(u"media-playlist-shuffle"_s));
@@ -2591,7 +2591,7 @@ void MainWindow::AddFile() {
   PlaylistParser parser(app_->tagreader_client(), app_->collection_backend());
 
   // Show dialog
-  const QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Add file"), directory, QStringLiteral("%1 (%2);;%3;;%4").arg(tr("Music"), QLatin1String(kFileFilter), parser.filters(PlaylistParser::Type::Load), tr(kAllFilesFilterSpec)));
+  const QStringList filenames = QFileDialog::getOpenFileNames(this, tr("Open audio or video files"), directory, QStringLiteral("%1 (%2);;%3 (%4);;%5 (%6);;%7;;%8").arg(tr("All supported media"), QLatin1String(kFileFilter), tr("Video files"), QLatin1String(kVideoFileFilter), tr("Audio files"), QLatin1String(kAudioFileFilter), parser.filters(PlaylistParser::Type::Load), tr(kAllFilesFilterSpec)));
 
   if (filenames.isEmpty()) return;
 
