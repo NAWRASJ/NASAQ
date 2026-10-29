@@ -26,18 +26,18 @@ constexpr char kAllFilesFilterSpec[] = QT_TRANSLATE_NOOP("FileFilter", "All File
 
 constexpr char kFileFilter[] =
     "*.wav *.flac *.wv *.ogg *.oga *.opus *.spx *.ape *.mpc "
-    "*.mp2 *.mp3 *.m4a *.mp4 *.m4v *.mov *.mkv *.avi *.aac *.asf *.asx *.wma "
+    "*.mp2 *.mp3 *.m4a *.mp4 *.m4v *.mov *.mkv *.avi *.wmv *.flv *.mpg *.mpeg *.mpe *.ts *.mts *.m2ts *.ogv *.3gp *.3g2 *.aac *.asf *.asx *.wma "
     "*.aif *.aiff *.mka *.tta *.dsf *.dsd *.webm "
     "*.cue *.m3u *.m3u8 *.pls *.xspf *.asxini "
-    "*.ac3 *.dts "
+    "*.ac3 *.eac3 *.caf *.au *.snd *.dts "
     "*.mod *.s3m *.xm *.it "
     "*.spc *.vgm "
     "*.tak" ;
 
-constexpr char kVideoFileFilter[] = "*.mp4 *.m4v *.mov *.mkv *.webm *.avi";
+constexpr char kVideoFileFilter[] = "*.mp4 *.m4v *.mov *.mkv *.webm *.avi *.wmv *.asf *.flv *.mpg *.mpeg *.mpe *.ts *.mts *.m2ts *.ogv *.3gp *.3g2";
 constexpr char kAudioFileFilter[] =
     "*.wav *.flac *.wv *.ogg *.oga *.opus *.spx *.ape *.mpc *.mp2 *.mp3 *.m4a "
-    "*.aac *.asf *.wma *.aif *.aiff *.mka *.tta *.dsf *.dsd *.ac3 *.dts "
+    "*.aac *.asf *.wma *.aif *.aiff *.mka *.tta *.dsf *.dsd *.ac3 *.eac3 *.caf *.au *.snd *.dts "
     "*.mod *.s3m *.xm *.it *.spc *.vgm *.tak";
 
 constexpr char kLoadImageFileFilter[] = QT_TRANSLATE_NOOP("FileFilter", "Images (*.png *.jpg *.jpeg *.bmp *.gif *.xpm *.pbm *.pgm *.ppm *.xbm *.webp)");

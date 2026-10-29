@@ -1,0 +1,22 @@
+[
+  {
+    "file": "gst-plugins-good-1.28.8.tar.xz",
+    "sha256": "a7670ed900d3d03be744d25c1873b239896e9a82ce6d17f8febc6fffbaee9521"
+  },
+  {
+    "file": "gst-plugins-bad-1.28.8.tar.xz",
+    "sha256": "670d888bde8242579b0d8e91f60cf337aa7be20ca7c315ebfbdd6e5a9218d104"
+  },
+  {
+    "file": "gst-plugins-base-1.28.8.tar.xz",
+    "sha256": "ade70e3381fcbb024f1f20aa9ede9b5654aeed39d5bd70b1a98f53015e501117"
+  },
+  {
+    "file": "gst-libav-1.28.8.tar.xz",
+    "sha256": "98ad3d7f8932c495e268708903f1c3388d5f26a0db34727a9f861ee23b724177"
+  },
+  {
+    "file": "libtheora-1.2.0.tar.gz",
+    "sha256": "e0c35771b425c32a052ffb358a2aed14219340ab850b48dc85b01939c0513a31"
+  }
+]

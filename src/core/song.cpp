@@ -250,7 +250,7 @@ const QStringList Song::kAcceptedExtensions = QStringList() << u"wav"_s
                                                             << u"tta"_s
                                                             << u"dsf"_s
                                                             << u"dsd"_s
-                                                            << u"webm"_s
+                                                            << u"webm"_s << u"wmv"_s << u"flv"_s << u"mpg"_s << u"mpeg"_s << u"mpe"_s << u"ts"_s << u"mts"_s << u"m2ts"_s << u"ogv"_s << u"3gp"_s << u"3g2"_s << u"caf"_s << u"eac3"_s << u"au"_s << u"snd"_s
                                                             << u"ac3"_s
                                                             << u"dts"_s
                                                             << u"spc"_s

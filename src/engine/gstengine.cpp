@@ -1180,7 +1180,7 @@ void GstEngine::StreamDiscovered(GstDiscoverer *discoverer, GstDiscovererInfo *i
       if (!mimetype.isEmpty() && mimetype != "audio/mpeg"_L1) {
         engine_metadata.filetype = Song::FiletypeByMimetype(mimetype);
         if (engine_metadata.filetype == Song::FileType::Unknown) {
-          qLog(Error) << "Unknown mimetype" << mimetype;
+          qLog(Debug) << "Unknown mimetype" << mimetype;
         }
       }
     }
@@ -1192,7 +1192,7 @@ void GstEngine::StreamDiscovered(GstDiscoverer *discoverer, GstDiscovererInfo *i
       if (!filetype_description.isEmpty()) {
         engine_metadata.filetype = Song::FiletypeByDescription(filetype_description);
         if (engine_metadata.filetype == Song::FileType::Unknown) {
-          qLog(Error) << "Unknown filetype" << filetype_description;
+          qLog(Debug) << "Unknown filetype" << filetype_description;
         }
       }
     }

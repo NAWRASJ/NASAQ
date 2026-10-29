@@ -73,6 +73,7 @@
 #include "utilities/strutils.h"
 #include "gstengine.h"
 #include "gstenginepipeline.h"
+#include "utilities/nasaqmedia.h"
 #include <gst/app/gstappsink.h>
 #include <gst/video/video.h>
 #include <QFileInfo>
@@ -2516,7 +2517,11 @@ bool GstEnginePipeline::Seek(const qint64 nanosec) {
 
   qLog(Debug) << "Seeking to" << nanosec;
 
-  const bool success = gst_element_seek_simple(pipeline_, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, nanosec);
+  // Video containers may otherwise land on an earlier keyframe, especially MPEG-TS.
+  // Request the selected timestamp for local video; retain the audio/network policy.
+  const auto flags = static_cast<GstSeekFlags>(GST_SEEK_FLAG_FLUSH |
+      ((IsVideoUrl(media_url_) || IsVideoUrl(stream_url_)) ? GST_SEEK_FLAG_ACCURATE : 0));
+  const bool success = gst_element_seek_simple(pipeline_, GST_FORMAT_TIME, flags, nanosec);
 
   if (success) {
     qLog(Debug) << "Seek succeeded";
@@ -3074,8 +3079,7 @@ void GstEnginePipeline::RemoveAllBufferConsumers() {
 
 // A bounded appsink queue prevents video from blocking audio when no display is visible.
 bool GstEnginePipeline::IsVideoUrl(const QUrl &url) {
-  static const QStringList extensions{u"mp4"_s,u"m4v"_s,u"mov"_s,u"mkv"_s,u"webm"_s,u"avi"_s};
-  return url.isLocalFile() && extensions.contains(QFileInfo(url.toLocalFile()).suffix().toLower());
+  return NasaqLocalVideo(url);
 }
 QImage GstEnginePipeline::TakeVideoFrame() {
   if (!video_sink_ || finish_requested_) return {};

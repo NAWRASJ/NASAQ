@@ -234,6 +234,32 @@ private Q_SLOTS:
   surface.setPlayback(true,true,true,"Radio","",{});QCOMPARE(surface.tonearmAngle(),-12.);
   surface.present({},true,true,false,{},{});QCOMPARE(surface.tonearmAngle(),-48.);
  }
+ void invalidMediaFailsCleanly(){
+  QTemporaryDir dir;QFile file(dir.filePath("broken.mp4"));QVERIFY(file.open(QIODevice::WriteOnly));file.write("invalid media content");file.close();
+  Settings settings;settings.beginGroup("Backend");settings.setValue("output","fakesink");settings.endGroup();
+  GstEngine engine(std::make_shared<TaskManager>());QVERIFY(engine.Init());QSignalSpy errors(&engine,&EngineBase::Error);
+  const auto url=QUrl::fromLocalFile(file.fileName());
+  if(engine.Load(url,url,EngineBase::TrackChangeType::First,false,0,0,std::nullopt) && engine.Play(false,0))QTRY_VERIFY_WITH_TIMEOUT(errors.count()>0,8000);
+  engine.Stop(true);QVERIFY(engine.TakeVideoFrame().isNull());
+ }
+ void mediaFormatPlayback(){
+  const auto file=qEnvironmentVariable("NASAQ_FORMAT_FIXTURE");
+  if(file.isEmpty())QSKIP("Set NASAQ_FORMAT_FIXTURE to run the format matrix");
+  const bool video=qEnvironmentVariableIntValue("NASAQ_FORMAT_VIDEO")==1;
+  Settings settings;settings.beginGroup("Backend");settings.setValue("output","fakesink");settings.setValue("bufferduration",4000);settings.setValue("fadeout_pause_enabled",false);settings.endGroup();
+  GstEngine engine(std::make_shared<TaskManager>());QVERIFY(engine.Init());QSignalSpy errors(&engine,&EngineBase::Error);
+  const auto url=QUrl::fromLocalFile(file);QVERIFY(engine.Load(url,url,EngineBase::TrackChangeType::First,false,0,0,std::nullopt));QVERIFY(engine.Play(false,0));
+  QElapsedTimer elapsed;elapsed.start();int frames=0;
+  while(elapsed.elapsed()<12000 && engine.position_nanosec()<2500000000LL){if(!engine.TakeVideoFrame().isNull())++frames;QTest::qWait(25);}
+  qInfo()<<"FORMAT"<<file<<"position"<<engine.position_nanosec()<<"frames"<<frames<<"errors"<<errors.count();
+  QVERIFY2(engine.position_nanosec()>=2500000000LL,"Playback must advance without intervention");if(video)QVERIFY2(frames>5,"Expected decoded video frames");
+  engine.Pause();QTRY_COMPARE(engine.state(),EngineBase::State::Paused);const auto paused=engine.position_nanosec();QTest::qWait(180);QVERIFY(qAbs(engine.position_nanosec()-paused)<100000000);
+  engine.Unpause();engine.Seek(500000000LL);QTest::qWait(200);
+  // A backwards jump cannot pass merely because the playback clock kept advancing.
+  QTRY_VERIFY_WITH_TIMEOUT(engine.position_nanosec()<1500000000LL,3000);
+  engine.Seek(4000000000LL);QTest::qWait(200);QTRY_VERIFY_WITH_TIMEOUT(engine.position_nanosec()>=3500000000LL && engine.position_nanosec()<5500000000LL,3000);
+  QCOMPARE(errors.count(),0);engine.Stop(true);QVERIFY(engine.TakeVideoFrame().isNull());
+ }
  void videoStartsWithoutIntervention_data(){
   QTest::addColumn<int>("bufferMs");
   QTest::newRow("default-buffer")<<4000;

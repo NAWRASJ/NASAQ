@@ -1,7 +1,8 @@
 # Run in a Visual Studio developer shell, using the SAME dependency prefix as NASAQ.
 [CmdletBinding()]
 param([Parameter(Mandatory)][string]$StageDir,
-      [Parameter(Mandatory)][string]$DependencyPrefix)
+      [Parameter(Mandatory)][string]$DependencyPrefix,
+      [Parameter(Mandatory)][string]$FormatPluginsDir)
 $ErrorActionPreference='Stop'
 $stage=(Resolve-Path -LiteralPath $StageDir).Path
 $prefix=(Resolve-Path -LiteralPath $DependencyPrefix).Path
@@ -27,8 +28,28 @@ function Copy-RuntimeDll([string]$source,[string]$destination) {
  }
 }
 New-Item -ItemType Directory -Force "$stage/gstreamer-plugins","$stage/gio-modules" | Out-Null
-foreach($name in 'gstapp.dll','gstisomp4.dll','gstlibav.dll','gstmatroska.dll'){
+foreach($name in 'gstapp.dll','gstisomp4.dll','gstmatroska.dll'){
  Copy-RuntimeDll "$prefix/lib/gstreamer-1.0/$name" "$stage/gstreamer-plugins/$name"
 }
 Copy-RuntimeDll "$prefix/bin/gstvideo-1.0-0.dll" "$stage/gstvideo-1.0-0.dll"
 Write-Output "Staged and checked $($visited.Count) video runtime libraries."
+
+$formatRoot=(Resolve-Path -LiteralPath $FormatPluginsDir).Path
+$manifest=Get-Content -LiteralPath "$formatRoot/format-runtime.json" -Raw | ConvertFrom-Json
+if($manifest.gstreamer_version -ne '1.28.8'){throw 'Unexpected format plugin version'}
+if(-not(Test-Path -LiteralPath "$formatRoot/licenses")){throw 'Missing format library licenses'}
+$requiredFormats=@('gstavi.dll','gstflv.dll','gstauparse.dll','gstmpegpsdemux.dll','gstvideoparsersbad.dll','gstaom.dll','gstlibav.dll','gsttheora.dll','libaom.dll','libwinpthread-1.dll')
+foreach($name in $requiredFormats){
+ $source=Join-Path $formatRoot $name
+ $expected=$manifest.files.$name
+ if(-not $expected -or -not(Test-Path -LiteralPath $source) -or (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant() -ne $expected){throw "Invalid format dependency: $name"}
+}
+foreach($name in $requiredFormats){
+ $target=if($name.StartsWith('gst')){Join-Path "$stage/gstreamer-plugins" $name}else{Join-Path $stage $name}
+ Copy-Item -LiteralPath (Join-Path $formatRoot $name) -Destination $target -Force
+}
+Copy-Item -LiteralPath "$formatRoot/format-runtime.json" -Destination "$stage/format-runtime.json" -Force
+Write-Output 'Staged verified video/audio format extensions.'
+
+New-Item -ItemType Directory -Force "$stage/format-licenses" | Out-Null
+Copy-Item -Path "$formatRoot/licenses/*" -Destination "$stage/format-licenses" -Recurse -Force

@@ -5,7 +5,7 @@ $temp=Join-Path ([IO.Path]::GetTempPath()) ('nasaq-msix-test-'+[guid]::NewGuid()
 New-Item -ItemType Directory -Path $temp | Out-Null
 $stage=Join-Path $temp 'stage'
 New-Item -ItemType Directory -Path $stage,"$stage/platforms","$stage/gstreamer-plugins","$stage/gio-modules" | Out-Null
-foreach($f in 'NASAQ.exe','gst-plugin-scanner.exe','platforms/qwindows.dll','gstreamer-plugins/gstcoreelements.dll','gstreamer-plugins/gstsoup.dll','gstreamer-plugins/gsticydemux.dll','soup-3.0-0.dll','gio-modules/gioopenssl.dll') { Set-Content -LiteralPath (Join-Path $stage $f) -Value 'fixture' }
+foreach($f in 'NASAQ.exe','gst-plugin-scanner.exe','platforms/qwindows.dll','gstreamer-plugins/gstcoreelements.dll','gstreamer-plugins/gstsoup.dll','gstreamer-plugins/gsticydemux.dll','soup-3.0-0.dll','gio-modules/gioopenssl.dll','gstreamer-plugins/gstavi.dll','gstreamer-plugins/gstflv.dll','gstreamer-plugins/gstauparse.dll','gstreamer-plugins/gstmpegpsdemux.dll','gstreamer-plugins/gstvideoparsersbad.dll','gstreamer-plugins/gstaom.dll','gstreamer-plugins/gsttheora.dll','gstreamer-plugins/gstlibav.dll','gstreamer-plugins/gstmpegtsdemux.dll','libaom.dll','libwinpthread-1.dll') { Set-Content -LiteralPath (Join-Path $stage $f) -Value 'fixture' }
 Copy-Item -LiteralPath "$stage/platforms/qwindows.dll" -Destination "$stage/qwindows.dll"
 Set-Content -LiteralPath "$stage/Qt6Core.dll" -Value 'core library must remain'
 & "$PSScriptRoot/normalize-runtime.ps1" -StageDir $stage
@@ -21,6 +21,13 @@ try { & "$PSScriptRoot/normalize-runtime.ps1" -StageDir $stage } catch { $reject
 if(-not $rejected){throw 'Missing HTTPS plugin accepted'}
 Move-Item "$temp/gstsoup.dll" "$stage/gstreamer-plugins/gstsoup.dll"
 Write-Output 'PASS: missing HTTPS source rejects the runtime'
+Move-Item "$stage/gstreamer-plugins/gstavi.dll" "$temp/gstavi.dll"
+$rejected=$false
+try { & "$PSScriptRoot/normalize-runtime.ps1" -StageDir $stage } catch { $rejected=$_.Exception.Message -like '*gstavi.dll*' }
+if(-not $rejected){throw 'Missing video demuxer accepted'}
+Move-Item "$temp/gstavi.dll" "$stage/gstreamer-plugins/gstavi.dll"
+Write-Output 'PASS: missing AVI demuxer rejects the runtime'
+
 Set-Content -LiteralPath "$stage/qwindows.dll" -Value 'conflicting version'
 $rejected=$false
 try { & "$PSScriptRoot/normalize-runtime.ps1" -StageDir $stage } catch { $rejected=$_.Exception.Message -like '*Conflicting plugin copies*' }

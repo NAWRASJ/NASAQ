@@ -51,6 +51,19 @@
               <uap:FileType>.ogg</uap:FileType>
               <uap:FileType>.m4a</uap:FileType>
               <uap:FileType>.opus</uap:FileType>
+              <uap:FileType>.aac</uap:FileType>
+              <uap:FileType>.wma</uap:FileType>
+              <uap:FileType>.aif</uap:FileType>
+              <uap:FileType>.aiff</uap:FileType>
+              <uap:FileType>.ac3</uap:FileType>
+              <uap:FileType>.eac3</uap:FileType>
+              <uap:FileType>.mp2</uap:FileType>
+              <uap:FileType>.mka</uap:FileType>
+              <uap:FileType>.wv</uap:FileType>
+              <uap:FileType>.tta</uap:FileType>
+              <uap:FileType>.caf</uap:FileType>
+              <uap:FileType>.au</uap:FileType>
+              <uap:FileType>.snd</uap:FileType>
             </uap:SupportedFileTypes>
           </uap3:FileTypeAssociation>
         </uap:Extension>
@@ -64,6 +77,18 @@
               <uap:FileType>.mkv</uap:FileType>
               <uap:FileType>.webm</uap:FileType>
               <uap:FileType>.avi</uap:FileType>
+              <uap:FileType>.wmv</uap:FileType>
+              <uap:FileType>.asf</uap:FileType>
+              <uap:FileType>.flv</uap:FileType>
+              <uap:FileType>.mpg</uap:FileType>
+              <uap:FileType>.mpeg</uap:FileType>
+              <uap:FileType>.mpe</uap:FileType>
+              <uap:FileType>.ts</uap:FileType>
+              <uap:FileType>.mts</uap:FileType>
+              <uap:FileType>.m2ts</uap:FileType>
+              <uap:FileType>.ogv</uap:FileType>
+              <uap:FileType>.3gp</uap:FileType>
+              <uap:FileType>.3g2</uap:FileType>
             </uap:SupportedFileTypes>
           </uap3:FileTypeAssociation>
         </uap:Extension>
