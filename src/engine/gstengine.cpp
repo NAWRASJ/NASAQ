@@ -408,7 +408,9 @@ void GstEngine::Unpause() {
 
   if (!current_pipeline_ || current_pipeline_->is_buffering()) return;
 
-  if (current_pipeline_->state() == GST_STATE_PAUSED) {
+  // A previous pause is asynchronous. PLAYING can still be reported while
+  // PAUSED is pending; an explicit resume must cancel that pending transition.
+  {
     current_pipeline_->set_video_paused(false);
 
     // Check if we faded out last time. If yes, fade in no matter what the settings say.

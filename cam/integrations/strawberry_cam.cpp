@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "strawberry_cam.h"
+#include "strawberrymusic.h"
 #include "audience.h"
 #include "covermanager/currentalbumcoverloader.h"
 #include "engine/gstengine.h"
@@ -37,82 +38,6 @@
 
 // Owns music through Strawberry's Player and PlaylistManager. No second music player.
 // Qt provides only foreground announcement, SAPI and live microphone services.
-class StrawberryMusic final:public MusicTransport {
- public:
- explicit StrawberryMusic(Application*application,QObject*parent=nullptr,const QDateTime &heldUntil={}):MusicTransport(parent),app(application){
-  // Block early file activation without touching the not-yet-initialized engine.
-  app->player()->setProperty("camStartupPrayerHoldUntil",heldUntil);
-  connect(&*app->player(),&Player::Playing,this,[this]{
-   if(app->player()->property("camLicenseDenied").toBool()){app->player()->Stop();return;}
-   if(suspended){suspend(true);return;}
-   interruptedRadio.reset();interruptedPlaylist=-1;
-   const auto item=app->player()->GetCurrentItem();
-   Q_EMIT event(QStringLiteral("play_started"),item?item->OriginalUrl().toString():QStringLiteral("strawberry"));
-  });
-  connect(&*app->player(),&Player::Stopped,this,[this]{Q_EMIT event(QStringLiteral("play_stopped"),QStringLiteral("strawberry"));});
-  connect(&*app->player(),&Player::Error,this,[this](const QString&e){Q_EMIT event(QStringLiteral("audio_error"),e);});
- }
- bool replace(const QStringList&files)override{
-  if(files.isEmpty()||pending)return false;
-  QList<QUrl> urls;for(const auto&f:files){if(!QFileInfo::exists(f)||!QFileInfo(f).isFile())return false;urls.append(QUrl::fromLocalFile(f));}
-  auto manager=app->playlist_manager();int id=-1;
-  for(int candidate:manager->playlist_ids())if(manager->playlist_name(candidate)==name){id=candidate;break;}
-  if(id<0){manager->New(name);id=manager->current_id();}
-  auto playlist=manager->playlist(id);if(!playlist)return false;
-  interruptedRadio.reset();interruptedPlaylist=-1;
-  app->player()->Stop();manager->SetCurrentPlaylist(id);manager->SetActivePlaylist(id);
-  playlist->Clear();manager->sequence()->SetRepeatMode(PlaylistSequence::RepeatMode::Playlist);
-  pending=true;const auto generation=++loadGeneration;
-  disconnect(rowsConnection);
-  rowsConnection=connect(playlist,&QAbstractItemModel::rowsInserted,this,[this,playlist]{
-   if(!pending||playlist->rowCount()==0)return;pending=false;
-   if(!suspended)authorizedPlay(true);
-  });
-  manager->InsertUrls(id,urls,-1,false,false,true);
-  QTimer::singleShot(30000,this,[this,generation]{if(pending&&generation==loadGeneration){pending=false;disconnect(rowsConnection);Q_EMIT event(QStringLiteral("audio_error"),QStringLiteral("Strawberry playlist import timed out"));}});
-  return true;
- }
- void setGain(double gain)override{requestedGain=gain;app->player()->engine()->SetBusinessGain(suspended?0.0:requestedGain);}
- bool playing()const override{return !suspended&&(app->player()->GetState()==EngineBase::State::Playing||app->player()->engine()->property("nasaqBuffering").toBool()||app->player()->property("nasaqRadioReconnecting").toBool());}
- void suspend(bool active)override{
-  app->player()->setProperty("camStartupPrayerHoldUntil",QDateTime());suspended=active;app->player()->setProperty("camSuspended",active);
-  // Silence is enforced independently of Pause: GStreamer may ignore Pause while buffering.
-  app->player()->engine()->SetBusinessGain(active?0.0:requestedGain);
-  if(active){
-   const auto item=app->player()->GetCurrentItem();
-   if(item&&item->EffectiveMetadata().is_radio()){
-    if(!interruptedRadio){interruptedRadio=item;interruptedPlaylist=app->playlist_manager()->active_id();}
-    // Destroy the live connection without clearing the playlist selection. No fade-out during adhan.
-    app->player()->engine()->Stop(true);
-   }else app->player()->Pause();
-  }
- }
- void resume()override{
-  if(suspended||pending)return;
-  if(interruptedRadio){
-   const auto item=interruptedRadio;interruptedRadio.reset();
-   // A manual Stop clears Player's item while an adhan engine-only stop preserves it.
-   if(app->player()->GetCurrentItem()!=item){interruptedPlaylist=-1;return;}
-   auto playlist=app->playlist_manager()->playlist(interruptedPlaylist);interruptedPlaylist=-1;
-   if(!playlist)return;
-   for(int row=0;row<playlist->rowCount();++row)if(playlist->item_at(row)==item){
-    app->playlist_manager()->SetActivePlaylist(playlist->id());
-    app->player()->setProperty("camAuthorized",true);
-    app->player()->PlayAt(row,false,0,EngineBase::TrackChangeType::First,Playlist::AutoScroll::Maybe,false);
-    app->player()->setProperty("camAuthorized",false);return;
-   }
-   return;
-  }
-  authorizedPlay(false);
- }
- void stop()override{pending=false;++loadGeneration;disconnect(rowsConnection);interruptedRadio.reset();interruptedPlaylist=-1;app->player()->Stop();}
- private:
- void authorizedPlay(bool playlist){app->player()->setProperty("camAuthorized",true);if(playlist)app->player()->PlayPlaylist(name);else app->player()->Play();app->player()->setProperty("camAuthorized",false);}
- Application*app;bool suspended=false,pending=false;quint64 loadGeneration=0;QMetaObject::Connection rowsConnection;
- double requestedGain=1.0;PlaylistItemPtr interruptedRadio;int interruptedPlaylist=-1;
- const QString name=QStringLiteral("NASAQ — Business playlist");
-};
-
 class CamHost final:public QObject {
  public:
  CamHost(Application*app,QMainWindow*main):QObject(main){
@@ -163,7 +88,7 @@ class CamHost final:public QObject {
    if(result.unknown)text+=ar?QStringLiteral(" • توجد مدد غير معروفة"):QStringLiteral(" • Unknown durations present");
    text+=ordered?(ar?QStringLiteral("\nالانتهاء تقديري حسب ساعة الكمبيوتر؛ يتغير عند التوقف والإعلانات."):QStringLiteral("\nEnd times use the PC clock; pauses and announcements shift estimates.")):(ar?QStringLiteral("\nأوقات الانتهاء تتطلب ترتيبًا متسلسلًا دون تخطي أو قائمة انتظار."):QStringLiteral("\nEnd times require sequential order without skips or queued tracks."));coverage->setText(text);
   });clock->start(1000);
-  music=std::make_unique<StrawberryMusic>(app,nullptr,store->get(QStringLiteral("prayer_pause_enabled"))!=QStringLiteral("0") ? QDateTime::fromString(store->get(QStringLiteral("prayer_hold_until")),Qt::ISODate) : QDateTime());
+  music=std::make_unique<StrawberryMusic>(&*app->player(),&*app->playlist_manager(),nullptr,store->get(QStringLiteral("prayer_pause_enabled"))!=QStringLiteral("0") ? QDateTime::fromString(store->get(QStringLiteral("prayer_hold_until")),Qt::ISODate) : QDateTime());
   window=std::make_unique<Window>(*store,music.get(),main);
   audience=std::make_unique<AudienceDisplay>(*store,main);
   connect(&*app->player(),&Player::ManualMediaRequested,audience.get(),&AudienceDisplay::manualMediaRequested);

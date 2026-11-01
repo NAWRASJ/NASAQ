@@ -20,6 +20,7 @@
  *
  */
 
+#include "../cam/src/datamanager.h"
 #include "config.h"
 #include "version.h"
 
@@ -238,6 +239,9 @@ int main(int argc, char *argv[]) {
     }
     return 0;
   }
+
+  try { NasaqData::applyPending(NasaqData::profilePath()); }
+  catch (const std::exception &e) { SilentMessageBox::critical(nullptr, QStringLiteral("NASAQ data recovery"), QString::fromUtf8(e.what())); return 1; }
 
   QThread::currentThread()->setObjectName(u"Main"_s);
 

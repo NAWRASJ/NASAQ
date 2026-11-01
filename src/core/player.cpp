@@ -791,6 +791,10 @@ void Player::PreviousItem(const EngineBase::TrackChangeFlags change) {
 
 void Player::EngineStateChanged(const EngineBase::State state) {
 
+  // Observers can synchronously pause/stop in response to Playing (CAM holds).
+  // Publish first so a nested transition remains authoritative on return.
+  last_state_ = state;
+
   // Reset the error count when playback stopped, not when playing starts, the engine reports playing before a stream fails to load.
   // A track that played for a while or to its end, or a track the user chose to play, also resets it, see TrackPositionChanged(), TrackEnded() and PlayAt().
   if (state == EngineBase::State::Error) {
@@ -821,8 +825,6 @@ void Player::EngineStateChanged(const EngineBase::State state) {
       Q_EMIT Stopped();
       break;
   }
-
-  last_state_ = state;
 
 }
 

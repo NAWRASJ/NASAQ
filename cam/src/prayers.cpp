@@ -8,7 +8,7 @@
 #include <QFileInfo>
 #include <QCryptographicHash>
 #include <stdexcept>
-PrayerService::PrayerService(Store &s,QObject *parent):QObject(parent),store(s){
+PrayerService::PrayerService(Store &s,QObject *parent,QNetworkAccessManager *client,std::function<QDateTime()> now):QObject(parent),store(s),network(client?client:new QNetworkAccessManager(this)),clock(std::move(now)){
  // Monthly refresh is automatic; the separate pause preference controls playback.
  store.set("prayer_enabled","1");
  auto timer=new QTimer(this);connect(timer,&QTimer::timeout,this,&PrayerService::refreshSaved);timer->start(3600000);
@@ -21,7 +21,7 @@ QDateTime PrayerService::nextPause(Store &s,const QDateTime &now){
  return q.next()?QDateTime::fromMSecsSinceEpoch(q.value(0).toLongLong(),QTimeZone::UTC).addSecs(-lead*60):QDateTime();
 }
 void PrayerService::refreshSaved(){
- try{if(!store.get("prayer_city").trimmed().isEmpty()&&!store.get("prayer_country").trimmed().isEmpty()&&store.get("prayer_sync_date")!=QDate::currentDate().toString(Qt::ISODate))sync(store.get("prayer_city"),store.get("prayer_country"),store.get("prayer_method").toInt(),store.get("prayer_audio"));}catch(const std::exception&e){Q_EMIT completed(false,QString::fromUtf8(e.what()));}
+ try{if(!store.get("prayer_city").trimmed().isEmpty()&&!store.get("prayer_country").trimmed().isEmpty()&&store.get("prayer_sync_date")!=clock().toLocalTime().date().toString(Qt::ISODate))sync(store.get("prayer_city"),store.get("prayer_country"),store.get("prayer_method").toInt(),store.get("prayer_audio"));}catch(const std::exception&e){Q_EMIT completed(false,QString::fromUtf8(e.what()));}
 }
 QList<Event> PrayerService::parseCalendar(const QByteArray &json,const QString &identity,const QString &audio,const QDateTime &now){
  QJsonParseError error;auto doc=QJsonDocument::fromJson(json,&error);auto root=doc.object();
@@ -51,19 +51,33 @@ void PrayerService::saveCalendar(Store&s,const QList<Event>&events){
 void PrayerService::sync(const QString &city,const QString &country,int method,const QString &adhan){
  if(busy){Q_EMIT completed(false,QStringLiteral("Prayer sync already running"));return;}
  if(city.trimmed().isEmpty()||country.trimmed().isEmpty()||(!adhan.isEmpty()&&!QFileInfo(adhan).isFile())){Q_EMIT completed(false,QStringLiteral("Choose a city, country and an existing adhan file"));return;}
- busy=true;
- auto date=QDate::currentDate();QUrl url(QString("https://api.aladhan.com/v1/calendarByCity/%1/%2").arg(date.year()).arg(date.month()));
+ busy=true;fetch(city,country,method,adhan,clock().toLocalTime().date());
+}
+void PrayerService::fetch(const QString &city,const QString &country,int method,const QString &adhan,QDate month,int attempt,bool advanced){
+ QUrl url(QString("https://api.aladhan.com/v1/calendarByCity/%1/%2").arg(month.year()).arg(month.month()));
  QUrlQuery query;query.addQueryItem("city",city.trimmed());query.addQueryItem("country",country.trimmed());query.addQueryItem("method",QString::number(method));query.addQueryItem("iso8601","true");url.setQuery(query);
- QNetworkRequest req(url);req.setTransferTimeout(15000);req.setRawHeader("User-Agent","NASAQ/0.3.10");auto reply=network.get(req);
- connect(reply,&QNetworkReply::finished,this,[this,reply,city,country,method,adhan,date]{
-  busy=false;reply->deleteLater();
+ QNetworkRequest req(url);req.setTransferTimeout(15000);req.setRawHeader("User-Agent",QByteArray("NASAQ/")+NASAQ_VERSION_STRING);auto reply=network->get(req);
+ reply->setReadBufferSize(2*1024*1024+1);
+ connect(reply,&QNetworkReply::readyRead,this,[reply]{if(reply->bytesAvailable()>2*1024*1024){reply->setProperty("tooLarge",true);reply->abort();}});
+ connect(reply,&QNetworkReply::finished,this,[this,reply,city,country,method,adhan,month,attempt,advanced]{
+  reply->deleteLater();
+  const int status=reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+  const bool retryable=!reply->property("tooLarge").toBool() && (status==0||status==408||status==429||status>=500);
+  if(reply->error()!=QNetworkReply::NoError&&retryable&&attempt<2){
+   QTimer::singleShot((attempt+1)*1000,this,[=]{fetch(city,country,method,adhan,month,attempt+1,advanced);});return;
+  }
   try{
+   if(reply->property("tooLarge").toBool())throw std::runtime_error("Prayer response too large");
    if(reply->error()!=QNetworkReply::NoError)throw std::runtime_error(reply->errorString().toStdString());
    auto bytes=reply->readAll();if(bytes.size()>2*1024*1024)throw std::runtime_error("Prayer response too large");
    auto identity=QString::fromLatin1(QCryptographicHash::hash((city+"|"+country+"|"+QString::number(method)).toUtf8(),QCryptographicHash::Sha256).toHex().left(16));
-   auto rows=parseCalendar(bytes,identity,adhan,QDateTime::currentDateTimeUtc());if(rows.isEmpty())throw std::runtime_error("No future prayer times received");
-   saveCalendar(store,rows);store.set("prayer_timezone",QJsonDocument::fromJson(bytes).object()["data"].toArray().first().toObject()["meta"].toObject()["timezone"].toString());store.set("prayer_city",city);store.set("prayer_country",country);store.set("prayer_method",QString::number(method));store.set("prayer_audio",adhan);store.set("prayer_enabled","1");store.set("prayer_sync_date",date.toString(Qt::ISODate));
-   store.log("prayer_sync",city+", "+country+"; AlAdhan; method="+QString::number(method));Q_EMIT completed(true,QStringLiteral("Prayer schedule saved: ")+QString::number(rows.size()));
-  }catch(const std::exception&e){Q_EMIT completed(false,QString::fromUtf8(e.what()));}
+   auto rows=parseCalendar(bytes,identity,adhan,clock());
+   // After the final prayer of a month, fetch the next month instead of reporting
+   // a valid but exhausted calendar as an error. Never delete the saved timetable on failure.
+   if(rows.isEmpty()&&!advanced){fetch(city,country,method,adhan,month.addMonths(1),0,true);return;}
+   if(rows.isEmpty())throw std::runtime_error("No future prayer times received");
+   saveCalendar(store,rows);store.set("prayer_timezone",QJsonDocument::fromJson(bytes).object()["data"].toArray().first().toObject()["meta"].toObject()["timezone"].toString());store.set("prayer_city",city);store.set("prayer_country",country);store.set("prayer_method",QString::number(method));store.set("prayer_audio",adhan);store.set("prayer_enabled","1");store.set("prayer_sync_date",clock().toLocalTime().date().toString(Qt::ISODate));
+   store.log("prayer_sync",city+", "+country+"; AlAdhan; method="+QString::number(method));busy=false;Q_EMIT completed(true,QStringLiteral("Prayer schedule saved: ")+QString::number(rows.size()));
+  }catch(const std::exception&e){busy=false;const auto reason=QString::fromUtf8(e.what());try{store.log("prayer_sync_failed",reason);}catch(...){}Q_EMIT completed(false,reason);}
  });
 }

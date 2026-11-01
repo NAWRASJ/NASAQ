@@ -2,10 +2,11 @@
 #pragma once
 #include "store.h"
 #include <QNetworkAccessManager>
+#include <functional>
 class PrayerService:public QObject {
  Q_OBJECT
 public:
- explicit PrayerService(Store &store,QObject *parent=nullptr);
+ explicit PrayerService(Store &store,QObject *parent=nullptr,QNetworkAccessManager *client=nullptr,std::function<QDateTime()> clock=QDateTime::currentDateTimeUtc);
  void sync(const QString &city,const QString &country,int method,const QString &adhan);
  static QList<Event> parseCalendar(const QByteArray &json,const QString &identity,const QString &audio,const QDateTime &now);
  static void saveCalendar(Store &store,const QList<Event> &events);
@@ -13,6 +14,7 @@ public:
 Q_SIGNALS:
  void completed(bool ok,const QString &message);
 private:
- Store &store;QNetworkAccessManager network;bool busy=false;
+ Store &store;QNetworkAccessManager *network;std::function<QDateTime()> clock;bool busy=false;
+ void fetch(const QString &city,const QString &country,int method,const QString &adhan,QDate month,int attempt=0,bool advanced=false);
  void refreshSaved();
 };

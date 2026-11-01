@@ -20,7 +20,7 @@ void Audio::log(const QString&k,const QString&d){try{store.log(k,d);}catch(const
 bool Audio::playMusic(const QStringList&files){if(!licenseAllowed){Q_EMIT status("Activation required / يلزم التفعيل");return false;}bool accepted=music->replace(files);if(accepted&&priority>0)resume=true;return accepted;}
 void Audio::finishSequence(const QString &result){sequenceTimer.stop();if(sequenceId.isEmpty())return;auto id=sequenceId;sequenceId.clear();sequenceFiles.clear();sequenceLanguages.clear();log("studio_sequence_"+result,id);Q_EMIT sequenceFinished(id,result);}
 void Audio::nextSequence(){if(sequenceId.isEmpty()||sequenceIndex>=sequenceFiles.size())return;log("studio_language_started",sequenceId+":"+sequenceLanguages.value(sequenceIndex));overlay.setSource(QUrl::fromLocalFile(sequenceFiles[sequenceIndex]));overlay.play();}
-void Audio::release(){if(transition||paging||pagePending)return;if(prayerActive()){priority=60;music->suspend(true);return;}priority=0;music->suspend(false);if(resume){resume=false;music->resume();}}
+void Audio::release(){if(transition||paging||pagePending)return;if(prayerActive()){priority=60;music->suspend(true);return;}priority=0;music->suspend(false);if(resume){resume=false;log("music_resume_requested","");music->resume();}}
 bool Audio::dispatch(const Event&e){
  if(!licenseAllowed)return false;
  if((e.kind=="prayer"||e.kind=="adhan")&&store.get("prayer_pause_enabled")=="0"){log("adhan_disabled",e.id);return true;}
@@ -124,5 +124,8 @@ bool Audio::skipPrayer(){
 }
 void Audio::tick(const QDateTime &now){
  if(!prayerRestored){prayerRestored=true;auto saved=QDateTime::fromString(store.get("prayer_hold_until"),Qt::ISODate);if(saved>now&&store.get("prayer_pause_enabled")!="0"){prayerUntil=saved;music->suspend(true);priority=(paging||pagePending)?100:60;Q_EMIT prayerPauseChanged(prayerUntil);}}
- if(prayerUntil.isValid()&&now>=prayerUntil){prayerUntil={};store.set("prayer_hold_until","");log("prayer_pause_finished","");Q_EMIT prayerPauseChanged({});if(!paging&&!pagePending&&!cue.active()&&sequenceId.isEmpty()&&speech.state()!=QTextToSpeech::Speaking&&overlay.playbackState()!=QMediaPlayer::PlayingState)release();}
+ if(prayerUntil.isValid()&&now>=prayerUntil){prayerUntil={};store.set("prayer_hold_until","");log("prayer_pause_finished",resume?"resume pending":"no previous playback");Q_EMIT prayerPauseChanged({});}
+ // Foreground state notifications can arrive after the expiry tick. Retry the
+ // handoff while prayer priority remains, rather than leaving suspension latched.
+ if(!prayerActive()&&priority==60&&!paging&&!pagePending&&!cue.active()&&sequenceId.isEmpty()&&speech.state()!=QTextToSpeech::Speaking&&overlay.playbackState()!=QMediaPlayer::PlayingState)release();
 }

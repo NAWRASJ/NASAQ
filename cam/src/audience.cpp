@@ -123,9 +123,9 @@ void AudienceSurface::paintEvent(QPaintEvent*){
   const auto fitted=card.size().scaled(size(),Qt::KeepAspectRatio);const QRectF box((width()-fitted.width())/2.,(height()-fitted.height())/2.,fitted.width(),fitted.height());p.drawImage(box,card);
   if(!custom){
    p.setPen(QColor("#596039"));QFont textFont(QStringLiteral("Segoe UI"));textFont.setPixelSize(qMax(14,int(box.width()*.027)));p.setFont(textFont);
-   QTextOption arabicText(Qt::AlignCenter);arabicText.setTextDirection(Qt::RightToLeft);p.drawText(QRectF(box.x()+12,box.y()+box.height()*.72,box.width()-24,box.height()*.09),QStringLiteral("الموسيقى متوقفة حالياً احتراماً للآذان."),arabicText);
+   QTextOption arabicText(Qt::AlignCenter);arabicText.setTextDirection(Qt::RightToLeft);p.drawText(QRectF(box.x()+12,box.y()+box.height()*.72,box.width()-24,box.height()*.09),QStringLiteral("التشغيل متوقف مؤقتًا احترامًا للأذان."),arabicText);
    textFont.setPixelSize(qMax(11,int(box.width()*.020)));p.setFont(textFont);
-   p.drawText(QRectF(box.x()+12,box.y()+box.height()*.81,box.width()-24,box.height()*.07),Qt::AlignCenter,QStringLiteral("Music is currently paused out of respect for the Adhan."));
+   p.drawText(QRectF(box.x()+12,box.y()+box.height()*.81,box.width()-24,box.height()*.07),Qt::AlignCenter,QStringLiteral("Playback is temporarily paused for the Adhan."));
   }
   const QRectF badge(qMax(12.,width()/2.-240),height()-65,qMin(480,width()-24),51);p.setPen(Qt::NoPen);p.setBrush(QColor(250,248,238,235));p.drawRoundedRect(badge,12,12);
   QFont timerFont(QStringLiteral("Segoe UI"));timerFont.setPixelSize(qBound(12,width()/65,20));p.setFont(timerFont);p.setPen(QColor("#596039"));p.drawText(badge,Qt::AlignCenter,countdown_);return;

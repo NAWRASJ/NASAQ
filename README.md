@@ -16,7 +16,7 @@ NASAQ is available on Microsoft Store, published by **Nawras Jarbouh**. The Stor
 
 ## Source version
 
-This source release is **NASAQ 0.3.20** (**0.3.20.0 x64 MSIX**), expanding local video/audio support and fixing missing runtime plugins and seeking. See [0.3.20 release notes](docs/RELEASE-0.3.20.md). Store availability follows Microsoft certification. Package identity: `NawrasJarbouh.NASAQ`; Store product: `9PH1T4418KTF`.
+This source release is **NASAQ 0.3.21** (**0.3.21.0 x64 MSIX**), adding local data management and prayer playback fixes. See [0.3.21 release notes](docs/RELEASE-0.3.21.md). Store availability follows Microsoft certification. Package identity: `NawrasJarbouh.NASAQ`; Store product: `9PH1T4418KTF`.
 
 See [Store source provenance](docs/STORE-RELEASE.md) for the archived package hashes, source reconstruction, and verification limits. The 0.3.10 baseline excludes the later license-deactivation button; 0.3.11 includes it. GitHub source updates do not automatically update Microsoft Store; Store updates require a separate package submission.
 

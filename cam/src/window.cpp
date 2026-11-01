@@ -13,6 +13,7 @@
 #include "nasaqlanguage.h"
 #include "licenseactivation.h"
 #include "activationdialog.h"
+#include "datamanager.h"
 #include <QtWidgets>
 #include <QPasswordDigestor>
 #include <QRandomGenerator>
@@ -99,6 +100,8 @@ Window::Window(Store&s,MusicTransport*transport,QWidget*notificationHost):store(
  auto defaultHelp=new QLabel;defaultHelp->setWordWrap(true);pages[5]->addWidget(defaultHelp);
  auto defaultText=[defaultPlayer,defaultHelp]{const bool ar=NasaqLanguage()=="ar";defaultPlayer->setText(ar?QStringLiteral("اجعل نسق المشغّل الافتراضي"):QStringLiteral("Make NASAQ the default audio player"));defaultHelp->setText(ar?QStringLiteral("اختر نسق للملفات الصوتية في إعدادات ويندوز التي ستفتح. أثناء توقف الأذان تُضاف الملفات إلى القائمة دون تشغيلها."):QStringLiteral("Choose NASAQ for audio files in Windows Settings. Files opened during a prayer pause are added without starting playback."));};defaultText();connect(this,&Window::interfaceLanguageChanged,defaultPlayer,defaultText);
  connect(defaultPlayer,&QPushButton::clicked,this,[this]{if(!QDesktopServices::openUrl(QUrl(Nasaq::defaultAudioSettingsUri()))&&!QDesktopServices::openUrl(QUrl("ms-settings:defaultapps")))SilentMessageBox::warning(this,"NASAQ",NasaqLanguage()=="ar"?QStringLiteral("افتح إعدادات ويندوز > التطبيقات > التطبيقات الافتراضية، ثم اختر نسق."):QStringLiteral("Open Windows Settings > Apps > Default apps and choose NASAQ."));});
+ auto dataTools=new QPushButton;dataTools->setObjectName("dataManagement");pages[5]->addWidget(dataTools);
+ auto dataText=[dataTools]{dataTools->setText(NasaqLanguage()=="ar"?QStringLiteral("إدارة البيانات والترخيص"):QStringLiteral("Data and license management"));};dataText();connect(this,&Window::interfaceLanguageChanged,dataTools,dataText);connect(dataTools,&QPushButton::clicked,this,[this]{guarded([this]{audio.stop();NasaqData::showDialog(this);});});
  auto storeUpdates=new StoreUpdates(Nasaq::storeManaged(),this);pages[5]->addWidget(storeUpdates);
  connect(this,&Window::interfaceLanguageChanged,storeUpdates,&StoreUpdates::updateLanguage);
  auto updateNotice=new QPushButton;updateNotice->setObjectName("storeUpdateNotice");layout->insertWidget(1,updateNotice);updateNotice->hide();
@@ -157,7 +160,7 @@ Window::Window(Store&s,MusicTransport*transport,QWidget*notificationHost):store(
  prayerPopup->show();prayerPopup->raise();prayerPopup->activateWindow();},Qt::QueuedConnection);
  auto timer=new QTimer(this);connect(timer,&QTimer::timeout,this,[this]{try{activation.tick();audio.tick(QDateTime::currentDateTimeUtc());scheduler.tick(QDateTime::currentDateTimeUtc(),[this](const Event&e){return audio.dispatch(e);});studioEngine.tick(QDateTime::currentDateTimeUtc());refresh();}catch(const std::exception&e){audio.setLicenseAllowed(false);Q_EMIT licenseAllowedChanged(false);status->setText(NText(QStringLiteral("Storage/scheduler error: "))+e.what());}});timer->start(1000);
  locked=!store.get("pin_hash").isEmpty();refresh();
- connect(&prayers,&PrayerService::completed,this,[this](bool ok,const QString&m){if(!ok)status->setText((NasaqLanguage()=="ar"?QStringLiteral("تعذر تحديث مواقيت الصلاة: "):QStringLiteral("Prayer update failed: "))+m);refresh();});
+ connect(&prayers,&PrayerService::completed,this,[this](bool ok,const QString&m){if(ok)status->setText(NasaqLanguage()=="ar"?QStringLiteral("تم تحديث مواقيت الصلاة بنجاح."):QStringLiteral("Prayer schedule updated successfully."));else status->setText((NasaqLanguage()=="ar"?QStringLiteral("تعذر تحديث مواقيت الصلاة: "):QStringLiteral("Prayer update failed: "))+m);refresh();});
  auto q=store.query("SELECT issuer,expires FROM licenses WHERE expires<=?",{QDate::currentDate().addDays(30).toString(Qt::ISODate)});QStringList reminders;while(q.next())reminders<<q.value(0).toString()+" — "+q.value(1).toString();
  status->setText(reminders.isEmpty()?NText(QStringLiteral("Ready. Recovery preserves schedules; audio does not auto-start after restart.")):NText(QStringLiteral("Licence renewal due or expired: "))+reminders.join("; "));
 }

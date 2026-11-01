@@ -1,11 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <QtTest>
+#include <QNetworkReply>
 #include <QtWidgets>
 #include "window.h"
 #include "prayers.h"
 #include "storeupdates.h"
 #include "nasaqlanguage.h"
 #include "livelanguage.h"
+class CalendarReply:public QNetworkReply {
+ QByteArray body;qint64 pos=0;
+ public:CalendarReply(QNetworkRequest r,int status,QByteArray bytes,QObject*p):QNetworkReply(p),body(bytes){setRequest(r);setUrl(r.url());setAttribute(QNetworkRequest::HttpStatusCodeAttribute,status);if(status!=200)setError(QNetworkReply::ServiceUnavailableError,"temporary service failure");open(QIODevice::ReadOnly);QTimer::singleShot(0,this,[this]{Q_EMIT readyRead();setFinished(true);Q_EMIT finished();});}
+ void abort()override{}qint64 bytesAvailable()const override{return body.size()-pos+QNetworkReply::bytesAvailable();}
+ qint64 readData(char*out,qint64 n)override{auto size=qMin(n,body.size()-pos);if(size<=0)return -1;memcpy(out,body.constData()+pos,size);pos+=size;return size;}
+};
+class CalendarNetwork:public QNetworkAccessManager {
+ public:QList<QPair<int,QByteArray>> replies;QList<QUrl> urls;
+ QNetworkReply*createRequest(Operation,const QNetworkRequest&r,QIODevice*)override{urls<<r.url();auto result=replies.isEmpty()?qMakePair(503,QByteArray()):replies.takeFirst();return new CalendarReply(r,result.first,result.second,this);}
+};
 class ReviewTest:public QObject {
  Q_OBJECT
  QByteArray calendar(QString offset="+04:00"){
@@ -90,6 +101,16 @@ private slots:
 
  void chimePreferencesNoSoundAndPersistence(){Store s(":memory:");QWidget parent;bool seen=false;QTimer timer;connect(&timer,&QTimer::timeout,&parent,[&]{auto d=parent.findChild<QDialog*>();if(!d)return;seen=true;auto combos=d->findChildren<QComboBox*>();QCOMPARE(combos.size(),2);for(auto c:combos)QCOMPARE(c->currentData().toString(),QString("none"));auto dir=qEnvironmentVariable("NASAQ_REVIEW_EVIDENCE");if(!dir.isEmpty())QVERIFY(d->grab().save(dir+"/chimes.png"));auto b=d->findChild<QDialogButtonBox*>();b->button(QDialogButtonBox::Save)->click();});timer.start(200);showChimes(&parent,s);QVERIFY(seen);QCOMPARE(s.get("chime_mic"),QString("none"));QCOMPARE(s.get("chime_ad"),QString("none"));QCOMPARE(s.get("chime_gap"),QString("300"));}
 
+ void monthRolloverFetchesNextCalendar(){
+  Store s(":memory:");CalendarNetwork network;auto old=calendar();auto next=old;next.replace("2030-01-02","2030-02-01");network.replies={{200,old},{200,next}};
+  PrayerService service(s,nullptr,&network,[]{return QDateTime::fromString("2030-01-31T18:30:00Z",Qt::ISODate);});QSignalSpy done(&service,&PrayerService::completed);service.sync("Dubai","AE",16,"");QTRY_COMPARE(done.count(),1);QVERIFY(done[0][0].toBool());QCOMPARE(network.urls.size(),2);QVERIFY(network.urls[1].path().endsWith("/2030/2"));auto q=s.query("select count(*) from events");QVERIFY(q.next());QCOMPARE(q.value(0).toInt(),5);
+ }
+ void temporaryFailureRetriesAndSucceeds(){
+  Store s(":memory:");CalendarNetwork network;network.replies={{503,{}},{200,calendar()}};PrayerService service(s,nullptr,&network,[]{return QDateTime::fromString("2030-01-01T00:00:00Z",Qt::ISODate);});QSignalSpy done(&service,&PrayerService::completed);service.sync("Dubai","AE",16,"");QTRY_COMPARE_WITH_TIMEOUT(done.count(),1,5000);QVERIFY(done[0][0].toBool());QCOMPARE(network.urls.size(),2);
+ }
+ void failedRefreshKeepsSavedTimetable(){
+  Store s(":memory:");s.add({"saved","prayer","",QDateTime::currentDateTimeUtc().addDays(2),60});CalendarNetwork network;PrayerService service(s,nullptr,&network);QSignalSpy done(&service,&PrayerService::completed);service.sync("Dubai","AE",16,"");QTRY_COMPARE_WITH_TIMEOUT(done.count(),1,7000);QVERIFY(!done[0][0].toBool());QCOMPARE(network.urls.size(),3);auto q=s.query("select count(*) from events where id='saved'");QVERIFY(q.next());QCOMPARE(q.value(0).toInt(),1);QVERIFY(s.get("prayer_sync_date").isEmpty());
+ }
  void timezoneConverted(){auto rows=PrayerService::parseCalendar(calendar(),"Dubai","",QDateTime::fromString("2030-01-01T00:00:00Z",Qt::ISODate));QCOMPARE(rows.size(),5);QCOMPARE(rows[0].due.toString(Qt::ISODate),QString("2030-01-02T08:00:00Z"));QCOMPARE(rows[0].kind,QString("prayer"));}
  void missingTimezoneRejected(){QVERIFY_EXCEPTION_THROWN(PrayerService::parseCalendar(calendar(""),"city","",QDateTime::currentDateTimeUtc()),std::runtime_error);}
  void invalidJsonRejected(){QVERIFY_EXCEPTION_THROWN(PrayerService::parseCalendar("bad","city","",QDateTime::currentDateTimeUtc()),std::runtime_error);}

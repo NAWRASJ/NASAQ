@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <QtTest>
+#include "../integrations/strawberrymusic.h"
+#include "audio.h"
+#include "audience.h"
 #include <QApplication>
+#include <QMainWindow>
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTimer>
@@ -20,6 +24,8 @@ class RecoveryManager final : public PlaylistManager {
   Playlist list;
   Playlist *active() const override { return const_cast<Playlist*>(&list); }
   Playlist *current() const override { return active(); }
+  void SetActivePlaylist(int) override {}
+  Playlist *playlist(int id) const override {return id==1?active():nullptr;}
   int active_id() const override { return 1; }
   int current_id() const override { return 1; }
 };
@@ -66,6 +72,30 @@ class RadioRecoveryTest : public QObject {
    player->engine_=engine;player->ConnectEngineSignals();select(QUrl(QStringLiteral("https://example.test/live")));
  }
  void cleanup(){player->Stop();player.reset();engine.reset();manager.reset();}
+ void productionTransportResumesAfterPrayer_data(){QTest::addColumn<bool>("radio");QTest::newRow("radio")<<true;QTest::newRow("local")<<false;}
+ void mainWindowStopCancelsPrayerResume_data(){productionTransportResumesAfterPrayer_data();}
+ void mainWindowStopCancelsPrayerResume(){
+   QFETCH(bool,radio);player->playlists_loaded_=true;if(!radio)select(QUrl::fromLocalFile(QStringLiteral("C:/test.wav")),false);
+   Store store(QStringLiteral(":memory:"));StrawberryMusic music(player.get(),manager.get());Audio audio(store,nullptr,&music);
+   const auto now=QDateTime::currentDateTimeUtc();QVERIFY(audio.dispatch({QStringLiteral("prayer"),QStringLiteral("prayer"),{},now,60}));
+   player->Stop();audio.tick(now.addSecs(601));QCOMPARE(engine->state(),EngineBase::State::Empty);QVERIFY(!music.playing());
+ }
+ void latePlayingDuringHoldKeepsPausedState(){
+   player->playlists_loaded_=true;select(QUrl::fromLocalFile(QStringLiteral("C:/test.wav")),false);
+   StrawberryMusic music(player.get(),manager.get());music.suspend(true);
+   engine->Unpause();QCOMPARE(engine->state(),EngineBase::State::Paused);QCOMPARE(player->GetState(),EngineBase::State::Paused);
+   music.suspend(false);music.resume();QVERIFY(music.playing());QCOMPARE(engine->state(),EngineBase::State::Playing);
+ }
+ void productionTransportResumesAfterPrayer(){
+   QFETCH(bool,radio);player->playlists_loaded_=true;
+   if(!radio)select(QUrl::fromLocalFile(QStringLiteral("C:/test.wav")),false);
+   const int plays=engine->plays;
+   Store store(QStringLiteral(":memory:"));StrawberryMusic music(player.get(),manager.get());Audio audio(store,nullptr,&music);
+   auto now=QDateTime::currentDateTimeUtc();QVERIFY(music.playing());
+   QVERIFY(audio.dispatch({QStringLiteral("early"),QStringLiteral("prayer"),{},now.addSecs(60),60}));QVERIFY(!music.playing());
+   QVERIFY(audio.dispatch({QStringLiteral("actual"),QStringLiteral("prayer"),{},now.addSecs(60),60}));
+   audio.tick(now.addSecs(661));QVERIFY(!audio.prayerActive());QVERIFY(music.playing());QCOMPARE(engine->plays,plays+(radio?1:0));
+ }
  void errorsAreQuietAndRetrySameRow(){
    QSignalSpy errors(player.get(),&Player::Error);engine->fail();
    QCOMPARE(errors.count(),0);QVERIFY(player->radio_retry_timer_->isActive());QCOMPARE(player->radio_retry_timer_->interval(),2000);
@@ -137,6 +167,12 @@ class RadioRecoveryTest : public QObject {
    pipeline->buffering_=true;gst->BufferingStarted();pipeline->ConfirmPlaybackFlow();QVERIFY(pipeline->is_buffering());
    pipeline->buffering_=false;gst->BufferingFinished();pipeline->SetState(GST_STATE_PLAYING);QTRY_COMPARE(pipeline->state(),GST_STATE_PLAYING);
    QCOMPARE(errors.count(),0);const int row=manager->list.current_row();
+   Store store(QStringLiteral(":memory:"));StrawberryMusic music(player.get(),manager.get());Audio audio(store,nullptr,&music);
+   const auto due=QDateTime::currentDateTimeUtc();
+   QVERIFY(audio.dispatch({QStringLiteral("normal"),QStringLiteral("prayer"),{},due,60}));
+   QTest::qWait(300);audio.tick(due.addSecs(601));
+   QTRY_VERIFY_WITH_TIMEOUT(player->engine()->position_nanosec()>1000000000,15000);
+   QVERIFY(music.playing());QCOMPARE(manager->list.current_row(),row);
    offline=true;for(const auto &socket:sockets)if(socket)socket->abort();
    QTRY_VERIFY_WITH_TIMEOUT(player->radio_retry_timer_->isActive(),15000);
    player->setProperty("camSuspended",true);player->engine()->SetBusinessGain(0);player->engine()->Stop(true);
@@ -145,6 +181,68 @@ class RadioRecoveryTest : public QObject {
    player->PlayAt(row,false,0,EngineBase::TrackChangeType::First,Playlist::AutoScroll::Never,false);
    QTRY_VERIFY_WITH_TIMEOUT(player->engine()->position_nanosec()>1000000000,15000);QCOMPARE(errors.count(),0);
    player->Stop();const int stoppedRequests=requests;QTest::qWait(2300);QCOMPARE(requests,stoppedRequests);
+ }
+ void realLocalFileResumesAfterPrayer_data(){QTest::addColumn<int>("settleMs");QTest::newRow("pending-pause")<<0;QTest::newRow("settled-pause")<<500;}
+ void productionVideoScreenResumesAfterPrayer_data(){QTest::addColumn<bool>("withAdhan");QTest::newRow("silent-pause")<<false;QTest::newRow("adhan-audio")<<true;}
+ void productionVideoScreenResumesAfterPrayer(){
+   QFETCH(bool,withAdhan);
+   QTemporaryDir temp;
+   Settings settings;settings.beginGroup(QStringLiteral("Backend"));settings.setValue(QStringLiteral("output"),QStringLiteral("fakesink"));settings.endGroup();
+   player->Stop();player.reset();player=std::make_unique<Player>(make_shared<TaskManager>(),make_shared<UrlHandlers>(),manager);
+   QVERIFY(player->engine()->Init());player->ConnectEngineSignals();player->playlists_loaded_=true;
+   const auto video=qEnvironmentVariable("NASAQ_VIDEO_FIXTURE");QVERIFY(QFileInfo::exists(video));select(QUrl::fromLocalFile(video),false);
+   auto gst=qobject_cast<GstEngine*>(&*player->engine());QVERIFY(gst);
+   QImage frame;QTRY_VERIFY_WITH_TIMEOUT(([&]{if(frame.isNull())frame=gst->TakeVideoFrame();return !frame.isNull();}()),15000);
+   QTRY_VERIFY_WITH_TIMEOUT(gst->position_nanosec()>1000000000,10000);
+   Store store(QStringLiteral(":memory:"));store.set(QStringLiteral("prayer_pause_minutes"),QStringLiteral("1"));
+   StrawberryMusic music(player.get(),manager.get());Audio audio(store,nullptr,&music);QMainWindow main;AudienceDisplay display(store,&main);
+   display.updateFrame(frame,gst->VideoGeneration(),false,false);display.setPlayback(true,false,false,QStringLiteral("Prayer video regression"),{},{});
+   QVERIFY(!display.preview()->prayerVisible());
+   const auto evidence=qEnvironmentVariable("NASAQ_VIDEO_EVIDENCE");const auto label=withAdhan?QStringLiteral("adhan"):QStringLiteral("silent");
+   if(!evidence.isEmpty())QVERIFY(display.preview()->grab().save(evidence+QStringLiteral("/video-before-")+label+QStringLiteral(".png")));
+   const auto due=QDateTime::currentDateTimeUtc().addSecs(60);
+   QVERIFY(audio.dispatch({QStringLiteral("early"),QStringLiteral("prayer"),{},due,60}));
+   QTRY_COMPARE(gst->state(),EngineBase::State::Paused);const auto pausedAt=gst->position_nanosec();const int generation=gst->VideoGeneration();
+   display.updateFrame({},gst->VideoGeneration(),audio.prayerActive(),true);display.setPlayback(false,false,false,{},AudienceDisplay::prayerCaption(store,QDateTime::currentDateTimeUtc()),{});
+   QVERIFY(display.preview()->prayerVisible());QCOMPARE(gst->business_gain_,0.0);
+   if(!evidence.isEmpty())QVERIFY(display.preview()->grab().save(evidence+QStringLiteral("/video-paused-")+label+QStringLiteral(".png")));
+   QString adhan;
+   if(withAdhan){
+     adhan=temp.filePath(QStringLiteral("silent-adhan.wav"));QFile file(adhan);QVERIFY(file.open(QIODevice::WriteOnly));QDataStream wav(&file);wav.setByteOrder(QDataStream::LittleEndian);
+     wav.writeRawData("RIFF",4);wav<<quint32(36+32000);wav.writeRawData("WAVEfmt ",8);wav<<quint32(16)<<quint16(1)<<quint16(1)<<quint32(16000)<<quint32(32000)<<quint16(2)<<quint16(16);wav.writeRawData("data",4);wav<<quint32(32000);file.write(QByteArray(32000,'\0'));file.close();
+   }
+   QVERIFY(audio.dispatch({QStringLiteral("actual"),withAdhan?QStringLiteral("adhan"):QStringLiteral("prayer"),adhan,due,60}));
+   QTest::qWait(1500);QVERIFY(audio.prayerActive());QCOMPARE(gst->state(),EngineBase::State::Paused);QVERIFY(qAbs(gst->position_nanosec()-pausedAt)<100000000);
+   audio.tick(due.addSecs(59));QVERIFY(audio.prayerActive());
+   QTRY_VERIFY_WITH_TIMEOUT(([&]{audio.tick(due.addSecs(60));return music.playing();}()),10000);
+   QVERIFY(!audio.prayerActive());QCOMPARE(gst->business_gain_,1.0);QCOMPARE(gst->VideoGeneration(),generation);QVERIFY(gst->position_nanosec()>=pausedAt-100000000);
+   QTRY_VERIFY_WITH_TIMEOUT(gst->position_nanosec()>pausedAt+1000000000,10000);frame={};
+   QTRY_VERIFY_WITH_TIMEOUT(([&]{if(frame.isNull())frame=gst->TakeVideoFrame();return !frame.isNull();}()),10000);
+   display.updateFrame(frame,gst->VideoGeneration(),false,false);display.setPlayback(true,false,false,QStringLiteral("Resumed video"),{},{});
+   QVERIFY(!display.preview()->prayerVisible());
+   if(!evidence.isEmpty())QVERIFY(display.preview()->grab().save(evidence+QStringLiteral("/video-resumed-")+label+QStringLiteral(".png")));
+   auto errors=store.query(QStringLiteral("SELECT count(*) FROM logs WHERE kind='audio_error'"));QVERIFY(errors.next());QCOMPARE(errors.value(0).toInt(),0);
+   player->Stop();
+ }
+ void realLocalFileResumesAfterPrayer(){
+   QFETCH(int,settleMs);
+   Settings settings;settings.beginGroup(QStringLiteral("Backend"));settings.setValue(QStringLiteral("output"),QStringLiteral("fakesink"));settings.endGroup();
+   player->Stop();player.reset();player=std::make_unique<Player>(make_shared<TaskManager>(),make_shared<UrlHandlers>(),manager);
+   QVERIFY(player->engine()->Init());player->ConnectEngineSignals();player->playlists_loaded_=true;
+   QTemporaryDir dir;QFile file(dir.filePath(QStringLiteral("local.wav")));QVERIFY(file.open(QIODevice::WriteOnly));
+   QDataStream out(&file);out.setByteOrder(QDataStream::LittleEndian);out.writeRawData("RIFF",4);out<<quint32(36+32000*120);out.writeRawData("WAVEfmt ",8);out<<quint32(16)<<quint16(1)<<quint16(1)<<quint32(16000)<<quint32(32000)<<quint16(2)<<quint16(16);out.writeRawData("data",4);out<<quint32(32000*120);file.write(QByteArray(32000*120,'\0'));file.close();
+   select(QUrl::fromLocalFile(file.fileName()),false);
+   QTRY_VERIFY_WITH_TIMEOUT(player->engine()->position_nanosec()>1000000000,15000);
+   Store store(QStringLiteral(":memory:"));StrawberryMusic music(player.get(),manager.get());Audio audio(store,nullptr,&music);
+   auto now=QDateTime::currentDateTimeUtc();QVERIFY(music.playing());
+   QVERIFY(audio.dispatch({QStringLiteral("early"),QStringLiteral("prayer"),{},now,60}));
+   QTRY_COMPARE(player->GetState(),EngineBase::State::Paused);
+   const auto position=player->engine()->position_nanosec();
+   QVERIFY(audio.dispatch({QStringLiteral("actual"),QStringLiteral("prayer"),{},now,60}));
+   if(settleMs)QTest::qWait(settleMs);
+   audio.tick(now.addSecs(601));
+   QTRY_VERIFY_WITH_TIMEOUT(player->engine()->position_nanosec()>position+1000000000,10000);QVERIFY(music.playing());
+   player->Stop();
  }
  private:
  QUrl currentUrl() const {return player->current_item_->OriginalUrl();}
