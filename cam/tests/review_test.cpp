@@ -7,6 +7,7 @@
 #include "storeupdates.h"
 #include "nasaqlanguage.h"
 #include "livelanguage.h"
+#include "nasaqtheme.h"
 class CalendarReply:public QNetworkReply {
  QByteArray body;qint64 pos=0;
  public:CalendarReply(QNetworkRequest r,int status,QByteArray bytes,QObject*p):QNetworkReply(p),body(bytes){setRequest(r);setUrl(r.url());setAttribute(QNetworkRequest::HttpStatusCodeAttribute,status);if(status!=200)setError(QNetworkReply::ServiceUnavailableError,"temporary service failure");open(QIODevice::ReadOnly);QTimer::singleShot(0,this,[this]{Q_EMIT readyRead();setFinished(true);Q_EMIT finished();});}
@@ -24,6 +25,13 @@ class ReviewTest:public QObject {
  return QJsonDocument(QJsonObject{{"code",200},{"data",QJsonArray{QJsonObject{{"timings",timings}}}}}).toJson();
  }
 private slots:
+ void unifiedPrayerAndDataCenter(){
+  Store s(":memory:");Window w(s);QTimer dismiss;connect(&dismiss,&QTimer::timeout,&w,[&]{if(auto d=w.findChild<QDialog*>("activationDialog"))d->reject();});dismiss.start(30);
+  bool prayerSeen=false;QTimer::singleShot(100,&w,[&]{auto d=w.findChild<QDialog*>("prayerSettings");if(!d)return;prayerSeen=true;QVERIFY(d->findChild<QPushButton*>("testPrayer15Seconds"));QVERIFY(d->findChild<QSpinBox*>("prayerLeadMinutes"));auto evidence=qEnvironmentVariable("NASAQ_REVIEW_EVIDENCE");if(!evidence.isEmpty())QVERIFY(d->grab().save(evidence+"/unified-prayer.png"));d->reject();});w.configurePrayers();QVERIFY(prayerSeen);
+  bool centerSeen=false;QTimer::singleShot(100,&w,[&]{auto d=w.findChild<QDialog*>("nasaqDataCenter");if(!d)return;centerSeen=true;QVERIFY(d->findChild<StoreUpdates*>());QString text;for(auto label:d->findChildren<QLabel*>())text+=label->text();QVERIFY(text.contains(NASAQ_VERSION_STRING));auto evidence=qEnvironmentVariable("NASAQ_REVIEW_EVIDENCE");if(!evidence.isEmpty())QVERIFY(d->grab().save(evidence+"/data-center.png"));d->reject();});w.openDataCenter();QVERIFY(centerSeen);
+ }
+ void textScaleIsBoundedAndReversible(){QSettings prefs("NASAQ","Preferences");prefs.setValue("text_scale",130);ApplyNasaqTextScale();QCOMPARE(qApp->font().pointSize(),13);prefs.setValue("text_scale",999);ApplyNasaqTextScale();QCOMPARE(qApp->font().pointSize(),13);prefs.setValue("text_scale",100);ApplyNasaqTextScale();QCOMPARE(qApp->font().pointSize(),10);}
+
  void storeUpdateStates(){
   int calls=0;StoreUpdates panel(true,nullptr,[&calls](quintptr){++calls;if(calls==1)return StoreUpdateResult{true,{}};if(calls==2)return StoreUpdateResult{false,"offline"};return StoreUpdateResult{};});
   QSignalSpy available(&panel,&StoreUpdates::availabilityChanged);auto button=panel.findChild<QPushButton*>("checkStoreUpdates");QVERIFY(button);
@@ -133,6 +141,6 @@ private slots:
  void realNetworkSync(){if(!qEnvironmentVariableIsSet("NASAQ_LIVE_NETWORK"))QSKIP("Live network test not requested");Store s(":memory:");PrayerService service(s);QSignalSpy spy(&service,&PrayerService::completed);service.sync("Dubai","AE",16,"");QTRY_VERIFY_WITH_TIMEOUT(!spy.isEmpty(),25000);QVERIFY2(spy.first().first().toBool(),qPrintable(spy.first().at(1).toString()));QCOMPARE(s.get("prayer_timezone"),QString("Asia/Dubai"));auto q=s.query("SELECT count(*) FROM events WHERE status='pending'");q.next();QVERIFY(q.value(0).toInt()>0);}
  void realServiceFixture(){auto path=qEnvironmentVariable("NASAQ_PRAYER_FIXTURE");if(path.isEmpty())QSKIP("No live fixture supplied");QFile file(path);QVERIFY(file.open(QIODevice::ReadOnly));auto rows=PrayerService::parseCalendar(file.readAll(),"live","",QDateTime::currentDateTimeUtc());QVERIFY(rows.size()>0);}
 };
-int main(int argc,char **argv){qputenv("QT_MEDIA_BACKEND","windows");QApplication app(argc,argv);app.setApplicationName("NASAQ-Review-Tests");ReviewTest test;return QTest::qExec(&test,argc,argv);}
+int main(int argc,char **argv){qputenv("QT_MEDIA_BACKEND","windows");QApplication app(argc,argv);app.setApplicationName("NASAQ-Review-Tests");QTemporaryDir isolated;QSettings::setDefaultFormat(QSettings::IniFormat);QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,isolated.path());ReviewTest test;return QTest::qExec(&test,argc,argv);}
 #include "review_test.moc"
 

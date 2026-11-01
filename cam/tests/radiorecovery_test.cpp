@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include <QtTest>
 #include "../integrations/strawberrymusic.h"
+#include "../integrations/experience.h"
 #include "audio.h"
 #include "audience.h"
 #include <QApplication>
@@ -72,6 +73,16 @@ class RadioRecoveryTest : public QObject {
    player->engine_=engine;player->ConnectEngineSignals();select(QUrl(QStringLiteral("https://example.test/live")));
  }
  void cleanup(){player->Stop();player.reset();engine.reset();manager.reset();}
+
+ void previewUsesProductionTransport_data(){productionTransportResumesAfterPrayer_data();}
+ void previewUsesProductionTransport(){QFETCH(bool,radio);player->playlists_loaded_=true;if(!radio)select(QUrl::fromLocalFile(QStringLiteral("C:/test.wav")),false);Store s(QStringLiteral(":memory:"));StrawberryMusic music(player.get(),manager.get());Audio audio(s,nullptr,&music);QVERIFY(audio.previewPrayer());QVERIFY(!music.playing());audio.tick(QDateTime::currentDateTimeUtc().addSecs(16));QVERIFY(music.playing());}
+ void workspaceCheckpointStopAndWizard(){
+  Store s(QStringLiteral(":memory:"));s.set(QStringLiteral("ux_setup_complete"),QStringLiteral("1"));QMainWindow main;main.resize(1100,700);main.setCentralWidget(new QLabel(QStringLiteral("قائمة التشغيل — مساحة الإدارة")));Window window(s,nullptr,&main);const auto nextAd=QDateTime::currentDateTimeUtc().addSecs(600);s.exec(QStringLiteral("INSERT INTO studio_rules(id,ad,body,next) VALUES('ux-test','ad','{}',?)"),{nextAd.toMSecsSinceEpoch()});AudienceDisplay audience(s,&main);NasaqExperience experience(player.get(),manager.get(),&main,s,&window,&audience);main.show();
+  QVERIFY(main.findChild<QLabel*>(QStringLiteral("playbackExplanation")));QVERIFY(main.findChild<QLabel*>(QStringLiteral("dailyUpcoming"))->text().contains(nextAd.toLocalTime().toString(QStringLiteral("HH:mm"))));main.setProperty("nasaqExiting",true);QVERIFY(!s.get(QStringLiteral("ux_recovery")).isEmpty());player->Stop();QCoreApplication::processEvents();QVERIFY(!s.get(QStringLiteral("ux_recovery")).isEmpty());main.setProperty("nasaqExiting",false);select(QUrl(QStringLiteral("https://example.test/live")));player->Stop();QTRY_VERIFY(s.get(QStringLiteral("ux_recovery")).isEmpty());
+  auto evidence=qEnvironmentVariable("NASAQ_VIDEO_EVIDENCE");if(!evidence.isEmpty())QVERIFY(main.grab().save(evidence+QStringLiteral("/daily-workspace.png")));
+  QSettings scale(QStringLiteral("NASAQ"),QStringLiteral("Preferences"));scale.setValue(QStringLiteral("text_scale"),130);ApplyNasaqTextScale();QCoreApplication::processEvents();if(!evidence.isEmpty())QVERIFY(main.grab().save(evidence+QStringLiteral("/daily-workspace-large.png")));
+  bool seen=false;QTimer::singleShot(100,&main,[&]{auto wizard=main.findChild<QWizard*>(QStringLiteral("nasaqFirstRun"));if(!wizard)return;seen=true;QCOMPARE(wizard->pageIds().size(),5);if(!evidence.isEmpty())QVERIFY(wizard->grab().save(evidence+QStringLiteral("/first-run.png")));for(int i=0;i<4;++i)wizard->next();QVERIFY(!wizard->button(QWizard::FinishButton)->isEnabled());wizard->reject();});experience.showWizard();QVERIFY(seen);scale.setValue(QStringLiteral("text_scale"),100);ApplyNasaqTextScale();
+ }
  void productionTransportResumesAfterPrayer_data(){QTest::addColumn<bool>("radio");QTest::newRow("radio")<<true;QTest::newRow("local")<<false;}
  void mainWindowStopCancelsPrayerResume_data(){productionTransportResumesAfterPrayer_data();}
  void mainWindowStopCancelsPrayerResume(){

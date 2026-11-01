@@ -21,6 +21,10 @@ class Audio:public QObject {
  void tick(const QDateTime &now);
  bool prayerActive()const{return prayerUntil.isValid();}
  bool skipPrayer();
+ bool previewPrayer(const QString &file=QString());
+ bool prayerPreviewActive() const {return prayerPreview;}
+ QDateTime prayerDeadline() const {return prayerUntil;}
+ bool resumePending() const {return resume;}
  void setPrayerPauseEnabled(bool enabled);
  void stop();
  void cancelSequence(const QString &id){if(sequenceId==id)stop();}
@@ -39,7 +43,7 @@ class Audio:public QObject {
  ChimeCue cue;bool pagePending=false;
  void release(); void log(const QString&,const QString&);
  Store &store; MusicTransport *music;MusicDuck duck;QDateTime prayerUntil;bool prayerRestored=false; QMediaPlayer overlay; QAudioOutput overlayOut; QTextToSpeech speech;
- bool licenseAllowed=true;
+ bool licenseAllowed=true,prayerPreview=false;
  int priority=0; bool resume=false,paging=false,transition=false;
  std::unique_ptr<QAudioSource> mic; std::unique_ptr<QAudioSink> sink;
 };

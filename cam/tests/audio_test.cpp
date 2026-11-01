@@ -16,6 +16,13 @@ class FakeMusic:public MusicTransport {
 class AudioTest:public QObject {
  Q_OBJECT
 private slots:
+ void prayerPreviewRestoresPreviousState(){Store s(":memory:");s.set("prayer_pause_enabled","0");s.set("prayer_pause_minutes","25");FakeMusic music;Audio audio(s,nullptr,&music);QVERIFY(audio.previewPrayer());QVERIFY(audio.prayerPreviewActive());QVERIFY(music.held);QVERIFY(s.get("prayer_hold_until").isEmpty());audio.tick(QDateTime::currentDateTimeUtc().addSecs(16));QVERIFY(!audio.prayerActive());QVERIFY(!music.held);QCOMPARE(music.resumes,1);QCOMPARE(s.get("prayer_pause_enabled"),QString("0"));QCOMPARE(s.get("prayer_pause_minutes"),QString("25"));}
+ void previewDoesNotStartPreviouslyPausedMusic(){Store s(":memory:");FakeMusic music;music.running=false;Audio audio(s,nullptr,&music);QVERIFY(audio.previewPrayer());audio.tick(QDateTime::currentDateTimeUtc().addSecs(16));QCOMPARE(music.resumes,0);QVERIFY(!music.held);}
+ void previewStopCancelsResume(){Store s(":memory:");FakeMusic music;Audio audio(s,nullptr,&music);QVERIFY(audio.previewPrayer());audio.stop();audio.tick(QDateTime::currentDateTimeUtc().addSecs(16));QCOMPARE(music.resumes,0);QVERIFY(!music.held);}
+ void realPrayerSupersedesPreview(){Store s(":memory:");FakeMusic music;Audio audio(s,nullptr,&music);QVERIFY(audio.previewPrayer());auto now=QDateTime::currentDateTimeUtc();QVERIFY(audio.dispatch({"real","prayer","",now,60}));QVERIFY(!audio.prayerPreviewActive());audio.tick(now.addSecs(16));QVERIFY(audio.prayerActive());QVERIFY(music.held);QVERIFY(!audio.previewPrayer());audio.tick(now.addSecs(601));QCOMPARE(music.resumes,1);}
+ void configuredPrayerDoesNotResumeWhenDisabled(){Store s(":memory:");s.set("prayer_resume_enabled","0");FakeMusic music;Audio audio(s,nullptr,&music);auto now=QDateTime::currentDateTimeUtc();QVERIFY(audio.dispatch({"real","prayer","",now,60}));audio.tick(now.addSecs(601));QCOMPARE(music.resumes,0);QVERIFY(!music.held);}
+ void previewRequiresValidFileAndLicense(){Store s(":memory:");FakeMusic music;Audio audio(s,nullptr,&music);QVERIFY(!audio.previewPrayer("C:/missing-ux-test.wav"));QVERIFY(!music.held);audio.setLicenseAllowed(false);QVERIFY(!audio.previewPrayer());}
+
  void earlyPauseDoesNotPlayAdhanUntilTimetable(){
   QTemporaryDir dir;auto file=dir.filePath("adhan.wav");QVERIFY(writeSilence(file));Store s(":memory:");FakeMusic music;Audio audio(s,nullptr,&music);Scheduler scheduler(s);auto now=QDateTime::currentDateTimeUtc();auto at=now.addSecs(120);s.set("prayer_lead_minutes","2");s.add({"fajr","adhan",file,at,60});
   scheduler.tick(now,[&](const Event&e){return audio.dispatch(e);});QVERIFY(music.held);QTest::qWait(100);auto q=s.query("SELECT count(*) FROM logs WHERE kind='play_started'");QVERIFY(q.next());QCOMPARE(q.value(0).toInt(),0);

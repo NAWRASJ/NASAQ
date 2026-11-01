@@ -10,6 +10,10 @@
 #include <QImageReader>
 #include <QCryptographicHash>
 #include <QSaveFile>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QRegularExpression>
 #include <stdexcept>
 #include <cmath>
 namespace {
@@ -311,7 +315,12 @@ QString AudienceDisplay::importImage(const QString &source,const QString &direct
 }
 void AudienceDisplay::settings(){
  QDialog d(main_);d.setObjectName("audienceSettings");d.setWindowTitle(trAudience("Display and screens","العرض والشاشات"));d.resize(640,680);
- QVBoxLayout outer(&d);QScrollArea scroll;scroll.setWidgetResizable(true);scroll.setFrameShape(QFrame::NoFrame);auto content=new QWidget;QFormLayout form(content);scroll.setWidget(content);outer.addWidget(&scroll);
+ QVBoxLayout outer(&d);QTabWidget tabs;QWidget screenPage,imagePage;
+ QVBoxLayout screenLayout(&screenPage),imageLayout(&imagePage);
+ QScrollArea scroll,imageScroll;scroll.setWidgetResizable(true);scroll.setFrameShape(QFrame::NoFrame);imageScroll.setWidgetResizable(true);imageScroll.setFrameShape(QFrame::NoFrame);
+ auto content=new QWidget;QFormLayout form(content);scroll.setWidget(content);screenLayout.addWidget(&scroll);
+ auto imageContent=new QWidget;QFormLayout imageForm(imageContent);imageScroll.setWidget(imageContent);imageLayout.addWidget(&imageScroll);
+ tabs.addTab(&screenPage,trAudience("Screens and display","الشاشات والعرض"));tabs.addTab(&imagePage,trAudience("Pause images","صور التوقف"));outer.addWidget(&tabs);
  QLabel heading(trAudience("Audience screen","شاشة الجمهور"));heading.setObjectName("title");form.addRow(&heading);
  QLabel note(trAudience("Use Windows Extend mode. The audience sees only the content; all controls stay on this computer. Audio uses NASAQ's current audio output. Screen or audio-device changes stop playback for safety.","استخدم وضع توسيع الشاشات في ويندوز. تظهر أدوات التحكم على الكمبيوتر فقط. يستخدم الفيديو مخرج الصوت الحالي لنسق. يتوقف التشغيل عند تغيير الشاشة أو جهاز الصوت للحماية."));note.setWordWrap(true);form.addRow(&note);
  QCheckBox enable(trAudience("Enable audience display","تفعيل شاشة الجمهور"));enable.setChecked(enabled_);form.addRow(&enable);
@@ -323,26 +332,56 @@ void AudienceDisplay::settings(){
  QCheckBox crop(trAudience("Fill screen by cropping (default: fit without distortion)","ملء الشاشة بالقص (الافتراضي: احتواء دون تشويه)"));crop.setChecked(crop_);form.addRow(&crop);
  QCheckBox restore(trAudience("Restore display at startup, without starting playback","استعادة العرض عند فتح نسق دون بدء التشغيل"));restore.setChecked(store_.get("audience_restore")=="1");form.addRow(&restore);
  QPushButton output(trAudience("Audio output settings","إعدادات مخرج الصوت"));form.addRow(&output);connect(&output,&QPushButton::clicked,&d,[&]{d.reject();Q_EMIT audioSettingsRequested();});
- QLabel stills(trAudience("Prayer and waiting screens","الصلاة والانتظار"));stills.setObjectName("title");form.addRow(&stills);
- QLabel stillHelp(trAudience("A still image replaces the video throughout the prayer pause, including the early pause. Playback controls remain on this computer.","تظهر صورة ثابتة بدل الفيديو طوال توقف الصلاة، بما فيه التوقف المبكر. تبقى أدوات التحكم على هذا الكمبيوتر."));stillHelp.setWordWrap(true);form.addRow(&stillHelp);
+ QLabel stills(trAudience("Prayer and waiting screens","الصلاة والانتظار"));stills.setObjectName("title");imageForm.addRow(&stills);
+ QLabel stillHelp(trAudience("A still image replaces the video throughout the prayer pause, including the early pause. Playback controls remain on this computer.","تظهر صورة ثابتة بدل الفيديو طوال توقف الصلاة، بما فيه التوقف المبكر. تبقى أدوات التحكم على هذا الكمبيوتر."));stillHelp.setWordWrap(true);imageForm.addRow(&stillHelp);
  QString prayerPath=store_.get("audience_prayer_image"),waitingPath=store_.get("audience_waiting_image");
- QPushButton prayer(trAudience("Choose prayer image","اختيار صورة الصلاة")),waiting(trAudience("Choose audio / radio image","اختيار صورة للصوت والراديو")),reset(trAudience("Restore vinyl and default prayer image","استعادة الفينيل وصورة الصلاة الافتراضية"));form.addRow(&prayer);form.addRow(&waiting);form.addRow(&reset);
- QLabel feedback;feedback.setObjectName("audienceSaveFeedback");feedback.setWordWrap(true);form.addRow(&feedback);
- auto choose=[&](QString &path){const auto file=QFileDialog::getOpenFileName(&d,trAudience("Choose image","اختيار صورة"),{},"Images (*.png *.jpg *.jpeg *.webp)");if(file.isEmpty())return;try{path=importImage(file,QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)+"/CAM/audience");feedback.setText(trAudience("Image ready. Save to apply.","الصورة جاهزة. احفظ لتطبيقها."));}catch(const std::exception&){feedback.setText(trAudience("Cannot load image. Choose a valid image smaller than 20 MB.","تعذر تحميل الصورة. اختر صورة صالحة أصغر من 20 ميغابايت."));}};
- connect(&prayer,&QPushButton::clicked,&d,[&]{choose(prayerPath);});connect(&waiting,&QPushButton::clicked,&d,[&]{choose(waitingPath);});connect(&reset,&QPushButton::clicked,&d,[&]{prayerPath.clear();waitingPath.clear();feedback.setText(trAudience("Default images selected.","تم اختيار الصور الافتراضية."));});
- QDialogButtonBox buttons(QDialogButtonBox::Save|QDialogButtonBox::Cancel);outer.addWidget(&buttons);connect(&buttons,&QDialogButtonBox::rejected,&d,&QDialog::reject);connect(&buttons,&QDialogButtonBox::accepted,&d,[&]{
+ QLabel feedback;feedback.setObjectName("audienceSaveFeedback");feedback.setWordWrap(true);
+ QListWidget gallery;gallery.setObjectName("prayerImageGallery");gallery.setViewMode(QListView::IconMode);gallery.setResizeMode(QListView::Adjust);gallery.setMovement(QListView::Static);gallery.setSelectionMode(QAbstractItemView::SingleSelection);gallery.setIconSize(QSize(176,99));gallery.setGridSize(QSize(204,143));gallery.setMinimumHeight(230);gallery.setWordWrap(true);
+ gallery.setAccessibleName(trAudience("Prayer image library","مكتبة صور التوقف"));
+ gallery.setStyleSheet("QListWidget { background:#f6f5ef; border:1px solid #d7ddce; border-radius:12px; padding:8px; } QListWidget::item { border:2px solid transparent; border-radius:10px; padding:6px; color:#243e32; } QListWidget::item:selected { background:#e4eddf; border:2px solid #597343; color:#153e34; } QListWidget::item:hover { background:#edf0e7; }");
+ auto thumbnail=[](const QImage &image){QPixmap tile(176,99);tile.fill(QColor("#faf4e7"));QPainter painter(&tile);painter.setRenderHint(QPainter::SmoothPixmapTransform);const auto fitted=image.size().scaled(tile.size(),Qt::KeepAspectRatio);painter.drawImage(QRect(QPoint((176-fitted.width())/2,(99-fitted.height())/2),fitted),image);return QIcon(tile);};
+ auto addCard=[&](const QString &path,const QString &name){
+  for(int i=0;i<gallery.count();++i)if(gallery.item(i)->data(Qt::UserRole).toString()==path)return gallery.item(i);
+  const QImage image=path.isEmpty()?QImage(":/nasaq/adhan-default.png"):loadImage(path);
+  auto item=new QListWidgetItem(thumbnail(image),name,&gallery);item->setData(Qt::UserRole,path);item->setToolTip(path.isEmpty()?trAudience("Included with NASAQ — cannot be deleted","مرفقة مع نسق — لا يمكن حذفها"):name);return item;
+ };
+ auto builtin=addCard({},trAudience("Default • Included","الافتراضية • مرفقة"));
+ QStringList originalPaths;
+ const auto savedGallery=QJsonDocument::fromJson(store_.get("audience_prayer_gallery").toUtf8()).array();
+ for(const auto &value:savedGallery){const auto entry=value.toObject();const auto path=entry.value("path").toString();if(!path.isEmpty()&&!path.startsWith(":")){addCard(path,entry.value("name").toString());originalPaths.append(path);}}
+ if(!prayerPath.isEmpty()){addCard(prayerPath,trAudience("Previous image","الصورة السابقة"));originalPaths.append(prayerPath);}
+ imageForm.addRow(&gallery);
+ QLabel selected;selected.setObjectName("prayerImageSelection");selected.setWordWrap(true);imageForm.addRow(&selected);
+ QPushButton add(trAudience("Add images…","إضافة صور…")),remove(trAudience("Delete selected image","حذف الصورة المحددة"));add.setObjectName("addPrayerImages");remove.setObjectName("deletePrayerImage");
+ auto actions=new QHBoxLayout;actions->addWidget(&add);actions->addWidget(&remove);imageForm.addRow(actions);
+ QLabel libraryHelp(trAudience("Select a card, then Save to use it during prayer pauses. Included images cannot be deleted. Original files are never deleted.","حدد صورة ثم اضغط حفظ لاستخدامها أثناء توقف الصلاة. الصور المرفقة محمية من الحذف، ولا تُحذف ملفاتك الأصلية."));libraryHelp.setWordWrap(true);imageForm.addRow(&libraryHelp);
+ connect(&gallery,&QListWidget::currentItemChanged,&d,[&](QListWidgetItem *item){remove.setEnabled(item&&!item->data(Qt::UserRole).toString().isEmpty()&&!item->data(Qt::UserRole).toString().startsWith(":"));if(item){prayerPath=item->data(Qt::UserRole).toString();selected.setText(trAudience("Selected: ","الصورة المحددة: ")+item->text());}});
+ gallery.setCurrentItem(builtin);for(int i=0;i<gallery.count();++i)if(gallery.item(i)->data(Qt::UserRole).toString()==store_.get("audience_prayer_image"))gallery.setCurrentRow(i);
+ connect(&add,&QPushButton::clicked,&d,[&]{const auto files=QFileDialog::getOpenFileNames(&d,trAudience("Add prayer images","إضافة صور للتوقف"),{},"Images (*.png *.jpg *.jpeg *.webp)");int invalid=0;for(const auto &file:files){if(loadImage(file).isNull()){++invalid;continue;}gallery.setCurrentItem(addCard(file,QFileInfo(file).completeBaseName()));}feedback.setText(invalid?trAudience("Some images could not be loaded (maximum 20 MB / 16000 pixels).","تعذر تحميل بعض الصور (الحد 20 ميغابايت / 16000 بكسل)."):trAudience("Images ready. Save to apply.","الصور جاهزة. احفظ لتطبيقها."));});
+ connect(&remove,&QPushButton::clicked,&d,[&]{auto item=gallery.currentItem();if(!item||item->data(Qt::UserRole).toString().isEmpty()||item->data(Qt::UserRole).toString().startsWith(":"))return;delete gallery.takeItem(gallery.row(item));gallery.setCurrentItem(builtin);feedback.setText(trAudience("Image removed from the library. Save to apply; Cancel to undo.","أزيلت الصورة من المكتبة. احفظ لتطبيق الحذف، أو ألغِ للتراجع."));});
+ QPushButton waiting(trAudience("Choose audio / radio image","اختيار صورة للصوت والراديو")),reset(trAudience("Restore vinyl and default prayer image","استعادة الفينيل وصورة الصلاة الافتراضية"));imageForm.addRow(&waiting);imageForm.addRow(&reset);imageForm.addRow(&feedback);
+ connect(&waiting,&QPushButton::clicked,&d,[&]{const auto file=QFileDialog::getOpenFileName(&d,trAudience("Choose image","اختيار صورة"),{},"Images (*.png *.jpg *.jpeg *.webp)");if(file.isEmpty())return;if(loadImage(file).isNull()){feedback.setText(trAudience("Cannot load image.","تعذر تحميل الصورة."));return;}waitingPath=file;feedback.setText(trAudience("Image ready. Save to apply.","الصورة جاهزة. احفظ لتطبيقها."));});
+ connect(&reset,&QPushButton::clicked,&d,[&]{gallery.setCurrentItem(builtin);waitingPath.clear();feedback.setText(trAudience("Default images selected.","تم اختيار الصور الافتراضية."));});
+ QDialogButtonBox buttons(QDialogButtonBox::Save|QDialogButtonBox::Cancel);buttons.button(QDialogButtonBox::Save)->setText(trAudience("Save","حفظ"));buttons.button(QDialogButtonBox::Cancel)->setText(trAudience("Cancel","إلغاء"));outer.addWidget(&buttons);connect(&buttons,&QDialogButtonBox::rejected,&d,&QDialog::reject);connect(&buttons,&QDialogButtonBox::accepted,&d,[&]{
   const bool nextEnabled=enable.isChecked()&&screens.count()>0;
   const QString nextScreen=screens.count()>0?screens.currentData().toString():chosen_;
   bool transaction=false;
+  const QString imageDirectory=QStandardPaths::writableLocation(QStandardPaths::AppLocalDataLocation)+"/CAM/audience";
+  QStringList retained;QJsonArray library;QString savedPrayer,savedWaiting;
   try{
+   for(int i=1;i<gallery.count();++i){const auto item=gallery.item(i);const auto source=item->data(Qt::UserRole).toString();const auto owned=importImage(source,imageDirectory);retained.append(owned);library.append(QJsonObject{{"path",owned},{"name",item->text()}});if(item==gallery.currentItem())savedPrayer=owned;}
+   if(!waitingPath.isEmpty())savedWaiting=importImage(waitingPath,imageDirectory);
    store_.exec("BEGIN IMMEDIATE");transaction=true;
-   store_.set("audience_screen",nextScreen);store_.set("audience_crop",crop.isChecked()?"1":"0");store_.set("audience_restore",nextEnabled&&restore.isChecked()?"1":"0");store_.set("audience_prayer_image",prayerPath);store_.set("audience_waiting_image",waitingPath);
+   store_.set("audience_screen",nextScreen);store_.set("audience_crop",crop.isChecked()?"1":"0");store_.set("audience_restore",nextEnabled&&restore.isChecked()?"1":"0");store_.set("audience_prayer_image",savedPrayer);store_.set("audience_waiting_image",savedWaiting);store_.set("audience_prayer_gallery",QString::fromUtf8(QJsonDocument(library).toJson(QJsonDocument::Compact)));
    store_.exec("COMMIT");transaction=false;
   }catch(const std::exception&){
    if(transaction){try{store_.exec("ROLLBACK");}catch(const std::exception&){}}
    feedback.setText(trAudience("Could not save display settings. Your previous settings are unchanged. Check available disk space and try again.","تعذر حفظ إعدادات العرض. لم تتغير إعداداتك السابقة. تحقق من المساحة المتاحة ثم أعد المحاولة."));
-   scroll.ensureWidgetVisible(&feedback);return;
+   tabs.setCurrentWidget(&imagePage);imageScroll.ensureWidgetVisible(&feedback);return;
   }
+  // Delete only app-owned, content-addressed copies after the preferences commit.
+  const QDir ownedDirectory(imageDirectory);
+  for(const auto &path:originalPaths){const QFileInfo file(path);if(!retained.contains(path)&&path!=savedWaiting&&!file.isSymLink()&&file.canonicalPath()==ownedDirectory.canonicalPath()&&QRegularExpression("^[a-f0-9]{64}\\.png$").match(file.fileName()).hasMatch())QFile::remove(path);}
   enabled_=nextEnabled;chosen_=nextScreen;crop_=crop.isChecked();
   reloadImages();reconcileScreens();d.accept();
  });ApplyNasaqFormDesign(&d);d.exec();

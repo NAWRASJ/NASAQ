@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #include "strawberry_cam.h"
 #include "strawberrymusic.h"
+#include "experience.h"
 #include "audience.h"
 #include "covermanager/currentalbumcoverloader.h"
 #include "engine/gstengine.h"
@@ -140,7 +141,9 @@ class CamHost final:public QObject {
      bands[b]=float(qBound(0.,std::log1p(std::sqrt(re*re+im*im)/frames*60)/std::log(16.),1.));
     }}
    }
-   audience->setPlayback(playing,item&&item->EffectiveMetadata().is_radio(),reconnecting,item?item->EffectiveMetadata().PrettyTitle():QString(),prayerState->property("audienceCaption").toString(),bands);
+   QString caption=prayerState->property("audienceCaption").toString();
+   if(window->prayerPreviewActive()){const auto seconds=qMax<qint64>(0,QDateTime::currentDateTimeUtc().secsTo(window->prayerDeadline()));caption=(NasaqLanguage()==QStringLiteral("ar")?QStringLiteral("تجربة الأذان • "):QStringLiteral("Adhan test • "))+QString::number(seconds);}
+   audience->setPlayback(playing,item&&item->EffectiveMetadata().is_radio(),reconnecting,item?item->EffectiveMetadata().PrettyTitle():QString(),caption,bands);
    audience->preview()->setVolume(app->player()->GetVolume());
    const bool radio=item&&item->EffectiveMetadata().is_radio();
    audience->preview()->setNavigation(!radio||adjacentStation(-1)>=0,!radio||adjacentStation(1)>=0);
@@ -168,6 +171,7 @@ class CamHost final:public QObject {
   if(window->operatorLocked())window->show();
   // Scheduling remains active when its window is hidden; the host lasts until exit.
   store->log(QStringLiteral("integration"),QStringLiteral("Strawberry in-process music transport attached"));
+  experience=std::make_unique<NasaqExperience>(&*app->player(),&*app->playlist_manager(),main,*store,window.get(),audience.get());
   const QString businessTest=qEnvironmentVariable("NASAQ_BUSINESS_TEST_OUTPUT");
   if(!businessTest.isEmpty()&&!qEnvironmentVariableIsEmpty("CAM_SMOKE_OUTPUT")){
    if(QCoreApplication::applicationName().startsWith(QStringLiteral("NASAQ-PersistenceTest-"))&&qEnvironmentVariable("NASAQ_PERSIST_TEST_PHASE")==QStringLiteral("verify")){
@@ -239,6 +243,7 @@ class CamHost final:public QObject {
  std::unique_ptr<StrawberryMusic> music;
  std::unique_ptr<Window> window;
  std::unique_ptr<AudienceDisplay> audience;
+ std::unique_ptr<NasaqExperience> experience;
  QJsonObject testResults;
 };
 void AttachCam(Application*app,QMainWindow*main){

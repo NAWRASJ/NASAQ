@@ -1483,6 +1483,8 @@ void MainWindow::SaveSettings() {
 
 void MainWindow::Exit() {
 
+  setProperty("nasaqExiting", true);
+
   ++exit_count_;
 
   SaveSettings();

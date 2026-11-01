@@ -21,13 +21,20 @@ bool Audio::playMusic(const QStringList&files){if(!licenseAllowed){Q_EMIT status
 void Audio::finishSequence(const QString &result){sequenceTimer.stop();if(sequenceId.isEmpty())return;auto id=sequenceId;sequenceId.clear();sequenceFiles.clear();sequenceLanguages.clear();log("studio_sequence_"+result,id);Q_EMIT sequenceFinished(id,result);}
 void Audio::nextSequence(){if(sequenceId.isEmpty()||sequenceIndex>=sequenceFiles.size())return;log("studio_language_started",sequenceId+":"+sequenceLanguages.value(sequenceIndex));overlay.setSource(QUrl::fromLocalFile(sequenceFiles[sequenceIndex]));overlay.play();}
 void Audio::release(){if(transition||paging||pagePending)return;if(prayerActive()){priority=60;music->suspend(true);return;}priority=0;music->suspend(false);if(resume){resume=false;log("music_resume_requested","");music->resume();}}
+bool Audio::previewPrayer(const QString &file){
+ if(!licenseAllowed||prayerActive()||priority!=0||paging||pagePending||(!file.isEmpty()&&!QFileInfo(file).isFile()))return false;
+ const auto saved=QDateTime::fromString(store.get("prayer_hold_until"),Qt::ISODate);if(saved>QDateTime::currentDateTimeUtc())return false;
+ prayerRestored=true;prayerPreview=true;resume=music->playing();prayerUntil=QDateTime::currentDateTimeUtc().addSecs(15);priority=60;music->suspend(true);
+ Q_EMIT prayerPauseChanged(prayerUntil);log("prayer_preview_started","15 seconds");
+ if(!file.isEmpty()){overlay.setSource(QUrl::fromLocalFile(file));overlay.play();}return true;
+}
 bool Audio::dispatch(const Event&e){
  if(!licenseAllowed)return false;
  if((e.kind=="prayer"||e.kind=="adhan")&&store.get("prayer_pause_enabled")=="0"){log("adhan_disabled",e.id);return true;}
  if((e.kind=="prayer"||e.kind=="adhan")&&store.get("prayer_pause_enabled")!="0"){
  int minutes=store.get("prayer_pause_minutes").isEmpty()?10:qBound(1,store.get("prayer_pause_minutes").toInt(),60);
  auto now=QDateTime::currentDateTimeUtc();auto end=(e.due.isValid()?e.due:now).addSecs(minutes*60);if(end<=now)return false;
- prayerUntil=qMax(prayerUntil,end);store.set("prayer_hold_until",prayerUntil.toString(Qt::ISODate));resume=resume||music->playing();music->suspend(true);log("prayer_music_paused",e.id);Q_EMIT prayerPauseChanged(prayerUntil);
+ prayerPreview=false;prayerUntil=qMax(prayerUntil,end);store.set("prayer_hold_until",prayerUntil.toString(Qt::ISODate));resume=(resume||music->playing())&&store.get("prayer_resume_enabled")!="0";music->suspend(true);log("prayer_music_paused",e.id);Q_EMIT prayerPauseChanged(prayerUntil);
  if(!paging&&!pagePending){cue.cancel();transition=true;finishSequence("interrupted");overlay.stop();speech.stop();transition=false;priority=0;}
  }
  if(e.kind=="prayer"){log("prayer_reminder",e.id);if(prayerActive())release();return true;}
@@ -57,7 +64,7 @@ bool Audio::dispatch(const Event&e){
  const auto obj=QJsonDocument::fromJson(e.payload.toUtf8()).object();auto files=obj["files"].toArray(),languages=obj["languages"].toArray();if(files.isEmpty()||files.size()>3||files.size()!=languages.size()||obj["gap"].toInt()<0||obj["gap"].toInt()>30)return false;for(auto file:files)if(!QFileInfo(file.toString()).isFile())return false;
  }
  else if((e.kind!="announcement"&&e.kind!="adhan")||!QFileInfo(e.payload).isFile()){if(prayerActive())release();return false;}
- resume=resume||music->playing();music->suspend(true);
+ resume=(resume||music->playing())&&(e.kind!="adhan"||store.get("prayer_resume_enabled")!="0");music->suspend(true);
  cue.cancel();transition=true;finishSequence("interrupted");overlay.stop();speech.stop();transition=false;priority=requested;
  if(e.kind=="sequence"){auto obj=QJsonDocument::fromJson(e.payload.toUtf8()).object();sequenceId=e.id;sequenceIndex=0;sequenceGap=obj["gap"].toInt();for(auto f:obj["files"].toArray())sequenceFiles<<f.toString();for(auto l:obj["languages"].toArray())sequenceLanguages<<l.toString();beforeChime(obj["chime"].toString("default"),[this]{nextSequence();});}
  else if(e.kind=="tts")beforeChime("default",[this,speechText]{
@@ -108,7 +115,7 @@ void Audio::stop(){cue.cancel();finishSequence("cancelled");resume=false;transit
 void Audio::setPrayerPauseEnabled(bool enabled){
  store.set("prayer_pause_enabled",enabled?"1":"0");
  if(!enabled){
-  store.set("prayer_hold_until","");prayerUntil={};prayerRestored=true;
+  store.set("prayer_hold_until","");prayerUntil={};prayerPreview=false;prayerRestored=true;
   if(priority==60){transition=true;overlay.stop();transition=false;if(!licenseAllowed)resume=false;release();}
   if(!licenseAllowed)music->stop();
   Q_EMIT prayerPauseChanged({});
@@ -117,14 +124,14 @@ void Audio::setPrayerPauseEnabled(bool enabled){
 }
 bool Audio::skipPrayer(){
  if(!licenseAllowed||!prayerActive())return false;
- store.set("prayer_hold_until","");prayerUntil={};prayerRestored=true;
+ store.set("prayer_hold_until","");prayerUntil={};prayerPreview=false;prayerRestored=true;
  log("prayer_pause_skipped","operator requested playback; future prayers unchanged");
  if(!paging&&!pagePending){transition=true;overlay.stop();transition=false;resume=true;release();}
  Q_EMIT prayerPauseChanged({});return true;
 }
 void Audio::tick(const QDateTime &now){
  if(!prayerRestored){prayerRestored=true;auto saved=QDateTime::fromString(store.get("prayer_hold_until"),Qt::ISODate);if(saved>now&&store.get("prayer_pause_enabled")!="0"){prayerUntil=saved;music->suspend(true);priority=(paging||pagePending)?100:60;Q_EMIT prayerPauseChanged(prayerUntil);}}
- if(prayerUntil.isValid()&&now>=prayerUntil){prayerUntil={};store.set("prayer_hold_until","");log("prayer_pause_finished",resume?"resume pending":"no previous playback");Q_EMIT prayerPauseChanged({});}
+ if(prayerUntil.isValid()&&now>=prayerUntil){if(prayerPreview){transition=true;overlay.stop();transition=false;prayerPreview=false;}prayerUntil={};store.set("prayer_hold_until","");log("prayer_pause_finished",resume?"resume pending":"no previous playback");Q_EMIT prayerPauseChanged({});}
  // Foreground state notifications can arrive after the expiry tick. Retry the
  // handoff while prayer priority remains, rather than leaving suspension latched.
  if(!prayerActive()&&priority==60&&!paging&&!pagePending&&!cue.active()&&sequenceId.isEmpty()&&speech.state()!=QTextToSpeech::Speaking&&overlay.playbackState()!=QMediaPlayer::PlayingState)release();

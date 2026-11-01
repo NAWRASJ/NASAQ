@@ -13,6 +13,10 @@
 #include <QDialogButtonBox>
 #include <QCheckBox>
 #include <QLabel>
+#include <QListWidget>
+#include <QScrollArea>
+#include <QTabWidget>
+#include <QFileDialog>
 #include <QLineEdit>
 #include <QToolButton>
 #include <QSlider>
@@ -80,6 +84,33 @@ private Q_SLOTS:
   QImage frame(640,360,QImage::Format_RGB32);frame.fill(Qt::blue);display.updateFrame(frame,1,false,false);main.showMinimized();QTest::qWait(200);QVERIFY(surface->isVisible());QVERIFY(display.externalActive());QTest::mouseMove(surface,{20,20});QVERIFY(surface->findChildren<QAbstractButton*>().isEmpty());
   display.updateFrame({},1,true,true);QVERIFY(display.preview()->prayerVisible());auto dir=qEnvironmentVariable("NASAQ_VIDEO_EVIDENCE");if(!dir.isEmpty())QVERIFY(surface->grab().save(dir+"/external-prayer.png"));display.stopExternal();QVERIFY(!surface->isVisible());
  }
+ void prayerGalleryAddsImagesThroughPicker(){
+  QTemporaryDir dir;Store store(dir.filePath("add.sqlite"));QMainWindow main;AudienceDisplay display(store,&main);
+  QStringList originals;for(int i=0;i<2;++i){QImage image(160,90,QImage::Format_RGB32);image.fill(i?Qt::blue:Qt::green);auto path=dir.filePath(QString("photo-%1.png").arg(i));QVERIFY(image.save(path));originals.append(path);}
+  bool seen=false;
+  QTimer::singleShot(100,&main,[&]{auto dialog=main.findChild<QDialog*>("audienceSettings");if(!dialog)return;seen=true;
+   auto gallery=dialog->findChild<QListWidget*>("prayerImageGallery");
+   for(const auto &path:originals){QTimer::singleShot(100,&main,[&main,path]{for(auto widget:QApplication::topLevelWidgets())if(auto picker=qobject_cast<QFileDialog*>(widget)){picker->findChild<QLineEdit*>("fileNameEdit")->setText(path);QMetaObject::invokeMethod(picker,"accept",Qt::DirectConnection);}});dialog->findChild<QPushButton*>("addPrayerImages")->click();}
+   QCOMPARE(gallery->count(),3);QCOMPARE(gallery->currentRow(),2);dialog->findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Save)->click();
+  });display.settings();QVERIFY(seen);const auto library=QJsonDocument::fromJson(store.get("audience_prayer_gallery").toUtf8()).array();QCOMPARE(library.size(),2);QVERIFY(QFile::exists(store.get("audience_prayer_image")));for(const auto &path:originals)QVERIFY(QFile::exists(path));
+ }
+ void prayerGalleryProtectsDefaultPersistsSelectionAndCancelsDeletion(){
+  QTemporaryDir dir;Store store(dir.filePath("gallery.sqlite"));QMainWindow main;AudienceDisplay display(store,&main);
+  QImage image(480,270,QImage::Format_RGB32);image.fill(QColor("#547668"));const auto original=dir.filePath("garden.png");QVERIFY(image.save(original));
+  store.set("audience_prayer_image",original);
+  bool seen=false;
+  QTimer::singleShot(100,&main,[&]{auto dialog=main.findChild<QDialog*>("audienceSettings");if(!dialog)return;seen=true;
+   auto gallery=dialog->findChild<QListWidget*>("prayerImageGallery");auto remove=dialog->findChild<QPushButton*>("deletePrayerImage");QVERIFY(gallery);QCOMPARE(gallery->count(),2);QCOMPARE(gallery->currentRow(),1);
+   gallery->setCurrentRow(0);QVERIFY(!remove->isEnabled());remove->click();QCOMPARE(gallery->count(),2);
+   gallery->setCurrentRow(1);QVERIFY(remove->isEnabled());
+   dialog->findChild<QTabWidget*>()->setCurrentIndex(1);QApplication::processEvents();
+   auto evidence=qEnvironmentVariable("NASAQ_VIDEO_EVIDENCE");if(!evidence.isEmpty())QVERIFY(dialog->grab().save(evidence+"/prayer-gallery.png"));
+   dialog->findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Save)->click();
+  });display.settings();QVERIFY(seen);QVERIFY(QFile::exists(original));const auto owned=store.get("audience_prayer_image");QVERIFY(owned!=original);QVERIFY(QFile::exists(owned));
+  QCOMPARE(QJsonDocument::fromJson(store.get("audience_prayer_gallery").toUtf8()).array().size(),1);
+  QTimer::singleShot(100,&main,[&]{auto dialog=main.findChild<QDialog*>("audienceSettings");auto gallery=dialog->findChild<QListWidget*>("prayerImageGallery");QCOMPARE(gallery->currentRow(),1);dialog->findChild<QPushButton*>("deletePrayerImage")->click();QCOMPARE(gallery->count(),1);QVERIFY(!dialog->findChild<QPushButton*>("deletePrayerImage")->isEnabled());dialog->reject();});display.settings();QCOMPARE(store.get("audience_prayer_image"),owned);QVERIFY(QFile::exists(owned));
+  QTimer::singleShot(100,&main,[&]{auto dialog=main.findChild<QDialog*>("audienceSettings");dialog->findChild<QPushButton*>("deletePrayerImage")->click();dialog->findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Save)->click();});display.settings();QVERIFY(store.get("audience_prayer_image").isEmpty());QVERIFY(!QFile::exists(owned));QVERIFY(QFile::exists(original));QVERIFY(QJsonDocument::fromJson(store.get("audience_prayer_gallery").toUtf8()).array().isEmpty());
+ }
  void settingsRespectThemeAndCancelKeepsPreferences(){
   qApp->setProperty("nasaqLiveLanguage",QStringLiteral("ar"));ApplyNasaqTheme();Store store(":memory:");store.set("audience_crop","1");QMainWindow main;main.show();AudienceDisplay display(store,&main);bool seen=false;
   QTimer timer;connect(&timer,&QTimer::timeout,&main,[&]{if(auto dialog=main.findChild<QDialog*>("audienceSettings")){seen=true;QVERIFY(dialog->findChild<QComboBox*>("audienceScreenSelector"));auto dir=qEnvironmentVariable("NASAQ_VIDEO_EVIDENCE");if(!dir.isEmpty())QVERIFY(dialog->grab().save(dir+"/settings-ar.png"));dialog->reject();}});timer.start(100);display.settings();QVERIFY(seen);QCOMPARE(store.get("audience_crop"),QString("1"));QVERIFY(store.get("audience_screen").isEmpty());
@@ -91,7 +122,7 @@ private Q_SLOTS:
     QTimer::singleShot(100,&main,[&]{auto dialog=main.findChild<QDialog*>("audienceSettings");if(!dialog)return;clicked=true;dialog->findChild<QDialogButtonBox*>()->button(QDialogButtonBox::Save)->click();});
     display.settings();QVERIFY(clicked);QVERIFY(!display.externalActive());QVERIFY(!display.preview()->isVisible());
    }
-   auto rows=store.query("SELECT COUNT(*) FROM settings WHERE key LIKE 'audience_%' AND value IS NOT NULL");QVERIFY(rows.next());QCOMPARE(rows.value(0).toInt(),5);
+   auto rows=store.query("SELECT COUNT(*) FROM settings WHERE key LIKE 'audience_%' AND value IS NOT NULL");QVERIFY(rows.next());QCOMPARE(rows.value(0).toInt(),6);
   }
   Store reopened(database);QCOMPARE(reopened.get("audience_crop"),QString("0"));QCOMPARE(reopened.get("audience_restore"),QString("0"));QVERIFY(reopened.get("audience_prayer_image").isEmpty());
  }
@@ -304,7 +335,7 @@ private Q_SLOTS:
   engine.Stop(true);QCOMPARE(engine.VideoGeneration(),-1);QVERIFY(engine.TakeVideoFrame().isNull());
  }
 };
-int main(int argc,char **argv){qputenv("QT_MEDIA_BACKEND","windows");QApplication app(argc,argv);gst_init(nullptr,nullptr);QTimer glib;QObject::connect(&glib,&QTimer::timeout,[]{while(g_main_context_iteration(nullptr,false)){};});glib.start(10);app.setOrganizationName("NASAQ-Video-Test");app.setApplicationName("Video");QTemporaryDir temp;QSettings::setDefaultFormat(QSettings::IniFormat);QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,temp.path());Q_INIT_RESOURCE(data);VideoTest test;return QTest::qExec(&test,argc,argv);}
+int main(int argc,char **argv){qputenv("QT_MEDIA_BACKEND","windows");QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);QApplication app(argc,argv);gst_init(nullptr,nullptr);QTimer glib;QObject::connect(&glib,&QTimer::timeout,[]{while(g_main_context_iteration(nullptr,false)){};});glib.start(10);app.setOrganizationName("NASAQ-Video-Test");app.setApplicationName("Video");QTemporaryDir temp;QSettings::setDefaultFormat(QSettings::IniFormat);QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,temp.path());Q_INIT_RESOURCE(data);VideoTest test;return QTest::qExec(&test,argc,argv);}
 #include "video_test.moc"
 
 

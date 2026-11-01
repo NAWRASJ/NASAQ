@@ -101,7 +101,7 @@ Window::Window(Store&s,MusicTransport*transport,QWidget*notificationHost):store(
  auto defaultText=[defaultPlayer,defaultHelp]{const bool ar=NasaqLanguage()=="ar";defaultPlayer->setText(ar?QStringLiteral("اجعل نسق المشغّل الافتراضي"):QStringLiteral("Make NASAQ the default audio player"));defaultHelp->setText(ar?QStringLiteral("اختر نسق للملفات الصوتية في إعدادات ويندوز التي ستفتح. أثناء توقف الأذان تُضاف الملفات إلى القائمة دون تشغيلها."):QStringLiteral("Choose NASAQ for audio files in Windows Settings. Files opened during a prayer pause are added without starting playback."));};defaultText();connect(this,&Window::interfaceLanguageChanged,defaultPlayer,defaultText);
  connect(defaultPlayer,&QPushButton::clicked,this,[this]{if(!QDesktopServices::openUrl(QUrl(Nasaq::defaultAudioSettingsUri()))&&!QDesktopServices::openUrl(QUrl("ms-settings:defaultapps")))SilentMessageBox::warning(this,"NASAQ",NasaqLanguage()=="ar"?QStringLiteral("افتح إعدادات ويندوز > التطبيقات > التطبيقات الافتراضية، ثم اختر نسق."):QStringLiteral("Open Windows Settings > Apps > Default apps and choose NASAQ."));});
  auto dataTools=new QPushButton;dataTools->setObjectName("dataManagement");pages[5]->addWidget(dataTools);
- auto dataText=[dataTools]{dataTools->setText(NasaqLanguage()=="ar"?QStringLiteral("إدارة البيانات والترخيص"):QStringLiteral("Data and license management"));};dataText();connect(this,&Window::interfaceLanguageChanged,dataTools,dataText);connect(dataTools,&QPushButton::clicked,this,[this]{guarded([this]{audio.stop();NasaqData::showDialog(this);});});
+ auto dataText=[dataTools]{dataTools->setText(NasaqLanguage()=="ar"?QStringLiteral("إدارة البيانات والترخيص"):QStringLiteral("Data and license management"));};dataText();connect(this,&Window::interfaceLanguageChanged,dataTools,dataText);connect(dataTools,&QPushButton::clicked,this,[this]{guarded([this]{openDataCenter();});});
  auto storeUpdates=new StoreUpdates(Nasaq::storeManaged(),this);pages[5]->addWidget(storeUpdates);
  connect(this,&Window::interfaceLanguageChanged,storeUpdates,&StoreUpdates::updateLanguage);
  auto updateNotice=new QPushButton;updateNotice->setObjectName("storeUpdateNotice");layout->insertWidget(1,updateNotice);updateNotice->hide();
@@ -148,7 +148,7 @@ Window::Window(Store&s,MusicTransport*transport,QWidget*notificationHost):store(
   prayerMessage->setText(ar?QStringLiteral("احترامًا لوقت الأذان بحسب مواقيت %1، أُوقفت الموسيقى مؤقتًا.\nسيُستأنف التشغيل السابق عند %2.\nالوقت المتبقي: %3\nشكرًا لتفهّمكم.").arg(city,until.toLocalTime().toString("HH:mm"),remaining):QStringLiteral("Music is temporarily paused for adhan according to the timetable for %1.\nPrevious playback will resume at %2.\nTime remaining: %3\nThank you for your understanding.").arg(city,until.toLocalTime().toString("HH:mm"),remaining));skipPrayer->setEnabled(activation.allowed());
  };
  auto prayerCountdown=new QTimer(prayerPopup);prayerCountdown->setInterval(1000);connect(prayerCountdown,&QTimer::timeout,prayerPopup,updatePrayerPopup);
- connect(&audio,&Audio::prayerPauseChanged,prayerPopup,[prayerPopup,prayerCountdown,updatePrayerPopup](const QDateTime &until){if(!until.isValid()){prayerCountdown->stop();prayerPopup->hide();return;}updatePrayerPopup();prayerCountdown->start();auto host=prayerPopup->parentWidget();
+ connect(&audio,&Audio::prayerPauseChanged,prayerPopup,[this,prayerPopup,prayerCountdown,updatePrayerPopup](const QDateTime &until){if(audio.prayerPreviewActive())return;if(!until.isValid()){prayerCountdown->stop();prayerPopup->hide();return;}updatePrayerPopup();prayerCountdown->start();auto host=prayerPopup->parentWidget();
  if(host){if(host->isMinimized()||!host->isVisible())host->showNormal();host->raise();}
  prayerPopup->adjustSize();
  if(host){
@@ -185,3 +185,15 @@ if(activationDialogOpen)return;
  ActivationDialog dialog(activation,this);
  const auto shot=qEnvironmentVariable("NASAQ_UI_SMOKE");if(!shot.isEmpty())QTimer::singleShot(300,&dialog,[&dialog,shot]{dialog.grab().save(shot+"-activation.png");dialog.reject();});dialog.exec();activationDialogOpen=false;
 }
+
+void Window::openDataCenter(){
+ QDialog d(this);d.setObjectName("nasaqDataCenter");d.setWindowTitle(NasaqLanguage()=="ar"?QStringLiteral("البيانات والترخيص والتحديثات"):QStringLiteral("Data, license and updates"));d.resize(640,480);QVBoxLayout layout(&d);
+ auto label=new QLabel(&d);label->setWordWrap(true);layout.addWidget(label);
+ auto refreshCenter=[this,label]{const bool ar=NasaqLanguage()=="ar";QSettings prefs("NASAQ","Preferences");const auto last=prefs.value("last_verified_backup").toString();const auto at=prefs.value("last_verified_backup_time").toDateTime();label->setText((ar?QStringLiteral("النسخة المثبتة: "):QStringLiteral("Installed version: "))+QStringLiteral(NASAQ_VERSION_STRING)+"\n"+NText(activation.description())+"\n"+(ar?QStringLiteral("آخر نسخة احتياطية متحقق منها: "):QStringLiteral("Last verified backup: "))+(last.isEmpty()?(ar?QStringLiteral("لا توجد نسخة مسجلة"):QStringLiteral("None recorded")):at.toLocalTime().toString("yyyy-MM-dd HH:mm")+"\n"+last));};refreshCenter();
+ auto licenseButton=new QPushButton(NasaqLanguage()=="ar"?QStringLiteral("إدارة الترخيص"):QStringLiteral("Manage license"));layout.addWidget(licenseButton);connect(licenseButton,&QPushButton::clicked,&d,[this,refreshCenter]{showActivationDialog();refreshCenter();});
+ auto dataButton=new QPushButton(NasaqLanguage()=="ar"?QStringLiteral("النسخ الاحتياطي والاستعادة وإعادة الضبط"):QStringLiteral("Backup, restore and reset"));layout.addWidget(dataButton);connect(dataButton,&QPushButton::clicked,&d,[&]{NasaqData::showDialog(&d);refreshCenter();});
+ auto updates=new StoreUpdates(Nasaq::storeManaged(),&d);layout.addWidget(updates);
+ auto note=new QLabel(NasaqLanguage()=="ar"?QStringLiteral("قبل إزالة التطبيق احفظ نسخة احتياطية خارج مجلداته. الإزالة لا تلغي شراء الترخيص. الاستعادة تتطلب حساب ويندوز نفسه على هذا الجهاز، ولا تشمل ملفات الوسائط الخارجية."):QStringLiteral("Before uninstalling, save a backup outside the app folders. Uninstalling does not cancel your license purchase. Restore requires the same Windows account on this device; external media files are not included."));note->setWordWrap(true);layout.addWidget(note);QDialogButtonBox close(QDialogButtonBox::Close);layout.addWidget(&close);connect(&close,&QDialogButtonBox::rejected,&d,&QDialog::reject);ApplyNasaqFormDesign(&d);d.exec();
+}
+
+void Window::changeInterfaceLanguage(const QString &choice){ApplyNasaqLanguage(choice);setLayoutDirection(NasaqLanguage()=="ar"?Qt::RightToLeft:Qt::LeftToRight);refresh();Q_EMIT interfaceLanguageChanged();}

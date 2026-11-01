@@ -22,6 +22,17 @@ class Window:public QMainWindow {
  bool licenseAllowed()const{return activation.allowed();}
  bool operatorLocked()const{return locked;}
  bool prayerActive()const{return audio.prayerActive();}
+ bool prayerPreviewActive()const{return audio.prayerPreviewActive();}
+ QDateTime prayerDeadline()const{return audio.prayerDeadline();}
+ bool resumePending()const{return audio.resumePending();}
+ int foregroundPriority()const{return audio.activePriority();}
+ void stopAll(){audio.stop();}
+ QString licenseDescription()const{return activation.description();}
+ void configurePrayers(){guarded([this]{prayerSettings();});}
+ bool previewPrayer(){return !locked&&audio.previewPrayer(store.get(QStringLiteral("prayer_audio")));}
+ void openDataCenter();
+ void changeInterfaceLanguage(const QString &choice);
+ Q_SIGNALS: void audienceSettingsRequested();
  Q_SIGNALS: void operatorLockChanged(bool locked);
  void licenseAllowedChanged(bool allowed);
  void interfaceLanguageChanged();

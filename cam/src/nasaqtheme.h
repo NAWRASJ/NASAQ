@@ -12,6 +12,8 @@
 #include <QMenu>
 #include <QEvent>
 #include <QRegion>
+#include <QSettings>
+#include <QRegularExpression>
 #include "nasaqlanguage.h"
 // Keep native popup corners consistent with the rounded theme on Windows.
 class NasaqMenuShape final : public QObject {
@@ -68,6 +70,16 @@ class NasaqControlStyle final : public QProxyStyle {
   p->restore();
  }
 };
+inline void ApplyNasaqTextScale(){
+ const int percent=qBound(100,QSettings(QStringLiteral("NASAQ"),QStringLiteral("Preferences")).value(QStringLiteral("text_scale"),100).toInt(),130);
+ qApp->setFont(QFont(QStringLiteral("Segoe UI"),10*percent/100.));
+ QFile file(QStringLiteral(":/nasaq/nasaq.qss"));if(file.open(QIODevice::ReadOnly)){
+  const QString original=QString::fromUtf8(file.readAll());QString scaled;int previous=0;
+  auto matches=QRegularExpression(QStringLiteral("font-size:\\s*(\\d+)px")).globalMatch(original);
+  while(matches.hasNext()){auto match=matches.next();scaled+=original.mid(previous,match.capturedStart()-previous)+QStringLiteral("font-size:%1px").arg(qRound(match.captured(1).toInt()*percent/100.));previous=match.capturedEnd();}
+  scaled+=original.mid(previous);qApp->setStyleSheet(scaled);
+ }
+}
 inline void ApplyNasaqTheme() {
  if(qApp->property("nasaqThemeApplied").toBool())return;
  qApp->setProperty("nasaqThemeApplied",true);
@@ -90,4 +102,5 @@ inline void ApplyNasaqTheme() {
  qApp->setPalette(p); qApp->setFont(QFont(QStringLiteral("Segoe UI"),10));
  QFile css(QStringLiteral(":/nasaq/nasaq.qss"));
  if(css.open(QIODevice::ReadOnly))qApp->setStyleSheet(QString::fromUtf8(css.readAll()));
+ ApplyNasaqTextScale();
 }
