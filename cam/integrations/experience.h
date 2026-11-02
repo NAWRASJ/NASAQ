@@ -18,7 +18,9 @@ public:
  NasaqExperience(Player *player,PlaylistManager *manager,QMainWindow *main,Store &store,Window *window,AudienceDisplay *audience):QObject(main),player_(player),manager_(manager),main_(main),store_(store),window_(window),audience_(audience){
   auto bar=new QToolBar(main);bar->setObjectName(QStringLiteral("nasaqDailyWorkspace"));bar->setMovable(false);main->addToolBar(Qt::TopToolBarArea,bar);main->insertToolBarBreak(bar);
   auto panel=new QWidget(bar);panel->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Preferred);auto layout=new QVBoxLayout(panel);layout->setContentsMargins(12,8,12,8);
-  state_=new QLabel(panel);state_->setObjectName(QStringLiteral("playbackExplanation"));state_->setWordWrap(true);state_->setAccessibleName(L(QStringLiteral("Playback status"),QStringLiteral("حالة التشغيل")));layout->addWidget(state_);
+  state_=new QLabel(panel);state_->setObjectName(QStringLiteral("playbackExplanation"));state_->setWordWrap(true);state_->setAccessibleName(L(QStringLiteral("Playback status"),QStringLiteral("حالة التشغيل")));auto header=new QWidget(panel);header->setLayoutDirection(Qt::LeftToRight);auto heading=new QHBoxLayout(header);heading->setContentsMargins(0,0,0,0);heading->setSpacing(16);state_->setLayoutDirection(main->layoutDirection());
+  if(auto total=main->findChild<QLabel*>(QStringLiteral("playlistTotalDuration")))heading->addWidget(total,0,Qt::AlignLeft|Qt::AlignTop);
+  heading->addWidget(state_,1);layout->addWidget(header);
   upcoming_=new QLabel(panel);upcoming_->setObjectName(QStringLiteral("dailyUpcoming"));upcoming_->setWordWrap(true);layout->addWidget(upcoming_);
   auto actions=new QHBoxLayout;layout->addLayout(actions);
   auto button=[&](const QString &text,const QString &name,auto fn){auto b=new QPushButton(text,panel);b->setObjectName(name);actions->addWidget(b);connect(b,&QPushButton::clicked,this,fn);return b;};
